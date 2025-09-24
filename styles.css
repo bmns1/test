@@ -1,0 +1,26 @@
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: #f8fafc; /* A softer slate-50 background */
+}
+
+.tab-active {
+    border-bottom: 2px solid #0d9488; /* teal-600 */
+    color: #0d9488; /* teal-600 */
+    font-weight: 600;
+}
+
+.tab-content { display: none; }
+.tab-content-active { display: block; }
+#mobile-menu { display: none; }
+
+/* Simple animation for accordion */
+.rotate-180 { transform: rotate(180deg); }
+.transition-transform { transition: transform 0.2s ease-in-out; }
+
+/* Styles for Toastify Notifications */
+.toastify.toastify-success {
+    background: linear-gradient(to right, #00b09b, #96c93d);
+}
+.toastify.toastify-error {
+    background: linear-gradient(to right, #ff5f6d, #ffc371);
+}
