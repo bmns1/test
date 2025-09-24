@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Silicon Valley Academy Parent Portal (beta)</title>
+    
+    <link rel="stylesheet" href="styles.css">
+    
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
+    <script src="https://unpkg.com/phosphor-icons"></script>
+    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
+
+</head>
+<body class="antialiased text-slate-800">
+
+    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+        <div class="text-center p-8 bg-white rounded-xl shadow-lg max-w-md w-full">
+            <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
+            <h1 class="text-3xl font-bold text-slate-900 mt-4">Silicon Valley Academy</h1>
+            <p class="text-lg text-slate-600 mb-6">Parent Portal (beta)</p>
+            <p class="text-sm text-slate-500 mb-8">Please log in with your student's Google Classroom account. For assistance or password issues, please contact: <a href="mailto:parent.portal@svaschool.org" class="font-medium text-teal-600 hover:underline">parent.portal@svaschool.org</a></p>
+            <div id="google-signin-button-container" class="flex justify-center"></div>
+        </div>
+    </div>
+
+    <div id="portal-container" class="hidden">
+        <div id="qr-code-modal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50">
+            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+                <div class="mt-3 text-center">
+                    <h3 class="text-lg leading-6 font-medium text-gray-900">Event Check-in QR Code</h3>
+                    <div class="mt-2 px-7 py-3">
+                        <div id="qrcode" class="mx-auto"></div>
+                        <p class="text-sm text-gray-500 mt-4">Have an admin scan this code when you arrive at the event to get credit for your hours.</p>
+                    </div>
+                    <div class="items-center px-4 py-3">
+                        <button id="close-modal-btn" class="px-4 py-2 bg-teal-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-400">
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="min-h-screen bg-slate-50">
+            <header class="bg-white shadow-sm sticky top-0 z-40">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div class="flex items-center justify-between h-20">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                                <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-12 w-auto">
+                            </div>
+                            <div class="ml-4">
+                                <h1 class="text-2xl font-bold text-slate-900">Silicon Valley Academy</h1>
+                                <p class="text-sm text-slate-500">Parent Portal (beta)</p>
+                            </div>
+                        </div>
+                        <div class="hidden sm:flex items-center">
+                            <div id="user-info-desktop" class="mr-4 text-right"></div>
+                            <button onclick="signOut();" class="bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition duration-300">Sign Out</button>
+                        </div>
+                        <div class="sm:hidden flex items-center">
+                            <button id="mobile-menu-button" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-slate-500 hover:text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
+                                <span class="sr-only">Open main menu</span>
+                                <i id="menu-icon-open" class="ph-list text-2xl"></i>
+                                <i id="menu-icon-close" class="ph-x text-2xl hidden"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                 <div class="sm:hidden" id="mobile-menu">
+                    <div class="pt-4 pb-3 border-b border-slate-200">
+                        <div id="user-info-mobile" class="px-5"></div>
+                    </div>
+                    <div id="main-nav-mobile" class="px-2 pt-2 pb-3 space-y-1"></div>
+                    <div class="pt-4 pb-3 border-t border-slate-200">
+                        <div class="px-2">
+                             <button onclick="signOut();" class="w-full bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition duration-300">Sign Out</button>
+                        </div>
+                    </div>
+                </div>
+            </header>
+            
+            <nav class="hidden sm:block bg-white border-b border-slate-200">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div id="main-nav" class="flex justify-center -mb-px">
+                        <button class="tab-btn tab-active text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="dashboard"><i class="ph-house mr-2"></i>Student Dashboard</button>
+                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="actions"><i class="ph-bell-ringing mr-2"></i>Actions</button>
+                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="volunteering"><i class="ph-hands-clapping mr-2"></i>Volunteering</button>
+                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="signups"><i class="ph-list-checks mr-2"></i>My Signups</button>
+                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="pto"><i class="ph-users-three mr-2"></i>PTO</button>
+                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="faq-forms"><i class="ph-link mr-2"></i>Resources</button>
+                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="live-event"><i class="ph-video-camera-fill mr-2"></i>Live Events</button>  
+                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="calendar"><i class="ph-calendar mr-2"></i>Calendar</button>
+                    </div>
+                </div>
+            </nav>
+
+            <main class="max-w-7xl mx-auto py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
+                
+                <div id="skeleton-loader">
+                    <div class="space-y-12">
+                        <div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
+                            <div class="p-6 bg-slate-50 border-b border-slate-200">
+                                <div class="flex items-center animate-pulse">
+                                    <div class="h-16 w-16 rounded-full bg-slate-200"></div>
+                                    <div class="ml-4 space-y-2">
+                                        <div class="h-6 w-48 bg-slate-200 rounded"></div>
+                                        <div class="h-4 w-32 bg-slate-200 rounded"></div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="p-6">
+                               <div class="h-8 w-1/3 bg-slate-200 rounded animate-pulse"></div>
+                               <div class="mt-4 space-y-3">
+                                   <div class="h-5 w-full bg-slate-200 rounded animate-pulse"></div>
+                                   <div class="h-5 w-5/6 bg-slate-200 rounded animate-pulse"></div>
+                               </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="main-content" class="hidden">
+                    <div id="dashboard" class="tab-content tab-content-active">
+                        <h2 class="text-3xl font-bold text-slate-900 mb-6">My Students</h2>
+                        <div id="student-content-container" class="space-y-12"></div>
+                    </div>
+                    
+                    <div id="actions" class="tab-content">
+                        <h2 class="text-3xl font-bold text-slate-900 mb-6">Actions</h2>
+                        <div id="actions-content-container" class="space-y-10"></div>
+                    </div>
+                    <div id="volunteering" class="tab-content">
+                         <h2 class="text-3xl font-bold text-slate-900 mb-6">Volunteering Opportunities</h2>
+                        <div class="mb-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                            <h3 class="text-lg font-semibold text-slate-800 mb-2">Volunteering Objectives & Rules</h3>
+                            <p class="text-slate-600 text-sm">
+                                Our parent volunteer program is essential to the success of our school community. The primary objective is to foster a strong partnership between parents and the school, enriching our students' educational experience. We require each family to complete a set number of volunteer hours per school year, divided between two semesters. Please sign up for opportunities that match your interests and schedule. If you must withdraw from a commitment, please do so at least three weeks in advance to allow another parent to take the spot. Failure to show up for a signed-up event without prior cancellation will result in a penalty, increasing your total required hours. For safety reasons, we ask that you do not bring small children while volunteering. We recommend arranging childcare during your volunteer shift. Thank you for your dedication to our students and school!
+                            </p>
+                        </div>
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div>
+                                    <label for="filter-semester" class="block text-sm font-medium text-slate-700">Semester</label>
+                                    <select id="filter-semester" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                        <option value="all">All</option>
+                                        <option value="1">Semester 1</option>
+                                        <option value="2">Semester 2</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="filter-event" class="block text-sm font-medium text-slate-700">Filter by Event</label>
+                                    <select id="filter-event" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                        <option value="all">All Events</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="filter-time" class="block text-sm font-medium text-slate-700">Time of Day</label>
+                                    <select id="filter-time" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                        <option>All</option>
+                                        <option>Morning</option>
+                                        <option>Afternoon</option>
+                                        <option>Evening</option>
+                                        <option>All Day</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="filter-hours" class="block text-sm font-medium text-slate-700">Max Hours</label>
+                                    <select id="filter-hours" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                        <option value="99">Any</option>
+                                        <option value="2">Up to 2</option>
+                                        <option value="4">Up to 4</option>
+                                        <option value="8">Up to 8</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="filter-location" class="block text-sm font-medium text-slate-700">Location</label>
+                                    <select id="filter-location" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                        <option>All</option>
+                                        <option>On-Campus</option>
+                                        <option>Remote</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label for="filter-sort" class="block text-sm font-medium text-slate-700">Sort By</label>
+                                    <select id="filter-sort" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                        <option value="default">Default</option>
+                                        <option value="recent">Recently Added</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                         <div id="volunteering-list" class="space-y-6"><p>Loading volunteering opportunities...</p></div>
+                    </div>
+                    <div id="signups" class="tab-content">
+                        <h2 class="text-3xl font-bold text-slate-900 mb-6">My Volunteer Hours</h2>
+                        <div id="my-signups-content"></div>
+                    </div>
+                    <div id="pto" class="tab-content">
+                         </div>
+                    <div id="faq-forms" class="tab-content">
+                        </div>
+                    <div id="live-event" class="tab-content">
+                        </div>
+                    <div id="calendar" class="tab-content">
+                        </div>
+                </div>
+
+            </main>
+            
+            <footer class="bg-white mt-12 border-t border-slate-200">
+                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-sm"><p>&copy; 2025 BMNS. All Rights Reserved - (parent.portal@svaschool.org)</p></div>
+            </footer>
+        </div>
+    </div>
+    
+    <template id="student-card-template">
+        <div class="student-card bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
+            <div class="p-6 bg-slate-50 border-b border-slate-200">
+                <div class="flex items-center">
+                    <img class="student-photo h-16 w-16 rounded-full" src="" alt="Student Photo">
+                    <div class="ml-4">
+                        <h3 class="student-name text-2xl font-bold text-slate-900"></h3>
+                        <p class="student-grade text-slate-600"></p>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-3">
+                <div class="lg:col-span-2 p-6">
+                    <div class="mb-8">
+                        <h4 class="font-semibold text-lg text-slate-700 mb-3">Quick Actions</h4>
+                        <div class="flex flex-wrap gap-3">
+                            <button class="report-absence-nav-btn inline-flex items-center bg-teal-100 text-teal-800 font-semibold py-2 px-4 rounded-lg hover:bg-teal-200 transition-colors">Report Absence/Tardy</button>
+                            <button class="view-handbook-btn inline-flex items-center bg-slate-100 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors">View Student Handbook</button>
+                        </div>
+                    </div>
+                    <div>
+                        <h4 class="font-semibold text-lg text-slate-700 mb-2">Teachers</h4>
+                        <ul class="teachers-list space-y-0"></ul>
+                    </div>
+                </div>
+                <div class="bg-slate-50 p-6 lg:border-l border-slate-200">
+                    <h4 class="font-semibold text-lg text-slate-700 mb-2">Upcoming Events</h4>
+                    <ul class="events-list space-y-4"></ul>
+                </div>
+            </div>
+        </div>
+    </template>
+
+    <template id="teacher-item-template">
+        <li class="flex items-center justify-between py-3 border-b border-slate-100 last:border-b-0">
+            <div class="flex items-center">
+                <img class="teacher-photo h-10 w-10 rounded-full mr-4" src="" alt="">
+                <div>
+                    <p class="teacher-name font-semibold text-slate-800"></p>
+                    <p class="teacher-role text-sm text-slate-500"></p>
+                </div>
+            </div>
+            <a class="teacher-email text-teal-600 hover:underline text-sm font-medium" href=""></a>
+        </li>
+    </template>
+
+    <template id="volunteer-opportunity-template">
+         <div class="bg-white rounded-xl shadow-sm border border-slate-200">
+            <div class="p-4 cursor-pointer flex justify-between items-center volunteer-card-header">
+                <h3 class="event-name text-xl font-bold text-slate-900"></h3>
+                <i class="ph-caret-down text-2xl transition-transform"></i>
+            </div>
+            <div class="content-container hidden">
+                </div>
+        </div>
+    </template>
+
+    <template id="upcoming-signup-template">
+         <div class="bg-white p-5 rounded-lg shadow-sm border border-slate-200">
+            <div class="flex flex-col sm:flex-row justify-between">
+                <div class="flex-grow">
+                    <h4 class="signup-title text-lg font-bold text-slate-900"></h4>
+                    <div class="mt-2 space-y-1">
+                        <div class="flex items-center text-sm text-slate-500">
+                            <i class="ph-info mr-2"></i>
+                            <p class="signup-description"></p>
+                        </div>
+                        <div class="flex items-center text-sm text-slate-500">
+                            <i class="ph-calendar-blank mr-2"></i>
+                            <p class="signup-datetime"></p>
+                        </div>
+                        <div class="flex items-center text-sm text-slate-500">
+                            <i class="ph-map-pin mr-2"></i>
+                            <p class="signup-location"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="action-buttons mt-4 sm:mt-0 sm:ml-6 flex-shrink-0 flex flex-col space-y-2 w-full sm:w-48">
+                    </div>
+            </div>
+        </div>
+    </template>
+
+
+    <script src="script.js"></script>
+</body>
+</html>
