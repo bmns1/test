@@ -683,6 +683,10 @@
                     eventsHtml = '<li><p class="text-slate-500 py-3">No upcoming events for this student.</p></li>';
                 }
 
+                // --- THIS IS THE FIX ---
+                const studentCard = document.createElement('div');
+                // ---------------------
+
                 const studentInitials = student.studentName.split(" ").map(n=>n[0]).join("");
                 studentCard.innerHTML = `
                 <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
