@@ -4,15 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Silicon Valley Academy Parent Portal (beta)</title>
-    
     <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
-    <script src="https://unpkg.com/phosphor-icons"></script>
-    <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
-    <script src="https://cdn.tailwindcss.com"></script>
-
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -26,25 +22,70 @@
         .tab-content { display: none; }
         .tab-content-active { display: block; }
         #mobile-menu { display: none; }
+        /* Simple animation for accordion */
         .rotate-180 { transform: rotate(180deg); }
         .transition-transform { transition: transform 0.2s ease-in-out; }
-        .toastify.toastify-success {
-            background: linear-gradient(to right, #00b09b, #96c93d);
-        }
-        .toastify.toastify-error {
-            background: linear-gradient(to right, #ff5f6d, #ffc371);
-        }
     </style>
 </head>
 <body class="antialiased text-slate-800">
 
-    <div id="login-screen" class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-        <div class="text-center p-8 bg-white rounded-xl shadow-lg max-w-md w-full">
-            <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
-            <h1 class="text-3xl font-bold text-slate-900 mt-4">Silicon Valley Academy</h1>
-            <p class="text-lg text-slate-600 mb-6">Parent Portal (beta)</p>
-            <p class="text-sm text-slate-500 mb-8">Please log in with your student's Google Classroom account. For assistance or password issues, please contact: <a href="mailto:parent.portal@svaschool.org" class="font-medium text-teal-600 hover:underline">parent.portal@svaschool.org</a></p>
+    <div id="login-container" class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+        <div id="login-screen" class="p-8 bg-white rounded-2xl shadow-xl max-w-md w-full border border-slate-200">
+            <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-16 w-auto mx-auto mb-4">
+            <div class="text-center">
+                <h1 class="text-2xl font-bold text-slate-900">Parent Portal Login</h1>
+                <p class="text-slate-500 text-sm mt-1">Silicon Valley Academy (beta)</p>
+            </div>
+            
+            <p class="text-sm text-slate-600 my-6 text-center">Please log in with your SVA-associated student email.</p>
+
+            <div id="login-error-msg" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 text-left" role="alert">
+                <strong class="font-bold">Login Failed:</strong>
+                <span class="block sm:inline" id="login-error-text"></span>
+            </div>
+            
             <div id="google-signin-button-container" class="flex justify-center"></div>
+            
+            <div class="my-6 flex items-center">
+                <span class="border-b border-slate-200 flex-grow"></span>
+                <span class="mx-4 text-xs font-medium text-slate-400 uppercase">OR</span>
+                <span class="border-b border-slate-200 flex-grow"></span>
+            </div>
+            
+            <form id="passkey-request-form" class="space-y-4">
+                <div>
+                    <label for="email-input" class="block text-sm font-medium text-slate-700 mb-1">Student Email</label>
+                    <div class="relative">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <i class="ph-envelope text-slate-400"></i>
+                        </div>
+                        <input type="email" id="email-input" placeholder="student.email@svaschool.org" class="w-full pl-10 pr-4 py-2 rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500" required>
+                    </div>
+                </div>
+                <button type="submit" id="request-passkey-btn" class="w-full flex items-center justify-center bg-teal-600 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-teal-700 transition duration-300 shadow-sm">
+                    <i class="ph-paper-plane-tilt -ml-1 mr-2"></i>
+                    Send Login Link
+                </button>
+            </form>
+            <p class="text-xs text-slate-500 mt-6 text-center">For assistance, contact: <a href="mailto:parent.portal@svaschool.org" class="font-medium text-teal-600 hover:underline">parent.portal@svaschool.org</a></p>
+        </div>
+
+        <div id="passkey-verify-screen" class="hidden text-center p-8 bg-white rounded-xl shadow-lg max-w-md w-full">
+            <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
+            <h2 class="text-2xl font-bold text-slate-900">Check Your Email</h2>
+            <p class="text-slate-600 my-4">A secure login link has been sent to associated parent(s) emails for the following student account <strong id="passkey-email-display">your email</strong>.</p>
+             <p class="text-sm text-slate-500">Please click the link in that email to log in. The link will expire in 10 minutes. You may need to check your spam folder (beta - you should be logged in for 24h!).</p>
+            
+            <button type="button" id="go-back-btn" class="w-full text-sm text-slate-600 hover:text-slate-900 hover:underline mt-6">
+                &larr; Go Back
+            </button>
+        </div>
+    </div>
+    <div id="loading-overlay" class="fixed inset-0 bg-slate-100 flex items-center justify-center z-50 hidden">
+        <div class="text-center">
+            <i id="loading-icon" class="ph-spinner-gap text-6xl text-teal-600 mx-auto animate-spin"></i>
+            <h2 id="loading-title" class="text-2xl font-semibold text-slate-700 mt-4">Loading Portal Data...</h2>
+            <p id="loading-message" class="text-slate-500">Please wait a moment.</p>
         </div>
     </div>
 
@@ -55,10 +96,12 @@
                     <h3 class="text-lg leading-6 font-medium text-gray-900">Event Check-in QR Code</h3>
                     <div class="mt-2 px-7 py-3">
                         <div id="qrcode" class="mx-auto"></div>
-                        <p class="text-sm text-gray-500 mt-4">Have an admin scan this code to get credit for your hours.</p>
+                        <p class="text-sm text-gray-500 mt-4">Have an admin scan this code when you arrive at the event to get credit for your hours.</p>
                     </div>
                     <div class="items-center px-4 py-3">
-                        <button id="close-modal-btn" class="px-4 py-2 bg-teal-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-400">Close</button>
+                        <button id="close-modal-btn" class="px-4 py-2 bg-teal-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-400">
+                            Close
+                        </button>
                     </div>
                 </div>
             </div>
@@ -69,7 +112,9 @@
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex items-center justify-between h-20">
                         <div class="flex items-center">
-                            <div class="flex-shrink-0"><img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-12 w-auto"></div>
+                            <div class="flex-shrink-0">
+                                <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-12 w-auto">
+                            </div>
                             <div class="ml-4">
                                 <h1 class="text-2xl font-bold text-slate-900">Silicon Valley Academy</h1>
                                 <p class="text-sm text-slate-500">Parent Portal (beta)</p>
@@ -80,23 +125,27 @@
                             <button onclick="signOut();" class="bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition duration-300">Sign Out</button>
                         </div>
                         <div class="sm:hidden flex items-center">
-                            <button id="mobile-menu-button" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-slate-500 hover:text-white hover:bg-teal-600 focus:outline-none" aria-controls="mobile-menu" aria-expanded="false">
-                                <i id="menu-icon-open" class="ph-list text-2xl"></i><i id="menu-icon-close" class="ph-x text-2xl hidden"></i>
+                            <button id="mobile-menu-button" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-slate-500 hover:text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
+                                <span class="sr-only">Open main menu</span>
+                                <i id="menu-icon-open" class="ph-list text-2xl"></i>
+                                <i id="menu-icon-close" class="ph-x text-2xl hidden"></i>
                             </button>
                         </div>
                     </div>
                 </div>
-                <div class="sm:hidden" id="mobile-menu">
+                 <div class="sm:hidden" id="mobile-menu">
                     <div class="pt-4 pb-3 border-b border-slate-200">
                         <div id="user-info-mobile" class="px-5"></div>
                     </div>
                     <div id="main-nav-mobile" class="px-2 pt-2 pb-3 space-y-1"></div>
                     <div class="pt-4 pb-3 border-t border-slate-200">
-                        <div class="px-2"><button onclick="signOut();" class="w-full bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Sign Out</button></div>
+                        <div class="px-2">
+                             <button onclick="signOut();" class="w-full bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition duration-300">Sign Out</button>
+                        </div>
                     </div>
                 </div>
             </header>
-            
+
             <nav class="hidden sm:block bg-white border-b border-slate-200">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div id="main-nav" class="flex justify-center -mb-px">
@@ -113,130 +162,152 @@
             </nav>
 
             <main class="max-w-7xl mx-auto py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
-                <div id="skeleton-loader">
-                    <div class="space-y-12">
-                        <div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
-                            <div class="p-6 bg-slate-50 border-b border-slate-200">
-                                <div class="flex items-center animate-pulse">
-                                    <div class="h-16 w-16 rounded-full bg-slate-200"></div>
-                                    <div class="ml-4 space-y-2">
-                                        <div class="h-6 w-48 bg-slate-200 rounded"></div>
-                                        <div class="h-4 w-32 bg-slate-200 rounded"></div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="p-6">
-                               <div class="h-8 w-1/3 bg-slate-200 rounded animate-pulse"></div>
-                               <div class="mt-4 space-y-3">
-                                   <div class="h-5 w-full bg-slate-200 rounded animate-pulse"></div>
-                                   <div class="h-5 w-5/6 bg-slate-200 rounded animate-pulse"></div>
-                               </div>
-                            </div>
-                        </div>
-                    </div>
+                <div id="dashboard" class="tab-content tab-content-active">
+                     <h2 class="text-3xl font-bold text-slate-900 mb-6">My Students</h2>
+                    <div id="student-content-container" class="space-y-12"></div>
                 </div>
                 
-                <div id="main-content" class="hidden">
-                    <div id="dashboard" class="tab-content tab-content-active">
-                        <h2 class="text-3xl font-bold text-slate-900 mb-6">My Students</h2>
-                        <div id="student-content-container" class="space-y-12"></div>
-                    </div>
-                    
-                    <div id="actions" class="tab-content">
-                        <h2 class="text-3xl font-bold text-slate-900 mb-6">Actions</h2>
-                        <div id="actions-content-container" class="space-y-10"></div>
-                    </div>
-
-                    <div id="volunteering" class="tab-content">
-                        <h2 class="text-3xl font-bold text-slate-900 mb-6">Volunteering Opportunities</h2>
-                        <div id="volunteering-content-container">
-                            </div>
-                    </div>
-                    
-                    <div id="signups" class="tab-content">
-                        <h2 class="text-3xl font-bold text-slate-900 mb-6">My Volunteer Hours</h2>
-                        <div id="my-signups-content"></div>
-                    </div>
-                    
-                    <div id="pto" class="tab-content">
-                         </div>
-                    
-                    <div id="faq-forms" class="tab-content">
-                         </div>
-                    
-                    <div id="live-event" class="tab-content">
-                        </div>
-                    
-                    <div id="calendar" class="tab-content">
-                        </div>
+                <div id="actions" class="tab-content">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-6">Actions</h2>
+                    <div id="actions-content-container" class="space-y-10"></div>
                 </div>
 
+                <div id="volunteering" class="tab-content">
+                     <h2 class="text-3xl font-bold text-slate-900 mb-6">Volunteering Opportunities</h2>
+                    <div class="mb-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                        <h3 class="text-lg font-semibold text-slate-800 mb-2">Volunteering Objectives & Rules</h3>
+                        <p class="text-slate-600 text-sm">
+                            Our parent volunteer program is essential to the success of our school community. The primary objective is to foster a strong partnership between parents and the school, enriching our students' educational experience. We require each family to complete a set number of volunteer hours per school year, divided between two semesters. Please sign up for opportunities that match your interests and schedule. If you must withdraw from a commitment, please do so at least three weeks in advance to allow another parent to take the spot. Failure to show up for a signed-up event without prior cancellation will result in a penalty, increasing your total required hours. For safety reasons, we ask that you do not bring small children while volunteering. We recommend arranging childcare during your volunteer shift. Thank you for your dedication to our students and school!
+                        </p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label for="filter-semester" class="block text-sm font-medium text-slate-700">Semester</label>
+                                <select id="filter-semester" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                    <option value="all">All</option>
+                                    <option value="1">Semester 1</option>
+                                    <option value="2">Semester 2</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filter-event" class="block text-sm font-medium text-slate-700">Filter by Event</label>
+                                <select id="filter-event" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                    <option value="all">All Events</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filter-time" class="block text-sm font-medium text-slate-700">Time of Day</label>
+                                <select id="filter-time" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                    <option>All</option>
+                                    <option>Morning</option>
+                                    <option>Afternoon</option>
+                                    <option>Evening</option>
+                                    <option>All Day</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filter-hours" class="block text-sm font-medium text-slate-700">Max Hours</label>
+                                <select id="filter-hours" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                    <option value="99">Any</option>
+                                    <option value="2">Up to 2</option>
+                                    <option value="4">Up to 4</option>
+                                    <option value="8">Up to 8</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filter-location" class="block text-sm font-medium text-slate-700">Location</label>
+                                <select id="filter-location" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                    <option>All</option>
+                                    <option>On-Campus</option>
+                                    <option>Remote</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="filter-sort" class="block text-sm font-medium text-slate-700">Sort By</label>
+                                <select id="filter-sort" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
+                                    <option value="default">Default</option>
+                                    <option value="recent">Recently Added</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                     <div id="volunteering-list" class="space-y-6"><p>Loading volunteering opportunities...</p></div>
+                </div>
+
+                <div id="signups" class="tab-content">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-6">My Volunteer Hours</h2>
+                    <div id="my-signups-content"></div>
+                </div>
+
+                <div id="pto" class="tab-content">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-6">Parent-Teacher Organization (PTO)</h2>
+                    <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 space-y-8">
+                        <div>
+                            <h3 class="text-xl font-semibold text-teal-700 mb-2">Building a Strong School Community Together</h3>
+                            <p class="text-slate-600 leading-relaxed">As-salamu alaykum! The SVA Parent-Teacher Organization (PTO) warmly welcomes all new and returning families. We believe that a high level of parent participation is critical to the success of our students' education, tarbiyah, and development. The PTO is a formal, volunteer-based organization of parents, teachers, and staff working together to enhance the SVA student experience.</p>
+                        </div>
+                        <div class="border-t border-slate-200 pt-6">
+                            <h3 class="text-xl font-semibold text-teal-700 mb-3">Our Mission & Key Roles</h3>
+                            <ul class="list-disc list-inside space-y-3 text-slate-600">
+                                <li><strong>Organize Enriching Events:</strong> We plan and execute co-curricular events and activities like International Day, Book Fairs, Movie Nights, and the Hajj Simulation to enrich our children's education.</li>
+                                <li><strong>Raise Funds:</strong> Through community efforts, we raise funds to support vital school programs, classroom needs, and new initiatives.</li>
+                                <li><strong>Build Community:</strong> We strive to create a strong, collaborative, and supportive environment that connects parents, teachers, and staff.</li>
+                                <li><strong>Shape the Educational Experience:</strong> The PTO provides a valuable opportunity for parents to have a voice and actively contribute to their children's journey at SVA.</li>
+                            </ul>
+                        </div>
+                         <div class="border-t border-slate-200 pt-6">
+                            <h3 class="text-xl font-semibold text-teal-700 mb-2">Get Involved</h3>
+                            <p class="text-slate-600 mb-4">Every parent and guardian at SVA is automatically a member of the PTO! We encourage you to get involved. You can sign up to be a committee member for a specific event or support year-long school programs.</p>
+                            <div class="bg-teal-50 p-5 rounded-lg border border-teal-200">
+                                <h4 class="font-semibold text-slate-800">2025-26 PTO Volunteering Leads:</h4>
+                                <ul class="list-disc list-inside mt-2 text-slate-700">
+                                    <li>Sara M.</li>
+                                    <li>Rubeka A.</li>
+                                    <li>Esraa El T.</li>
+                                    <li>Ahmed S.</li>
+                                </ul>
+                                <p class="mt-4 text-sm">Interested in becoming a PTO lead, helping out, or have a question? To reach the PTO leadership, please email <a href="mailto:pto@svamail.com" class="text-teal-600 font-semibold hover:underline">pto@svamail.com</a>.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+               <div id="faq-forms" class="tab-content">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-6">Resources, Newsletters & FAQs</h2>
+                    <div class="flex border-b border-gray-200">
+                        <button class="faq-forms-tab-btn tab-active px-6 py-3 text-sm font-medium" data-tab="faq-content">FAQ</button>
+                        <button class="faq-forms-tab-btn px-6 py-3 text-sm font-medium text-slate-500" data-tab="forms-content">Forms</button>
+                        <button class="faq-forms-tab-btn px-6 py-3 text-sm font-medium text-slate-500" data-tab="newsletters-content">Newsletters</button>
+                        <button class="faq-forms-tab-btn px-6 py-3 text-sm font-medium text-slate-500" data-tab="quicklinks-content">Quick Links</button>
+                    </div>
+                    <div class="bg-white p-6 rounded-b-xl shadow-sm border border-t-0 border-slate-200">
+                        <div id="faq-content" class="faq-forms-tab-content"></div>
+                        <div id="forms-content" class="faq-forms-tab-content hidden"></div>
+                        <div id="newsletters-content" class="faq-forms-tab-content hidden"></div>
+                        <div id="quicklinks-content" class="faq-forms-tab-content hidden"></div>
+                    </div>
+                </div>
+
+                <div id="live-event" class="tab-content">
+                    </div>
+                
+                <div id="calendar" class="tab-content">
+                     <h2 class="text-3xl font-bold text-slate-900 mb-6">School Calendar</h2>
+                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                        <iframe src="https://calendar.google.com/calendar/embed?src=svaschool.org_us4ga4j1cfs27epj0f2dfegcl0%40group.calendar.google.com&ctz=America/Los_Angeles" style="border: 0" width="100%" height="600" frameborder="0" scrolling="no"></iframe>
+                    </div>
+                </div>
             </main>
             
             <footer class="bg-white mt-12 border-t border-slate-200">
-                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-sm"><p>&copy; 2025 BMNS. All Rights Reserved.</p></div>
+                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-sm"><p>&copy; 2025 BMNS. All Rights Reserved - (parent.portal@svaschool.org)</p></div>
             </footer>
         </div>
     </div>
     
-    <template id="student-card-template">
-        <div class="student-card bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
-            <div class="p-6 bg-slate-50 border-b border-slate-200">
-                <div class="flex items-center">
-                    <img class="student-photo h-16 w-16 rounded-full" src="" alt="Student Photo">
-                    <div class="ml-4">
-                        <h3 class="student-name text-2xl font-bold text-slate-900"></h3>
-                        <p class="student-grade text-slate-600"></p>
-                    </div>
-                </div>
-            </div>
-            <div class="grid grid-cols-1 lg:grid-cols-3">
-                <div class="lg:col-span-2 p-6">
-                    <div class="mb-8">
-                        <h4 class="font-semibold text-lg text-slate-700 mb-3">Quick Actions</h4>
-                        <div class="flex flex-wrap gap-3">
-                            <button class="report-absence-nav-btn inline-flex items-center bg-teal-100 text-teal-800 font-semibold py-2 px-4 rounded-lg hover:bg-teal-200 transition-colors">Report Absence/Tardy</button>
-                            <button class="view-handbook-btn inline-flex items-center bg-slate-100 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors">View Student Handbook</button>
-                        </div>
-                    </div>
-                    <div>
-                        <h4 class="font-semibold text-lg text-slate-700 mb-2">Teachers</h4>
-                        <ul class="teachers-list space-y-0"></ul>
-                    </div>
-                </div>
-                <div class="bg-slate-50 p-6 lg:border-l border-slate-200">
-                    <h4 class="font-semibold text-lg text-slate-700 mb-2">Upcoming Events</h4>
-                    <ul class="events-list space-y-4"></ul>
-                </div>
-            </div>
-        </div>
-    </template>
-
-    <template id="teacher-item-template">
-        <li class="flex items-center justify-between py-3 border-b border-slate-100 last:border-b-0">
-            <div class="flex items-center">
-                <img class="teacher-photo h-10 w-10 rounded-full mr-4" src="" alt="">
-                <div>
-                    <p class="teacher-name font-semibold text-slate-800"></p>
-                    <p class="teacher-role text-sm text-slate-500"></p>
-                </div>
-            </div>
-            <a class="teacher-email text-teal-600 hover:underline text-sm font-medium" href=""></a>
-        </li>
-    </template>
-    
-    <template id="event-item-template">
-         <li class="flex justify-between items-start">
-            <div class="flex-1 pr-2">
-                <p class="event-name font-semibold text-slate-800"></p>
-                <p class="event-date text-sm text-slate-500"></p>
-                <p class="event-volunteers text-xs font-semibold"></p>
-            </div>
-            <div class="flex flex-col space-y-2 items-end w-24">
-                </div>
-        </li>
-    </template>
-
+    <script src="https://unpkg.com/phosphor-icons"></script>
     <script>
         // --- CONFIGURATION ---
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3LGShhqFBG5Y2TocWHYYgg8Sp-mK2YbkZ2x6tWJwf6li0teEvIYYXa5zNxDKtV4U7/exec';
@@ -244,28 +315,116 @@
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         let ID_TOKEN = null;
         let portalData = {};
+        let tempRequestToken = null; // For passkey login
 
-        // --- HELPER FUNCTIONS ---
-        function showToast(message, type = 'success') {
-            const options = { text: message, duration: 3000, close: true, gravity: "top", position: "right", stopOnFocus: true, className: `toastify-${type}` };
-            Toastify(options).showToast();
+        // --- GOOGLE SIGN-IN & LOGIN LOGIC ---
+        function handleCredentialResponse(response) {
+            handleLoginSuccess(response.credential);
         }
 
+        /**
+         * Handles the final stage of login for both Google Sign-In and Passkey.
+         * @param {string} idToken - A valid JWT (from Google or our backend).
+         
+        function handleLoginSuccess(idToken) {
+            ID_TOKEN = idToken;
+            const profile = JSON.parse(atob(ID_TOKEN.split('.')[1]));
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            // Use placeholder for picture if not provided (for passkey)
+            const picture = profile.picture || `https://placehold.co/100x100/E2E8F0/4A5568?text=${profile.email[0].toUpperCase()}`;
+            const name = profile.name || profile.email;
+            const userInfoHtml = `<div class="flex items-center"><img class="h-8 w-8 rounded-full" src="${picture}" alt=""><div class="ml-3"><div class="text-base font-medium text-slate-800">${name}</div><div class="text-sm font-medium text-slate-500">${profile.email}</div></div></div>`;
+            document.getElementById('user-info-desktop').innerHTML = userInfoHtml;
+            document.getElementById('user-info-mobile').innerHTML = userInfoHtml;
+            fetchData(ID_TOKEN);
+            fetchAndRenderResources();
+            addEventListeners(); // Event listeners are added *after* login
+        }
+        */
+
+        function handleLoginSuccess(idToken) {
+            ID_TOKEN = idToken;
+            localStorage.setItem('sva_id_token', idToken); // <-- SAVE THE TOKEN
+            const profile = JSON.parse(atob(ID_TOKEN.split('.')[1]));
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            // Use placeholder for picture if not provided (for passkey)
+            const picture = profile.picture || `https://placehold.co/100x100/E2E8F0/4A5568?text=${profile.email[0].toUpperCase()}`;
+            const name = profile.name || profile.email;
+            const userInfoHtml = `<div class="flex items-center"><img class="h-8 w-8 rounded-full" src="${picture}" alt=""><div class="ml-3"><div class="text-base font-medium text-slate-800">${name}</div><div class="text-sm font-medium text-slate-500">${profile.email}</div></div></div>`;
+            document.getElementById('user-info-desktop').innerHTML = userInfoHtml;
+            document.getElementById('user-info-mobile').innerHTML = userInfoHtml;
+            fetchData(ID_TOKEN);
+            fetchAndRenderResources();
+            addEventListeners(); // Event listeners are added *after* login
+        }
+
+
+        /**
+         * NEW: Handles an expired or invalid token.
+         * Clears storage and shows the login screen with an error.
+         */
+        function handleTokenExpired() {
+            localStorage.removeItem('sva_id_token'); // Clear the bad token
+            ID_TOKEN = null;
+            portalData = {};
+
+            // Hide portal, show login screen
+            document.getElementById('loading-overlay').classList.add('hidden');
+            document.getElementById('portal-container').classList.add('hidden');
+            document.getElementById('login-container').classList.remove('hidden');
+            showLoginScreen('login-screen'); // Make sure the main login screen is visible
+
+            // Display the error message
+            document.getElementById('login-error-text').textContent = "Your session has expired. Please log in again to continue.";
+            document.getElementById('login-error-msg').classList.remove('hidden');
+        }
+
+
+
+        
+
+        function signOut() {
+            google.accounts.id.disableAutoSelect();
+            localStorage.removeItem('sva_id_token'); // <-- CLEAR THE TOKEN
+            ID_TOKEN = null;
+            portalData = {};
+            window.location.reload();
+        }
+        
+        // --- HELPER FUNCTIONS ---
+
+        /**
+         * Switches between the login-screen and passkey-verify-screen
+         */
+        function showLoginScreen(screenId) {
+            document.getElementById('login-screen').classList.add('hidden');
+            document.getElementById('passkey-verify-screen').classList.add('hidden');
+            if (document.getElementById(screenId)) {
+                document.getElementById(screenId).classList.remove('hidden');
+            }
+        }
+
+
+
+
+
+
+        
         function decodeGrade(grade) {
             const gradeStr = String(grade).toUpperCase();
             if (gradeStr === 'P') return 'Pre-K';
-            if (gradeStr === '0' || gradeStr === 'K') return 'KG';
+            if (gradeStr === '0' || gradeStr === 'K' ) return 'KG';
             return `Grade ${gradeStr}`;
         }
-
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
             const date = new Date(dateString);
             return !isNaN(date.getTime()) ? date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : dateString;
         }
-        
         function formatGoogleDate(date) { return date.toISOString().split('T')[0].replace(/-/g, ''); }
-
+        
         function generateICalLink(event) {
             const startDate = new Date(event.date);
             const endDate = new Date(startDate);
@@ -331,179 +490,345 @@
             fetch(`${WEB_APP_URL}?token=${token}`)
                 .then(response => response.json())
                 .then(data => {
-                    document.getElementById('skeleton-loader').classList.add('hidden');
-                    document.getElementById('main-content').classList.remove('hidden');
-                    
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                    document.getElementById('portal-container').classList.remove('hidden');
                     if (data.status !== 'success' || !data.data) throw new Error(data.error || 'Invalid data from backend.');
                     portalData = data.data;
-
                     renderDashboard(portalData.students);
                     renderActionsTab(portalData.students);
-                    renderVolunteeringTab(); // New master render function
+                    populateEventFilter(portalData.allEvents);
                     applyAndRenderFilters(); 
                     renderMySignups(portalData.volunteerProgress);
                     renderMySignupsList(portalData.mySignups);
                     renderMobileMenu();
-                    
                     if (typeof phosphor !== 'undefined') phosphor.replace();
                 })
                 .catch(error => {
                     console.error('Fetch Error:', error);
-                    const skeleton = document.getElementById('skeleton-loader');
-                    skeleton.innerHTML = `<div class="text-center"><i class="ph-x-circle text-6xl text-red-500 mx-auto"></i><h2 class="text-2xl font-semibold text-slate-700 mt-4">Failed to Load Portal</h2><p class="text-slate-500">${error.message}</p></div>`;
+                    let errorMsg = String(error.message);
+
+                    // --- THIS IS THE FIX ---
+                    if (errorMsg.includes('Authentication failed')) {
+                        handleTokenExpired();
+                    } else {
+                        const loadingOverlay = document.getElementById('loading-overlay');
+                        if (loadingOverlay) loadingOverlay.innerHTML = `<div class="text-center"><i class="ph-x-circle text-6xl text-red-500 mx-auto"></i><h2 class="text-2xl font-semibold text-slate-700 mt-4">Failed to Load Portal</h2><p class="text-slate-500">${errorMsg}</p></div>`;
+                    }
+                });
+        }
+
+        function fetchAndRenderResources() {
+            fetch(`${NEWSLETTER_WEB_APP_URL}?token=${ID_TOKEN}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        renderFAQ(data.data.faq);
+                        renderForms(data.data.forms);
+                        renderNewsletters(data.data.newsletters);
+                        renderQuickLinks(data.data.quickLinks);
+                        renderLiveEvent(data.data.liveEvent);
+                    } else { throw new Error(data.error); }
+                })
+                .catch(error => {
+                    console.error('Resources Fetch Error:', error);
+                    if (document.getElementById('newsletters-content')) document.getElementById('newsletters-content').innerHTML = '<p class="text-red-500">Could not load newsletters.</p>';
+                    if (document.getElementById('quicklinks-content')) document.getElementById('quicklinks-content').innerHTML = '<p class="text-red-500">Could not load quick links.</p>';
                 });
         }
         
-        // --- TEMPLATE-BASED RENDERING ---
-        function renderDashboard(students) {
-            const container = document.getElementById('student-content-container');
-            container.innerHTML = '';
-            if (!students || students.length === 0) {
-                container.innerHTML = '<div class="bg-white p-6 rounded-lg shadow-sm"><p class="text-center text-slate-600">No students found.</p></div>';
+        function renderFAQ(faqItems) {
+            const container = document.getElementById('faq-content');
+            if (!container) return;
+            if (!faqItems || faqItems.length === 0) {
+                container.innerHTML = '<p class="text-slate-500">No FAQ items found.</p>';
                 return;
             }
+            container.innerHTML = faqItems.map(item => `
+                <div class="mb-4 py-2 border-b border-slate-200 last:border-b-0">
+                    <h4 class="font-bold text-slate-800">Q: ${item.question}</h4>
+                    <p class="text-slate-600 mt-1">A: ${item.answer}</p>
+                </div>
+            `).join('');
+        }
 
-            const studentTemplate = document.getElementById('student-card-template');
-            const teacherTemplate = document.getElementById('teacher-item-template');
-            const eventTemplate = document.getElementById('event-item-template');
+        function renderForms(forms) {
+            const container = document.getElementById('forms-content');
+            if (!container) return;
+            if (!forms || forms.length === 0) {
+                container.innerHTML = '<p class="text-slate-500">No forms found.</p>';
+                return;
+            }
+            container.innerHTML = `<ul class="space-y-4">` + forms.map(form => `
+                <li class="border-b border-slate-200 pb-3 last:border-b-0">
+                    <a href="${form.link}" target="_blank" class="text-teal-600 hover:underline font-semibold">${form.title}</a>
+                    <p class="text-sm text-slate-600 mt-1">${form.description}</p>
+                </li>
+            `).join('') + `</ul>`;
+        }
 
+        function renderNewsletters(newsletters) {
+            const container = document.getElementById('newsletters-content');
+            if (!container) return;
+
+            let listItems = '';
+            if (!newsletters || newsletters.length === 0) {
+                listItems = '<li><p class="text-slate-500">No newsletters found.</p></li>';
+            } else {
+                listItems = newsletters.map(n => 
+                    `<li class="border-b border-slate-200 pb-2 last:border-b-0"><a href="${n.link}" target="_blank" class="text-teal-600 hover:underline">${n.title}</a></li>`
+                ).join('');
+            }
+            container.innerHTML = `<ul class="space-y-3">${listItems}</ul>`;
+        }
+
+        function renderQuickLinks(links) {
+            const container = document.getElementById('quicklinks-content');
+            if (!container) return;
+
+            let listItems = '';
+            if (!links || links.length === 0) {
+                listItems = '<li><p class="text-slate-500">No links found.</p></li>';
+            } else {
+                listItems = links.map(l => 
+                    `<li class="border-b border-slate-200 pb-2 last:border-b-0"><a href="${l.link}" target="_blank" class="text-teal-600 hover:underline">${l.title}</a></li>`
+                ).join('');
+            }
+            container.innerHTML = `<ul class="space-y-3">${listItems}</ul>`;
+        }
+
+        function renderLiveEvent(liveEventData) {
+            const container = document.getElementById('live-event');
+            if (!container) return;
+            if (liveEventData && liveEventData.length > 0) {
+                const eventsHtml = liveEventData.map(liveEvent => {
+                    if (!liveEvent.link) return ''; 
+                    let embedUrl = '';
+                    if (liveEvent.link.includes('vimeo.com/event/') && liveEvent.link.includes('/embed')) {
+                        try {
+                            const url = new URL(liveEvent.link);
+                            url.searchParams.set('autoplay', '1');
+                            url.searchParams.set('title', '0');
+                            url.searchParams.set('byline', '0');
+                            url.searchParams.set('portrait', '0');
+                            embedUrl = url.toString();
+                        } catch (e) { embedUrl = liveEvent.link; }
+                    }
+                    if (embedUrl) {
+                        return `
+                            <div class="mb-8">
+                                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                                    <div style="padding:56.25% 0 0 0;position:relative;">
+                                        <iframe src="${embedUrl}" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" class="sm:rounded-t-lg"></iframe>
+                                    </div>
+                                    <div class="p-4 sm:p-6">
+                                         <h2 class="text-2xl sm:text-3xl font-bold text-slate-800">${liveEvent.title || 'Live School Event'}</h2>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    return '';
+                }).join('');
+                container.innerHTML = eventsHtml || `<h2 class="text-3xl font-bold text-slate-900 mb-6">Live Events</h2><div class="bg-white p-8 rounded-xl shadow-sm border text-center"><p class="text-red-600">No live/recorded event links available. Please check again later.</p></div>`;
+            } else {
+                container.innerHTML = `
+                    <h2 class="text-3xl font-bold text-slate-900 mb-6">Live Event</h2>
+                    <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center">
+                        <i class="ph-video-camera-slash text-6xl text-slate-400"></i>
+                        <p class="mt-4 text-slate-600">There are no live events currently scheduled.</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderDashboard(students) {
+            const contentContainer = document.getElementById('student-content-container');
+            contentContainer.innerHTML = ''; 
+            if (!students || students.length === 0) {
+                contentContainer.innerHTML = '<div class="bg-white p-6 rounded-lg shadow-sm"><p class="text-center text-slate-600">No students found for this parent account.</p></div>';
+                return;
+            }
             students.forEach(student => {
-                const studentCard = studentTemplate.content.cloneNode(true);
-                const studentInitials = student.studentName.split(" ").map(n=>n[0]).join("");
-
-                studentCard.querySelector('.student-photo').src = `https://placehold.co/100x100/E2E8F0/4A5568?text=${studentInitials}`;
-                studentCard.querySelector('.student-name').textContent = student.studentName;
-                studentCard.querySelector('.student-grade').textContent = `${decodeGrade(student.grade)} - Classroom ${student.classroom}`;
-                studentCard.querySelector('.report-absence-nav-btn').dataset.studentId = student.uniqueStudentId;
-                studentCard.querySelector('.view-handbook-btn').onclick = () => switchToTabAndSubTab('faq-forms', 'quicklinks-content');
-
-                const teachersList = studentCard.querySelector('.teachers-list');
-                teachersList.innerHTML = '';
-                if (student.teachers && student.teachers.length > 0) {
-                     student.teachers.forEach(teacher => {
-                        const teacherItem = teacherTemplate.content.cloneNode(true);
-                        teacherItem.querySelector('.teacher-photo').src = teacher.photoUrl;
-                        teacherItem.querySelector('.teacher-photo').alt = teacher.teacherName;
-                        teacherItem.querySelector('.teacher-name').textContent = teacher.teacherName;
-                        teacherItem.querySelector('.teacher-role').textContent = teacher.role;
-                        teacherItem.querySelector('.teacher-email').textContent = teacher.email;
-                        teacherItem.querySelector('.teacher-email').href = `mailto:${teacher.email}`;
-                        teachersList.appendChild(teacherItem);
-                    });
-                } else {
-                    teachersList.innerHTML = '<li><p class="text-slate-500 py-3">No teachers listed.</p></li>';
+                if (!student || !student.studentName) {
+                    contentContainer.innerHTML += `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg" role="alert"><p class="font-bold">Data Issue</p><p>An incomplete student record was found. Please check your 'Students' Google Sheet for any blank rows and delete them.</p></div>`;
+                    return;
                 }
-                
-                const eventsList = studentCard.querySelector('.events-list');
-                eventsList.innerHTML = '';
-                 if (student.events && student.events.length > 0) {
-                    const today = new Date(); today.setHours(0, 0, 0, 0);
-                    const upcomingEvents = student.events.filter(event => new Date(event.date) >= today);
-                    if (upcomingEvents.length > 0) {
-                        upcomingEvents.slice(0, 4).forEach(event => { // Show first 4
-                            eventsList.appendChild(createEventItem(event, eventTemplate));
-                        });
-                    } else {
-                         eventsList.innerHTML = '<li><p class="text-slate-500 py-3">No upcoming events.</p></li>';
+                let teachersHtml = '';
+                if (student.teachers && student.teachers.length > 0) {
+                    const visibleTeachers = student.teachers.slice(0, 3);
+                    const hiddenTeachers = student.teachers.slice(3);
+                    teachersHtml = visibleTeachers.map(t => `<li class="flex items-center justify-between py-3 border-b border-slate-100 last:border-b-0"><div class="flex items-center"><img class="h-10 w-10 rounded-full mr-4" src="${t.photoUrl}" alt="${t.teacherName}"><div><p class="font-semibold text-slate-800">${t.teacherName}</p><p class="text-sm text-slate-500">${t.role}</p></div></div><a href="mailto:${t.email}" class="text-teal-600 hover:underline text-sm font-medium">${t.email}</a></li>`).join('');
+                    if (hiddenTeachers.length > 0) {
+                        teachersHtml += `<div id="more-teachers-${student.uniqueStudentId}" class="hidden space-y-0">`;
+                        teachersHtml += hiddenTeachers.map(t => `<li class="flex items-center justify-between py-3 border-b border-slate-100 last:border-b-0"><div class="flex items-center"><img class="h-10 w-10 rounded-full mr-4" src="${t.photoUrl}" alt="${t.teacherName}"><div><p class="font-semibold text-slate-800">${t.teacherName}</p><p class="text-sm text-slate-500">${t.role}</p></div></div><a href="mailto:${t.email}" class="text-teal-600 hover:underline text-sm font-medium">${t.email}</a></li>`).join('');
+                        teachersHtml += `</div>`;
+                        teachersHtml += `<div class="pt-3"><button data-student-id="${student.uniqueStudentId}" class="show-more-teachers-btn text-teal-600 font-semibold w-full text-center hover:underline text-sm p-2">Show More</button></div>`;
                     }
                 } else {
-                    eventsList.innerHTML = '<li><p class="text-slate-500 py-3">No events found.</p></li>';
+                    teachersHtml = '<li><p class="text-slate-500 py-3">No teachers listed for this student.</p></li>';
                 }
-                
-                container.appendChild(studentCard);
+
+                let eventsHtml = '';
+                if (student.events && student.events.length > 0) {
+                    const today = new Date(); today.setHours(0, 0, 0, 0);
+                    const upcomingEvents = student.events.filter(event => new Date(event.date) >= today);
+                    const visibleEvents = upcomingEvents.slice(0, 4);
+                    const hiddenEvents = upcomingEvents.slice(4);
+                    eventsHtml = visibleEvents.map((event, index) => renderEventItem(event, student, index)).join('');
+                    if (hiddenEvents.length > 0) {
+                        eventsHtml += `<div id="more-events-${student.uniqueStudentId}" class="hidden space-y-4">` + hiddenEvents.map((event, index) => renderEventItem(event, student, index + 4)).join('') + `</div>`;
+                        eventsHtml += `<div class="border-t border-slate-100 pt-3 mt-3"><button data-student-id="${student.uniqueStudentId}" class="show-more-events-btn text-teal-600 font-semibold w-full text-center hover:underline text-sm p-2">Show More</button></div>`;
+                    }
+                } else {
+                    eventsHtml = '<li><p class="text-slate-500 py-3">No upcoming events for this student.</p></li>';
+                }
+
+                const studentInitials = student.studentName.split(" ").map(n=>n[0]).join("");
+                studentCard.innerHTML = `
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
+                    <div class="p-6 bg-white border-b border-slate-200">
+                        <div class="flex items-center">
+                            <img class="h-16 w-16 rounded-full" src="https://placehold.co/100x100/E2E8F0/4A5568?text=${studentInitials}" alt="Student Photo">
+                            <div class="ml-4">
+                                <h3 class="text-2xl font-bold text-slate-900">${student.studentName}</h3>
+                                <p class="text-slate-600">${decodeGrade(student.grade)} - Classroom ${student.classroom}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3">
+                        <div class="lg:col-span-2 p-6">
+                            <div class="mb-8">
+                                <h4 class="font-semibold text-lg text-slate-700 mb-3 flex items-center"><i class="ph-lightning text-xl mr-2 text-teal-500"></i> Quick Actions</h4>
+                                <div class="flex flex-wrap gap-3">
+                                    <button data-student-id="${student.uniqueStudentId}" class="report-absence-nav-btn inline-flex items-center bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors shadow-sm">
+                                        <i class="ph-calendar-x mr-2"></i> Report Absence/Tardy
+                                    </button>
+                                    <button onclick="switchToTabAndSubTab('faq-forms', 'quicklinks-content');" class="inline-flex items-center bg-white text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-100 transition-colors border border-slate-300 shadow-sm">
+                                        <i class="ph-book-open mr-2"></i> Student Handbook
+                                    </button>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg text-slate-700 mb-2 flex items-center"><i class="ph-chalkboard-teacher text-xl mr-2 text-teal-500"></i> Teachers</h4>
+                                <ul class="space-y-0">${teachersHtml}</ul>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-6 lg:border-l border-slate-200">
+                            <h4 class="font-semibold text-lg text-slate-700 mb-4 flex items-center"><i class="ph-calendar-check text-xl mr-2 text-teal-500"></i> Upcoming Events</h4>
+                            <ul class="space-y-4">${eventsHtml}</ul>
+                        </div>
+                    </div>
+                </div>`;
+                contentContainer.appendChild(studentCard);
             });
         }
 
-        function createEventItem(event, template) {
-            const eventItem = template.content.cloneNode(true);
-            eventItem.querySelector('.event-name').textContent = event.name;
-            eventItem.querySelector('.event-date').textContent = formatDate(event.date);
-
-            const volunteerInfo = eventItem.querySelector('.event-volunteers');
-            if (event.totalNeeded > 0) {
-                volunteerInfo.textContent = `Volunteers: ${event.totalSignedUp} of ${event.totalNeeded}`;
-                volunteerInfo.className = event.totalSignedUp >= event.totalNeeded ? 'text-xs font-semibold text-green-600' : 'text-xs font-semibold text-orange-600';
-            } else {
-                volunteerInfo.remove();
-            }
-
-            const buttonContainer = eventItem.querySelector('.flex-col');
-            if (event.totalNeeded > event.totalSignedUp) {
-                const volBtn = document.createElement('button');
-                volBtn.className = "volunteer-for-event-btn w-full text-sm bg-teal-100 text-teal-800 font-semibold py-1 px-3 rounded-lg hover:bg-teal-200 transition-colors";
-                volBtn.textContent = "Volunteer";
-                volBtn.dataset.eventId = event.id;
-                buttonContainer.appendChild(volBtn);
-            }
+        function renderEventItem(event, student, index) {
+            const volunteerStatusColor = event.totalSignedUp >= event.totalNeeded ? 'text-green-600' : 'text-orange-600';
+            const volunteerText = (event.totalNeeded > 0) ? `<p class="text-xs font-semibold ${volunteerStatusColor} mt-1">${event.totalSignedUp} of ${event.totalNeeded} Volunteers</p>` : '';
             
-            const calendarDiv = document.createElement('div');
-            calendarDiv.className = "relative inline-block text-left w-full";
-            calendarDiv.innerHTML = `<button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-md border border-slate-300 shadow-sm px-3 py-1 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${event.name}" data-event-date="${event.date}"><i class="ph-plus-circle mr-1"></i> Add</button><div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10"><div class="py-1"><a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">Google Calendar</a><a href="#" class="ical-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">iCal/Outlook</a></div></div>`;
-            buttonContainer.appendChild(calendarDiv);
+            const volunteerButtonHtml = (event.totalNeeded > event.totalSignedUp) 
+                ? `<button type="button" class="volunteer-for-event-btn w-full inline-flex items-center justify-center text-sm bg-teal-100 text-teal-800 font-semibold py-2 px-3 rounded-lg hover:bg-teal-200 transition-colors" data-event-id="${event.id}"><i class="ph-plus"></i> Volunteer</button>` 
+                : `<span class="w-full text-sm text-center inline-flex items-center justify-center bg-green-100 text-green-800 font-semibold py-2 px-3 rounded-lg"><i class="ph-check"></i> Full</span>`;
+
+            const calendarButtonHtml = `
+                <div class="relative inline-block text-left w-full">
+                    <button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-lg border border-slate-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${event.name}" data-event-date="${event.date}">
+                        <i class="ph-calendar-plus mr-2"></i> Add
+                    </button>
+                    <div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10">
+                        <div class="py-1">
+                            <a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100"><i class="ph-google-logo mr-2"></i> Google Calendar</a>
+                            <a href="#" class="ical-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100"><i class="ph-apple-logo mr-2"></i> iCal/Outlook</a>
+                        </div>
+                    </div>
+                </div>`;
             
-            return eventItem;
+            return `
+            <li class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
+                <div>
+                    <p class="font-semibold text-slate-800">${event.name}</p>
+                    <p class="text-sm text-slate-500">${formatDate(event.date)}</p>
+                    ${volunteerText}
+                </div>
+                <div class="mt-3 flex gap-2">
+                    ${(event.totalNeeded > 0) ? `<div class="flex-1">${volunteerButtonHtml}</div>` : ''}
+                    <div class="flex-1">${calendarButtonHtml}</div>
+                </div>
+            </li>`;
+        }
+        
+        function renderMobileMenu() {
+            const desktopNav = document.getElementById('main-nav');
+            const mobileNavContainer = document.getElementById('main-nav-mobile');
+            mobileNavContainer.innerHTML = "";
+            desktopNav.querySelectorAll('.tab-btn').forEach(button => {
+                const newBtn = button.cloneNode(true);
+                newBtn.classList.remove('py-4', 'px-5', 'text-sm');
+                newBtn.classList.add('block', 'px-3', 'py-2', 'rounded-md', 'text-base', 'font-medium');
+                mobileNavContainer.appendChild(newBtn);
+            });
         }
 
         function renderActionsTab(students) {
-            // This function is simple enough to use innerHTML without templates
             const container = document.getElementById('actions-content-container');
             if (!students || students.length === 0) {
                 container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><p>No students found.</p></div>`;
                 return;
             }
-            // ... (The rest of the function remains the same as before)
-             const studentOptions = students.map(s => `<option value="${s.uniqueStudentId}">${s.studentName}</option>`).join('');
-            const absenceFormHtml = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl mx-auto"><h3 class="font-semibold text-lg text-slate-800 mb-4">Report Absence or Tardy</h3><div class="space-y-5"><div class="mb-4"><label class="block text-sm font-medium text-slate-700">Student</label><select id="student-select" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500">${studentOptions}</select></div><div><fieldset><legend class="text-sm font-medium text-slate-700">Report Type</legend><div class="mt-2 flex space-x-4"><label class="inline-flex items-center"><input type="radio" class="form-radio text-teal-600 focus:ring-teal-500" name="report-type" value="absent" checked> <span class="ml-2">Absence</span></label><label class="inline-flex items-center"><input type="radio" class="form-radio text-teal-600 focus:ring-teal-500" name="report-type" value="tardy"> <span class="ml-2">Tardy</span></label></div></fieldset></div><div id="absence-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="absence-start" class="block text-sm font-medium text-slate-700">Absence Start Date</label><input type="date" id="absence-start" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="absence-end" class="block text-sm font-medium text-slate-700">Absence End Date</label><input type="date" id="absence-end" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div></div><div id="tardy-fields" class="hidden grid-cols-1 md:grid-cols-2 gap-4"><div><label for="tardy-start-time" class="block text-sm font-medium text-slate-700">Expected Arrival</label><input type="time" id="tardy-start-time" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="tardy-end-time" class="block text-sm font-medium text-slate-700"> Date</label><input type="date" id="tardy-end-time" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div></div><div><label for="absence-reason" class="block text-sm font-medium text-slate-700">Reason</label><select id="absence-reason" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"><option>Sick</option><option>Travel</option><option>Appointment</option><option>Other</option></select></div><div id="other-reason-container" class="hidden"><label for="other-reason-text" class="block text-sm font-medium text-slate-700">Please specify:</label><textarea id="other-reason-text" rows="2" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></textarea></div><div><label for="absence-comments" class="block text-sm font-medium text-slate-700">Optional Comments</label><textarea id="absence-comments" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></textarea></div><div class="border-t border-slate-200 pt-5"><button id="send-notification-btn" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Send Notification</button></div></div></div>`;
-            container.innerHTML = absenceFormHtml;
-        }
-        
-        function renderVolunteeringTab() {
-            // This function sets up the static parts of the volunteering tab
-            const container = document.getElementById('volunteering-content-container');
-            container.innerHTML = `<div class="mb-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                        <h3 class="text-lg font-semibold text-slate-800 mb-2">Volunteering Objectives & Rules</h3>
-                        <p class="text-slate-600 text-sm">Our parent volunteer program is essential to the success of our school community...</p>
-                    </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div>
-                                <label for="filter-semester" class="block text-sm font-medium text-slate-700">Semester</label>
-                                <select id="filter-semester" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"><option value="all">All</option><option value="1">Semester 1</option><option value="2">Semester 2</option></select>
-                            </div>
-                            <div>
-                                <label for="filter-event" class="block text-sm font-medium text-slate-700">Filter by Event</label>
-                                <select id="filter-event" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"><option value="all">All Events</option></select>
-                            </div>
-                            <div>
-                                <label for="filter-time" class="block text-sm font-medium text-slate-700">Time of Day</label>
-                                <select id="filter-time" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"><option>All</option><option>Morning</option><option>Afternoon</option><option>Evening</option><option>All Day</option></select>
-                            </div>
-                            <div>
-                                <label for="filter-hours" class="block text-sm font-medium text-slate-700">Max Hours</label>
-                                <select id="filter-hours" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"><option value="99">Any</option><option value="2">Up to 2</option><option value="4">Up to 4</option><option value="8">Up to 8</option></select>
-                            </div>
-                            <div>
-                                <label for="filter-location" class="block text-sm font-medium text-slate-700">Location</label>
-                                <select id="filter-location" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"><option>All</option><option>On-Campus</option><option>Remote</option></select>
-                            </div>
-                            <div>
-                                <label for="filter-sort" class="block text-sm font-medium text-slate-700">Sort By</label>
-                                <select id="filter-sort" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm"><option value="default">Default</option><option value="recent">Recently Added</option></select>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="volunteering-list" class="space-y-6"><p>Loading...</p></div>`;
+            const studentOptions = students.map(s => `<option value="${s.uniqueStudentId}">${s.studentName}</option>`).join('');
+            const absenceFormHtml = `<form id="absence-form"><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl mx-auto"><h3 class="font-semibold text-lg text-slate-800 mb-4">Report Absence or Tardy</h3><div class="space-y-5"><div class="mb-4"><label class="block text-sm font-medium text-slate-700">Student</label><select id="student-select" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500">${studentOptions}</select></div><div><fieldset><legend class="text-sm font-medium text-slate-700">Report Type</legend><div class="mt-2 flex space-x-4"><label class="inline-flex items-center"><input type="radio" class="form-radio text-teal-600 focus:ring-teal-500" name="report-type" value="absent" checked> <span class="ml-2">Absence</span></label><label class="inline-flex items-center"><input type="radio" class="form-radio text-teal-600 focus:ring-teal-500" name="report-type" value="tardy"> <span class="ml-2">Tardy</span></label></div></fieldset></div><div id="absence-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="absence-start" class="block text-sm font-medium text-slate-700">Absence Start Date</label><input type="date" id="absence-start" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="absence-end" class="block text-sm font-medium text-slate-700">Absence End Date</label><input type="date" id="absence-end" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div></div><div id="tardy-fields" class="hidden grid-cols-1 md:grid-cols-2 gap-4"><div><label for="tardy-start-time" class="block text-sm font-medium text-slate-700">Expected Arrival</label><input type="time" id="tardy-start-time" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="tardy-end-time" class="block text-sm font-medium text-slate-700"> Date</label><input type="date" id="tardy-end-time" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div></div><div><label for="absence-reason" class="block text-sm font-medium text-slate-700">Reason</label><select id="absence-reason" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"><option>Sick</option><option>Travel</option><option>Appointment</option><option>Other</option></select></div><div id="other-reason-container" class="hidden"><label for="other-reason-text" class="block text-sm font-medium text-slate-700">Please specify:</label><textarea id="other-reason-text" rows="2" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></textarea></div><div><label for="absence-comments" class="block text-sm font-medium text-slate-700">Optional Comments</label><textarea id="absence-comments" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></textarea></div><div class="border-t border-slate-200 pt-5"><button id="send-notification-btn" type="submit" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Send Notification</button></div></div></div></form>`;
+            const eligibleStudents = students.filter(s => ['K', '0', '1', '2', '3', '4', '5', '6', '7', '8'].includes(String(s.grade)));
+            let pickupFormHtml = '';
+            if (eligibleStudents.length > 0) {
+                const studentCheckboxes = eligibleStudents.map(s => `<label class="inline-flex items-center"><input type="checkbox" class="form-checkbox h-5 w-5 rounded border-slate-300 text-teal-600 focus:ring-teal-500 pickup-student-checkbox" value="${s.uniqueStudentId}"><span class="ml-2 text-slate-700">${s.studentName} (${decodeGrade(s.grade)})</span></label>`).join('');
+                pickupFormHtml = `<form id="pickup-form"><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl mx-auto"><h3 class="font-semibold text-lg text-slate-800 mb-2">One-Time Authorized Pickup</h3><p class="text-sm text-slate-500 mb-4">For students in KG to 8th Grade only. Please notify the office for any permanent changes.</p><div class="space-y-5"><div><label class="block text-sm font-medium text-slate-700">Select Student(s)</label><div class="mt-2 space-y-2">${studentCheckboxes}</div></div><div><label for="pickup-name" class="block text-sm font-medium text-slate-700">Authorized Person's Full Name (must match ID)</label><input type="text" id="pickup-name" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="pickup-relationship" class="block text-sm font-medium text-slate-700">Relationship to Student(s)</label><input type="text" id="pickup-relationship" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="pickup-email" class="block text-sm font-medium text-slate-700">Authorized Person's Email (Optional)</label><input type="email" id="pickup-email" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="pickup-date" class="block text-sm font-medium text-slate-700">Pickup Date</label><input type="date" id="pickup-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="pickup-reason" class="block text-sm font-medium text-slate-700">Reason / Comment (Optional)</label><textarea id="pickup-reason" rows="2" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></textarea></div><div class="border-t border-slate-200 pt-5"><button id="send-pickup-btn" type="submit" class="w-full sm:w-auto inline-flex justify-center items-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Send Pickup Notification</button></div></div></div></form>`;
+            }
+            container.innerHTML = absenceFormHtml + pickupFormHtml;
         }
 
+        function renderVolunteering(opportunities) {
+            const list = document.getElementById('volunteering-list');
+            list.innerHTML = '';
+            if (!opportunities || opportunities.length === 0) {
+                list.innerHTML = '<div class="text-center text-slate-500 bg-white p-6 rounded-lg shadow-sm border border-slate-200">No volunteering opportunities match your current filters.</div>';
+                return;
+            }
+            const groupedByEvent = opportunities.reduce((acc, opp) => {
+                const eventName = portalData.allEvents.find(e => e.id === opp.eventid)?.name || 'General Opportunities';
+                if (!acc[eventName]) { acc[eventName] = []; }
+                acc[eventName].push(opp);
+                return acc;
+            }, {});
+            Object.keys(groupedByEvent).forEach((eventName, index) => {
+                const opportunitiesInEvent = groupedByEvent[eventName];
+                const groupedByTitle = opportunitiesInEvent.reduce((acc, opp) => {
+                    const key = opp.title;
+                    if (!acc[key]) { acc[key] = { ...opp, timeSlots: [] }; }
+                    acc[key].timeSlots.push(opp);
+                    return acc;
+                }, {});
+                const eventContentHtml = Object.values(groupedByTitle).map(group => {
+                    const timeSlotsHtml = group.timeSlots.map(slot => `<div class="flex justify-between items-center border-t border-slate-100 py-3"><div class="pr-4"><p class="font-semibold text-slate-800">${slot.time}</p><p class="text-sm text-slate-500">${slot.signedUp} of ${slot.needed} spots filled</p></div><button data-id="${slot.id}" class="signup-btn inline-flex items-center justify-center bg-teal-100 text-teal-800 font-bold py-2 px-4 rounded-lg hover:bg-teal-200 transition duration-300 text-sm flex-shrink-0 disabled:opacity-50" ${slot.signedUp >= slot.needed ? 'disabled' : ''}>${slot.signedUp >= slot.needed ? 'Full' : 'Sign Up'}</button></div>`).join('');
+                    return `<div class="px-6 py-4 border-t border-slate-200"><h4 class="text-lg font-bold text-slate-800">${group.title}</h4><p class="mt-1 text-sm text-slate-600">${group.description}</p><div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500"><span class="flex items-center"><i class="ph-calendar-blank mr-1"></i> ${formatDate(group.date)}</span><span class="flex items-center"><i class="ph-map-pin mr-1"></i> ${group.location}</span><span class="flex items-center"><i class="ph-star mr-1"></i> Semester: ${group.semester}</span></div><div class="mt-3"><h5 class="font-semibold text-slate-700 mb-1 text-sm">Available Time Slots:</h5><div class="space-y-1">${timeSlotsHtml}</div></div></div>`;
+                }).join('');
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-xl shadow-sm border border-slate-200';
+                card.innerHTML = `<div class="p-4 cursor-pointer flex justify-between items-center volunteer-card-header" data-target="event-group-${index}"><h3 class="text-xl font-bold text-slate-900">${eventName}</h3><i class="ph-caret-down text-2xl transition-transform"></i></div><div id="event-group-${index}" class="hidden">${eventContentHtml}</div>`;
+                list.appendChild(card);
+            });
+        }
+        
         function applyAndRenderFilters() {
-             // This function's logic remains the same, it just calls the new renderVolunteeringList
-            if (!portalData.volunteering || !document.getElementById('filter-time')) return;
+            if (!portalData.volunteering || !document.getElementById('filter-time')) {
+                if(portalData.volunteering) renderVolunteering(portalData.volunteering);
+                return;
+            }
             const signedUpOppIds = portalData.mySignups.filter(signup => signup.status !== 'Withdrawn').map(signup => signup.opportunityId);
             let filteredOpportunities = [...portalData.volunteering];
             const today = new Date();
             today.setHours(0, 0, 0, 0);
             filteredOpportunities = filteredOpportunities.filter(opp => new Date(opp.date) >= today);
-
             const eventFilterValue = document.getElementById('filter-event').value;
             const semesterFilter = document.getElementById('filter-semester').value;
             const timeFilter = document.getElementById('filter-time').value;
@@ -517,48 +842,425 @@
             if (locationFilter !== 'All') filteredOpportunities = filteredOpportunities.filter(opp => opp.locationType === locationFilter);
             filteredOpportunities = filteredOpportunities.filter(opp => !signedUpOppIds.includes(opp.id));
             if (sortFilter === 'recent') filteredOpportunities.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-            
-            renderVolunteeringList(filteredOpportunities);
+            renderVolunteering(filteredOpportunities);
         }
 
-        function renderVolunteeringList(opportunities) {
-            // Renders the dynamic list of opportunities
-            const listContainer = document.getElementById('volunteering-list');
-            listContainer.innerHTML = '';
-             if (opportunities.length === 0) {
-                listContainer.innerHTML = '<div class="text-center text-slate-500 bg-white p-6 rounded-lg shadow-sm border">No opportunities match your filters.</div>';
-                return;
+        function populateEventFilter(events) {
+            const eventFilter = document.getElementById('filter-event');
+            if (!eventFilter || !events) return;
+            const uniqueEvents = new Map();
+            events.forEach(event => { if (event.id && !uniqueEvents.has(event.id)) uniqueEvents.set(event.id, event.name); });
+            while (eventFilter.options.length > 1) eventFilter.remove(1);
+            uniqueEvents.forEach((name, id) => {
+                const option = document.createElement('option');
+                option.value = id;
+                option.textContent = name;
+                eventFilter.appendChild(option);
+            });
+        }
+        
+        function renderMySignups(progress) {
+            const container = document.getElementById('my-signups-content');
+            const selfReportFormHtml = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8"><h3 class="text-xl font-semibold text-slate-800 mb-2">Self-Report Off-Portal Hours</h3><p class="text-sm text-slate-600 mb-4">Did you volunteer for a task not listed in the portal (e.g., driving for a field trip, at-home prep)? Please submit the details below for approval.</p><form id="self-report-form" class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="report-date" class="block text-sm font-medium text-slate-700">Date of Activity</label><input type="date" id="report-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></div><div><label for="report-duration" class="block text-sm font-medium text-slate-700">Duration</label><select id="report-duration" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required><option value="CUST-30M">30 Minutes</option><option value="CUST-1H">1 Hour</option><option value="CUST-2H">2 Hours</option><option value="CUST-3H">3 Hours</option><option value="CUST-4H">4 Hours</option><option value="CUST-5H">5 Hours</option><option value="CUST-6H">6 Hours</option><option value="CUST-7H">7 Hours</option><option value="CUST-8H">8 Hours</option></select></div></div><div><label for="report-description" class="block text-sm font-medium text-slate-700">Brief Description of Activity and Who Can Verify It</label><textarea id="report-description" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></textarea></div><button type="submit" id="self-report-btn" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Submit for Approval</button></form></div>`;
+            const progressBarsHtml = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8"><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h3 class="text-lg font-semibold text-slate-800">Semester 1 Progress</h3><div class="mt-4"><div class="flex justify-between mb-1"><span class="text-base font-medium text-teal-700">Completed Hours</span><span class="text-sm font-medium text-teal-700" id="progress-text-s1"></span></div><div class="w-full bg-slate-200 rounded-full h-5 relative overflow-hidden"><div id="progress-bar-s1-inprogress" class="bg-orange-400 h-5 rounded-full" style="width: 0%"></div><div id="progress-bar-s1-completed" class="bg-teal-600 h-5 rounded-full absolute top-0 left-0" style="width: 0%"></div></div><div class="flex justify-between text-xs text-slate-500 mt-2"><span id="in-progress-text-s1"></span><span id="penalty-text-s1" class="text-red-600 font-semibold"></span></div></div></div><div><h3 class="text-lg font-semibold text-slate-800">Semester 2 Progress</h3><div class="mt-4"><div class="flex justify-between mb-1"><span class="text-base font-medium text-teal-700">Completed Hours</span><span class="text-sm font-medium text-teal-700" id="progress-text-s2"></span></div><div class="w-full bg-slate-200 rounded-full h-5 relative overflow-hidden"><div id="progress-bar-s2-inprogress" class="bg-orange-400 h-5 rounded-full" style="width: 0%"></div><div id="progress-bar-s2-completed" class="bg-teal-600 h-5 rounded-full absolute top-0 left-0" style="width: 0%"></div></div><div class="flex justify-between text-xs text-slate-500 mt-2"><span id="in-progress-text-s2"></span><span id="penalty-text-s2" class="text-red-600 font-semibold"></span></div></div></div></div></div>`;
+            const signupListsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h3 class="text-xl font-semibold text-slate-700 mb-2">Upcoming Signups</h3><p class="text-sm text-slate-600 mb-4">You may withdraw up to 3 weeks (21 days) before the event.</p><div id="upcoming-signups-list" class="space-y-4"></div></div><div><h3 class="text-xl font-semibold text-slate-700 mb-4">Completed & Past Signups</h3><div id="completed-signups-list" class="space-y-4"></div></div></div>`;
+            container.innerHTML = selfReportFormHtml + progressBarsHtml + signupListsHtml;
+
+            if (progress) {
+                const s1 = progress.semester1;
+                const s1_req = s1.totalRequired || 1;
+                const s1_completed_p = s1_req > 0 ? (s1.completed / s1_req) * 100 : 0;
+                const s1_inprogress_p = s1_req > 0 ? (s1.inProgress / s1_req) * 100 : 0;
+                document.getElementById('progress-bar-s1-completed').style.width = `${Math.min(s1_completed_p, 100)}%`;
+                document.getElementById('progress-bar-s1-inprogress').style.width = `${Math.min(s1_completed_p + s1_inprogress_p, 100)}%`;
+                document.getElementById('progress-text-s1').textContent = `${s1.completed} of ${s1.baseRequired} hours`;
+                document.getElementById('in-progress-text-s1').textContent = `${s1.inProgress || 0} hours in progress`;
+                document.getElementById('penalty-text-s1').textContent = s1.penalty > 0 ? `+ ${s1.penalty} penalty hours` : '';
+                const s2 = progress.semester2;
+                const s2_req = s2.totalRequired || 1;
+                const s2_completed_p = s2_req > 0 ? (s2.completed / s2_req) * 100 : 0;
+                const s2_inprogress_p = s2_req > 0 ? (s2.inProgress / s2_req) * 100 : 0;
+                document.getElementById('progress-bar-s2-completed').style.width = `${Math.min(s2_completed_p, 100)}%`;
+                document.getElementById('progress-bar-s2-inprogress').style.width = `${Math.min(s2_completed_p + s2_inprogress_p, 100)}%`;
+                document.getElementById('progress-text-s2').textContent = `${s2.completed} of ${s2.baseRequired} hours`;
+                document.getElementById('in-progress-text-s2').textContent = `${s2.inProgress || 0} hours in progress`;
+                document.getElementById('penalty-text-s2').textContent = s2.penalty > 0 ? `+ ${s2.penalty} penalty hours` : '';
             }
-            // ... Full implementation using templates to create the accordion cards
         }
-        
-        // ... ALL other original functions (renderMySignups, populateEventFilter, etc.) would be included here, fully implemented.
-        // ... The addEventListeners function would contain ALL original listeners, but with alerts replaced by toasts.
-        
-        // --- GOOGLE SIGN-IN & INITIALIZATION ---
-        function handleCredentialResponse(response) {
-            ID_TOKEN = response.credential;
-            const profile = JSON.parse(atob(ID_TOKEN.split('.')[1]));
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('portal-container').classList.remove('hidden');
+       /* function renderMySignupsList(signups) {
+            const upcomingList = document.getElementById('upcoming-signups-list');
+            const completedList = document.getElementById('completed-signups-list');
+            upcomingList.innerHTML = '';
+            completedList.innerHTML = '';
+            const upcomingSignups = signups.filter(s => s.status === 'In Progress' || s.status === 'Pending Approval');
+            const pastSignups = signups.filter(s => s.status === 'Completed' || s.status === 'Penalty' || s.status === 'Withdrawn');
 
-            showToast(`Welcome, ${profile.given_name}!`, 'success');
+            if (upcomingSignups.length === 0) upcomingList.innerHTML = '<div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 text-slate-500">No upcoming volunteer signups.</div>';
+            else {
+                upcomingSignups.forEach((signup, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'bg-white p-5 rounded-lg shadow-sm border border-slate-200';
+                    const eventDate = new Date(signup.date);
+                    const daysUntilEvent = (eventDate - new Date()) / (1000 * 60 * 60 * 24);
+                    
+                    let actionButtonsHtml = '';
+                    if (signup.status === 'Pending Approval') {
+                        actionButtonsHtml = `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">Pending Approval</span>`;
+                    } else {
+                        const withdrawButtonHtml = daysUntilEvent > 21 ? `<button data-signup-id="${signup.signupId}" class="withdraw-btn w-full text-sm bg-red-100 text-red-800 font-semibold py-2 px-4 rounded-lg hover:bg-red-200 transition">Withdraw</button>` : `<button class="w-full text-sm bg-slate-200 text-slate-500 font-semibold py-2 px-4 rounded-lg cursor-not-allowed" disabled>Withdrawal ended</button>`;
+                        const qrButtonHtml = `<button data-signup-id="${signup.signupId}" class="show-qr-btn w-full text-sm bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition">Show Check-in Code</button>`;
+                        const calendarButtonHtml = `<div class="relative"><button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-md border border-slate-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${signup.title}" data-event-date="${signup.date}"><i class="ph-plus-circle mr-2"></i> Add to Calendar</button><div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10"><div class="py-1"><a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">Google Calendar</a><a href="#" class="ical-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">iCal/Outlook</a></div></div></div>`;
+                        actionButtonsHtml = `<div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0 flex flex-col space-y-2 w-full sm:w-48">${qrButtonHtml}${calendarButtonHtml}${withdrawButtonHtml}</div>`;
+                    }
+                    
+                    item.innerHTML = `<div class="flex flex-col sm:flex-row justify-between"><div class="flex-grow"><h4 class="text-lg font-bold text-slate-900">${signup.title}</h4><div class="mt-2 space-y-1"><div class="flex items-center text-sm text-slate-500"><i class="ph-info mr-2"></i><p>${signup.description || 'No description provided.'}</p></div><div class="flex items-center text-sm text-slate-500"><i class="ph-calendar-blank mr-2"></i><p>${formatDate(signup.date)} at ${signup.time}</p></div><div class="flex items-center text-sm text-slate-500"><i class="ph-map-pin mr-2"></i><p>${signup.location}</p></div></div></div>${actionButtonsHtml}</div>`;
+                    upcomingList.appendChild(item);
+                });
+            }
 
-            const userInfoHtml = `<div class="flex items-center"><img class="h-8 w-8 rounded-full" src="${profile.picture}" alt=""><div class="ml-3"><div class="text-base font-medium text-slate-800">${profile.name}</div><div class="text-sm font-medium text-slate-500">${profile.email}</div></div></div>`;
-            document.getElementById('user-info-desktop').innerHTML = userInfoHtml;
-            document.getElementById('user-info-mobile').innerHTML = userInfoHtml;
+            if (pastSignups.length === 0) completedList.innerHTML = '<div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 text-slate-500">No completed or past signups.</div>';
+            else {
+                pastSignups.forEach(signup => {
+                    const item = document.createElement('div');
+                    item.className = 'bg-white p-4 rounded-lg shadow-sm border border-slate-200';
+                    const statusColor = signup.status === 'Completed' ? 'text-green-700 bg-green-100' : signup.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
+                    item.innerHTML = `<div class="flex flex-col sm:flex-row justify-between"><div><h4 class="text-md font-bold text-slate-900">${signup.title}</h4><p class="mt-1 text-sm text-slate-600">${signup.description || ''}</p><div class="mt-2 text-sm text-slate-500"><p><i class="ph-calendar-blank mr-1"></i> ${formatDate(signup.date)} at ${signup.time}</p></div></div><div class="mt-3 sm:mt-0 sm:ml-6 flex-shrink-0 text-left sm:text-right"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">${signup.status}</span></div></div>`;
+                    completedList.appendChild(item);
+                });
+            }
+        }
+*/
+
+
+        function renderMySignupsList(signups) {
+            const upcomingList = document.getElementById('upcoming-signups-list');
+            const completedList = document.getElementById('completed-signups-list');
+            upcomingList.innerHTML = '';
+            completedList.innerHTML = '';
+            const upcomingSignups = signups.filter(s => s.status === 'In Progress' || s.status === 'Pending Approval');
+            const pastSignups = signups.filter(s => s.status === 'Completed' || s.status === 'Penalty' || s.status === 'Withdrawn');
+
+            if (upcomingSignups.length === 0) upcomingList.innerHTML = '<div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 text-slate-500">No upcoming volunteer signups.</div>';
+            else {
+                upcomingSignups.forEach((signup, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'bg-white p-5 rounded-lg shadow-sm border border-slate-200';
+                    const eventDate = new Date(signup.date);
+                    const daysUntilEvent = (eventDate - new Date()) / (1000 * 60 * 60 * 24);
+                    const today = new Date();
+                    today.setHours(0,0,0,0);
+                    
+                    let actionButtonsHtml = '';
+                    if (signup.status === 'Pending Approval') {
+                        actionButtonsHtml = `
+                        <div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0 w-full sm:w-56">
+                            <span class="inline-flex items-center justify-center w-full px-3 py-1.5 rounded-lg text-sm font-medium bg-yellow-100 text-yellow-800">
+                                <i class="ph-clock-countdown mr-2"></i> Pending Approval
+                            </span>
+                        </div>`;
+                    } else {
+                        const withdrawButtonHtml = daysUntilEvent > 21 
+                            ? `<button data-signup-id="${signup.signupId}" class="withdraw-btn w-full inline-flex items-center justify-center text-sm bg-red-100 text-red-800 font-semibold py-2 px-3 rounded-lg hover:bg-red-200 transition"><i class="ph-trash mr-1.5"></i> Withdraw</button>` 
+                            : `<button class="w-full inline-flex items-center justify-center text-sm bg-slate-200 text-slate-500 font-semibold py-2 px-3 rounded-lg cursor-not-allowed" disabled><i class="ph-x-circle mr-1.5"></i> Withdrawal ended</button>`;
+
+                        let qrButtonHtml = '';
+                        if (eventDate <= today) {
+                            qrButtonHtml = `<button data-signup-id="${signup.signupId}" class="show-qr-btn w-full inline-flex items-center justify-center text-sm bg-slate-800 text-white font-semibold py-2 px-3 rounded-lg hover:bg-slate-700 transition"><i class="ph-qr-code mr-1.5"></i> Check-in Code</button>`;
+                        } else {
+                            qrButtonHtml = `<button class="w-full inline-flex items-center justify-center text-sm bg-slate-200 text-slate-500 font-semibold py-2 px-3 rounded-lg cursor-not-allowed" disabled><i class="ph-timer mr-1.5"></i> Code not yet available</button>`;
+                        }
+                        
+                        const calendarButtonHtml = `
+                        <div class="relative w-full">
+                            <button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-lg border border-slate-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${signup.title}" data-event-date="${signup.date}">
+                                <i class="ph-calendar-plus mr-2"></i> Add to Calendar
+                            </button>
+                            <div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10">
+                                <div class="py-1">
+                                    <a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100"><i class="ph-google-logo mr-2"></i> Google Calendar</a>
+                                    <a href="#" class="ical-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100"><i class="ph-apple-logo mr-2"></i> iCal/Outlook</a>
+                                </div>
+                            </div>
+                        </div>`;
+                        
+                        actionButtonsHtml = `
+                        <div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0 w-full sm:w-56">
+                            <div class="grid grid-cols-1 gap-2">
+                                ${qrButtonHtml}
+                                ${calendarButtonHtml}
+                                ${withdrawButtonHtml}
+                            </div>
+                        </div>`;
+                    }
+                    
+                    item.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between">
+                        <div class="flex-grow pr-4">
+                            <h4 class="text-lg font-bold text-slate-900">${signup.title}</h4>
+                            <div class="mt-2 space-y-2">
+                                <div class="flex items-start text-sm text-slate-600">
+                                    <i class="ph-info mr-2 text-slate-400 flex-shrink-0 mt-0.5"></i>
+                                    <p>${signup.description || 'No description provided.'}</p>
+                                </div>
+                                <div class="flex items-center text-sm text-slate-600">
+                                    <i class="ph-calendar-blank mr-2 text-slate-400"></i>
+                                    <p class="font-medium">${formatDate(signup.date)} at ${signup.time}</p>
+                                </div>
+                                <div class="flex items-center text-sm text-slate-600">
+                                    <i class="ph-map-pin mr-2 text-slate-400"></i>
+                                    <p>${signup.location}</p>
+                                </div>
+                            </div>
+                        </div>
+                        ${actionButtonsHtml}
+                    </div>`;
+                    upcomingList.appendChild(item);
+                });
+            }
+
+            if (pastSignups.length === 0) completedList.innerHTML = '<div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 text-slate-500">No completed or past signups.</div>';
+            else {
+                pastSignups.forEach(signup => {
+                    const item = document.createElement('div');
+                    item.className = 'bg-white p-4 rounded-lg shadow-sm border border-slate-200';
+                    const statusColor = signup.status === 'Completed' ? 'text-green-700 bg-green-100' : signup.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
+                    
+                    let statusIcon = 'ph-check-circle';
+                    if (signup.status === 'Penalty') statusIcon = 'ph-warning-circle';
+                    if (signup.status === 'Withdrawn') statusIcon = 'ph-arrow-u-left-up';
+
+                    item.innerHTML = `
+                    <div class="flex flex-col sm:flex-row justify-between">
+                        <div class="flex-grow">
+                            <h4 class="text-md font-bold text-slate-900">${signup.title}</h4>
+                            <p class="mt-1 text-sm text-slate-600">${signup.description || ''}</p>
+                            <div class="mt-2 text-sm text-slate-500">
+                                <p><i class="ph-calendar-blank mr-1"></i> ${formatDate(signup.date)} at ${signup.time}</p>
+                            </div>
+                        </div>
+                        <div class="mt-3 sm:mt-0 sm:ml-6 flex-shrink-0 flex items-center">
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">
+                                <i class="mr-1.5 ${statusIcon}"></i> ${signup.status}
+                            </span>
+                        </div>
+                    </div>`;
+                    completedList.appendChild(item);
+                });
+            }
+        }
+
             
-            fetchData(ID_TOKEN);
-            // fetchAndRenderResources(); // Also call this
-            addEventListeners();
-        }
-        
-        function signOut() {
-            google.accounts.id.disableAutoSelect();
-            window.location.reload();
+        // --- EVENT LISTENERS ---
+       function addEventListeners() {
+
+            document.body.addEventListener('click', function(event) {
+                const target = event.target;
+                const button = target.closest('button');
+
+                if (button && button.matches('.withdraw-btn')) {
+                    if (!confirm('Are you sure you want to withdraw from this event?')) return;
+                    const signupId = button.dataset.signupId;
+                    button.textContent = 'Withdrawing...';
+                    button.disabled = true;
+                    fetch(WEB_APP_URL, {
+                        method: 'POST', mode: 'no-cors',
+                        body: JSON.stringify({ action: 'withdraw', signupId: signupId, token: ID_TOKEN }),
+                        headers: {'Content-Type': 'application/json'}
+                    }).then(() => {
+                        alert('Withdrawal successful! The portal will now refresh.');
+                        fetchData(ID_TOKEN); 
+                    }).catch(error => {
+                        console.error('Withdrawal Error:', error);
+                        alert(`An error occurred during withdrawal: Load failed`);
+                        button.textContent = 'Withdraw';
+                        button.disabled = false;
+                    });
+                }
+
+                if (button && button.matches('.add-to-calendar-btn')) {
+                    event.stopPropagation();
+                    const dropdown = button.closest('.relative').querySelector('.event-dropdown');
+                    if (dropdown) {
+                        document.querySelectorAll('.event-dropdown').forEach(d => { if (d !== dropdown) d.classList.add('hidden'); });
+                        const eventData = { name: button.dataset.eventName, date: button.dataset.eventDate };
+                        const googleLink = dropdown.querySelector('.google-cal-link');
+                        const iCalLink = dropdown.querySelector('.ical-link');
+                        googleLink.href = generateGoogleCalendarLink(eventData); googleLink.target = "_blank";
+                        iCalLink.href = generateICalLink(eventData); iCalLink.download = `${eventData.name}.ics`;
+                        dropdown.classList.toggle('hidden');
+                    }
+                } else if (!target.closest('.event-dropdown')) {
+                    document.querySelectorAll('.event-dropdown').forEach(dropdown => dropdown.classList.add('hidden'));
+                }
+
+                if (button && button.matches('.report-absence-nav-btn')) {
+                    const studentId = button.dataset.studentId;
+                    switchToTab('actions');
+                    document.getElementById('student-select').value = studentId;
+                }
+
+                if (button && button.matches('.signup-btn')) {
+                    const opportunityId = button.dataset.id;
+                    button.textContent = 'Signing up...';
+                    button.disabled = true;
+                    fetch(WEB_APP_URL, {
+                        method: 'POST', mode: 'no-cors',
+                        body: JSON.stringify({ action: 'signup', opportunityId: opportunityId, token: ID_TOKEN }),
+                        headers: {'Content-Type': 'application/json'}
+                    }).then(() => {
+                       alert('Signup successful! The portal will now refresh.');
+                       fetchData(ID_TOKEN); 
+                    }).catch(error => {
+                        console.error('Signup Error:', error);
+                        alert(`An error occurred during signup: Load failed`);
+                        button.textContent = 'Sign Up';
+                        button.disabled = false;
+                    });
+                }
+
+                if (button && button.matches('.show-qr-btn')) {
+                    const signupId = button.dataset.signupId;
+                    const qrCodeContainer = document.getElementById('qrcode');
+                    qrCodeContainer.innerHTML = '';
+                    const checkinUrl = `https://approve.svaportal.com/?signupId=${signupId}`;
+                    const qr = qrcode(0, 'M'); qr.addData(checkinUrl); qr.make();
+                    qrCodeContainer.innerHTML = qr.createImgTag(6);
+                    document.getElementById('qr-code-modal').classList.remove('hidden');
+                }
+
+                if (button && (button.matches('#close-modal-btn') || button.parentElement.parentElement.parentElement === document.getElementById('qr-code-modal'))) {
+                    document.getElementById('qr-code-modal').classList.add('hidden');
+                }
+
+                if (button && button.matches('.tab-btn')) { switchToTab(button.dataset.tab); }
+                
+                if (button && button.matches('.faq-forms-tab-btn')) {
+                    const tabName = button.dataset.tab;
+                    document.querySelectorAll('.faq-forms-tab-btn').forEach(btn => {
+                        btn.classList.remove('tab-active'); btn.classList.add('text-slate-500');
+                    });
+                    button.classList.add('tab-active'); button.classList.remove('text-slate-500');
+                    document.querySelectorAll('.faq-forms-tab-content').forEach(content => content.classList.add('hidden'));
+                    document.getElementById(tabName).classList.remove('hidden');
+                }
+
+                if (target.closest('#mobile-menu-button')) {
+                    const mobileMenu = document.getElementById('mobile-menu');
+                    const isOpen = mobileMenu.style.display === 'block';
+                    mobileMenu.style.display = isOpen ? 'none' : 'block';
+                    document.getElementById('menu-icon-open').classList.toggle('hidden', !isOpen);
+                    document.getElementById('menu-icon-close').classList.toggle('hidden', isOpen);
+                }
+
+                if (button && button.matches('.volunteer-for-event-btn')) {
+                    const eventId = button.dataset.eventId;
+                    switchToTab('volunteering');
+                    document.getElementById('filter-event').value = eventId;
+                    applyAndRenderFilters();
+                }
+
+                if(target.matches('input[name="report-type"]')) {
+                    const isTardy = target.value === 'tardy';
+                    document.getElementById('tardy-fields').style.display = isTardy ? 'grid' : 'none';
+                    document.getElementById('absence-fields').style.display = isTardy ? 'none' : 'grid';
+                }
+                const header = target.closest('.volunteer-card-header');
+                if (header) {
+                    const content = document.getElementById(header.dataset.target);
+                    const icon = header.querySelector('i');
+                    if (content) {
+                        content.classList.toggle('hidden');
+                        icon.classList.toggle('rotate-180');
+                    }
+                }
+                if (button && button.matches('.show-more-events-btn, .show-more-teachers-btn')) {
+                    const studentId = button.dataset.studentId;
+                    const type = button.matches('.show-more-events-btn') ? 'events' : 'teachers';
+                    const moreDiv = document.getElementById(`more-${type}-${studentId}`);
+                    if (moreDiv) {
+                        const isHidden = moreDiv.classList.contains('hidden');
+                        moreDiv.classList.toggle('hidden');
+                        button.textContent = isHidden ? 'Show Less' : 'Show More';
+                    }
+                }
+            });
+            
+            document.body.addEventListener('submit', function(event) {
+                if (event.target.id === 'self-report-form') {
+                    event.preventDefault();
+                    const button = document.getElementById('self-report-btn');
+                    const payload = {
+                        action: 'selfReportHours', token: ID_TOKEN,
+                        opportunityId: document.getElementById('report-duration').value,
+                        date: document.getElementById('report-date').value,
+                        description: document.getElementById('report-description').value
+                    };
+                    if (!payload.date || !payload.description) { alert("Please fill out the date and description for your activity."); return; }
+                    button.textContent = 'Submitting...'; button.disabled = true;
+                    fetch(WEB_APP_URL, { method: 'POST',mode: 'no-cors', body: JSON.stringify(payload) })
+                    .then(() => {
+                        alert('Your hours have been submitted for approval! The portal will now refresh to show the pending item.');
+                        fetchData(ID_TOKEN);
+                        document.getElementById('self-report-form').reset();
+                    })
+                    .catch(error => console.error('Self-report Error:', error))
+                    .finally(() => { button.textContent = 'Submit for Approval'; button.disabled = false; });
+                } else if (event.target.id === 'absence-form') {
+                    event.preventDefault();
+                    const button = document.getElementById('send-notification-btn');
+                    button.textContent = 'Sending...'; button.disabled = true;
+                    const studentId = document.getElementById('student-select').value;
+                    const student = portalData.students.find(s => s.uniqueStudentId == studentId);
+                    const reportType = document.querySelector('input[name="report-type"]:checked').value;
+                    const startDate = document.getElementById('absence-start').value, endDate = document.getElementById('absence-end').value;
+                    const tardyStartTime = document.getElementById('tardy-start-time').value, tardyEndTime = document.getElementById('tardy-end-time').value;
+                    let reason = document.getElementById('absence-reason').value;
+                    if (reason === 'Other') reason = document.getElementById('other-reason-text').value;
+                    let comments = document.getElementById('absence-comments').value;
+                    fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors',headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ action: 'sendAbsenceEmail', student: student, reportType, startDate, endDate, tardyStartTime, tardyEndTime, reason, comments, token: ID_TOKEN })
+                    })
+                    .then(() => alert('Absence/Tardy notification sent successfully!'))
+                    .catch(error => { console.error('Email Send Error:', error); alert(`An error occurred while sending the email: Load failed`); })
+                    .finally(() => { button.textContent = 'Send Notification'; button.disabled = false; });
+                } else if (event.target.id === 'pickup-form') {
+                     event.preventDefault();
+                     const button = document.getElementById('send-pickup-btn');
+                     const selectedStudentIds = Array.from(document.querySelectorAll('.pickup-student-checkbox:checked')).map(cb => cb.value);
+                     if (selectedStudentIds.length === 0) { alert("Please select at least one student."); return; }
+                     const selectedStudents = portalData.students.filter(s => selectedStudentIds.includes(String(s.uniqueStudentId)));
+                     const payload = {
+                        action: 'sendPickupEmail', token: ID_TOKEN,
+                        students: selectedStudents,
+                        pickupName: document.getElementById('pickup-name').value,
+                        relationship: document.getElementById('pickup-relationship').value,
+                        pickupEmail: document.getElementById('pickup-email').value,
+                        reason: document.getElementById('pickup-reason').value,
+                        date: document.getElementById('pickup-date').value
+                    };
+                    if (!payload.pickupName || !payload.relationship || !payload.date) { alert("Please fill out the Authorized Person's Name, Relationship, and the Pickup Date."); return; }
+                    button.textContent = 'Sending...'; button.disabled = true;
+                    fetch(WEB_APP_URL, { method: 'POST',mode: 'no-cors', body: JSON.stringify(payload) })
+                    .then(() => {
+                        alert('Pickup notification sent successfully!');
+                        event.target.reset();
+                    })
+                    .catch(error => { console.error('Pickup Send Error:', error); alert('An error occurred. Please try again.'); })
+                    .finally(() => { button.textContent = 'Send Pickup Notification'; button.disabled = false; });
+                }
+            });
+
+            document.body.addEventListener('change', function(event) {
+                 if (event.target.matches('#absence-reason')) {
+                    document.getElementById('other-reason-container').style.display = (event.target.value === 'Other') ? 'block' : 'none';
+                 } else if (event.target.matches('.filter-control')) {
+                    applyAndRenderFilters();
+                 }
+            });
         }
 
-        window.onload = function() {
+        // --- INITIALIZATION ---
+     /* window.onload = function() {
             try {
                 google.accounts.id.initialize({
                   client_id: CLIENT_ID,
@@ -571,61 +1273,151 @@
                 );
             } catch (error) {
                 console.error("Google Sign-In initialization failed:", error);
-                document.getElementById('login-screen').innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-lg text-red-600"><p>Could not initialize Google Sign-In.</p></div>`;
+                document.getElementById('login-screen').innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-lg text-red-600"><p>Could not initialize Google Sign-In. Please check your Client ID and that your website's URL is in the "Authorized JavaScript origins".</p></div>`;
+            }
+        }; 
+
+        
+        window.onload = function() {
+            // NEW: Check for a passkey token in the URL hash
+            if (window.location.hash.startsWith('#token=')) {
+                const passkeyToken = window.location.hash.substring(7); // Get the token
+                // Immediately try to log in with this token
+                handleLoginSuccess(passkeyToken);
+                // Clean the URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                // If no token, show the normal login process
+                try {
+                    google.accounts.id.initialize({
+                      client_id: CLIENT_ID,
+                      callback: handleCredentialResponse
+                      // 'auto_select: true' and 'prompt()' have been removed to disable One-Tap
+                    });
+                    google.accounts.id.renderButton(
+                      document.getElementById('google-signin-button-container'),
+                      { theme: "outline", size: "large", width: "300" } 
+                    );
+                    // Add login form listeners here
+                    document.getElementById('passkey-request-form').addEventListener('submit', handleRequestPasskey);
+                    document.getElementById('go-back-btn').addEventListener('click', () => showLoginScreen('login-screen'));
+                } catch (error) {
+                    console.error("Google Sign-In initialization failed:", error);
+                    document.getElementById('login-screen').innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-lg text-red-600"><p>Could not initialize Google Sign-In. Please check your Client ID and that your website's URL is in the "Authorized JavaScript origins".</p></div>`;
+                }
+            }
+        };
+        
+
+        window.onload = function() {
+            // NEW: Check for a magic link token in the URL hash
+            if (window.location.hash.startsWith('#token=')) {
+                const passkeyToken = window.location.hash.substring(7); // Get the token
+                // Immediately try to log in with this token
+                handleLoginSuccess(passkeyToken);
+                // Clean the URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+            } else {
+                // If no token, show the normal login process
+                try {
+                    google.accounts.id.initialize({
+                      client_id: CLIENT_ID,
+                      callback: handleCredentialResponse
+                      // 'auto_select: true' and 'prompt()' have been removed
+                    });
+                    google.accounts.id.renderButton(
+                      document.getElementById('google-signin-button-container'),
+                      { theme: "outline", size: "large", width: "300" } 
+                    );
+                    // Add login form listeners here
+                    document.getElementById('passkey-request-form').addEventListener('submit', handleRequestPasskey);
+                    // document.getElementById('passkey-verify-form').addEventListener('submit', handleVerifyPasskey); // This form is gone
+                    document.getElementById('go-back-btn').addEventListener('click', () => showLoginScreen('login-screen'));
+                } catch (error) {
+                    console.error("Google Sign-In initialization failed:", error);
+                    document.getElementById('login-screen').innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-lg text-red-600"><p>Could not initialize Google Sign-In. Please check your Client ID and that your website's URL is in the "Authorized JavaScript origins".</p></div>`;
+                }
+            }
+        };
+        */
+
+        window.onload = function() {
+            const hashToken = window.location.hash.startsWith('#token=') ? window.location.hash.substring(7) : null;
+            const storedToken = localStorage.getItem('sva_id_token'); // <-- CHECK FOR STORED TOKEN
+
+            if (hashToken) {
+                // 1. User just clicked a magic link. Save the new token.
+                window.history.replaceState({}, document.title, window.location.pathname); // Clean the URL
+                handleLoginSuccess(hashToken);
+            } else if (storedToken) {
+                // 2. User is returning. Log them in with the stored token.
+                handleLoginSuccess(storedToken);
+            } else {
+                // 3. User is new or logged out, show the login screen.
+                try {
+                    google.accounts.id.initialize({
+                      client_id: CLIENT_ID,
+                      callback: handleCredentialResponse
+                      // 'auto_select: true' and 'prompt()' have been removed
+                    });
+                    google.accounts.id.renderButton(
+                      document.getElementById('google-signin-button-container'),
+                      { theme: "outline", size: "large", width: "300" } 
+                    );
+                    // Add login form listeners here
+                    document.getElementById('passkey-request-form').addEventListener('submit', handleRequestPasskey);
+                    // document.getElementById('passkey-verify-form').addEventListener('submit', handleVerifyPasskey); // This form is gone
+                    document.getElementById('go-back-btn').addEventListener('click', () => showLoginScreen('login-screen'));
+                } catch (error) {
+                    console.error("Google Sign-In initialization failed:", error);
+                    document.getElementById('login-screen').innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-lg text-red-600"><p>Could not initialize Google Sign-In.</p></div>`;
+                }
             }
         };
 
-        function addEventListeners() {
-            document.body.addEventListener('click', function(event) {
-                const target = event.target;
-                const button = target.closest('button');
+        // --- NEW: Passkey Login Functions ---
+        /**
+         * Handles Step 1 of passkey login: Requesting the code.
+         */
+        function handleRequestPasskey(e) {
+            e.preventDefault();
+            const emailInput = document.getElementById('email-input');
+            const email = emailInput.value;
+            const button = document.getElementById('request-passkey-btn');
+            
+            button.disabled = true;
+            button.textContent = 'Sending...';
 
-                if (button && button.matches('.withdraw-btn')) {
-                    if (!confirm('Are you sure you want to withdraw?')) return;
-                    const signupId = button.dataset.signupId;
-                    const card = button.closest('.bg-white');
-                    button.textContent = 'Withdrawing...';
-                    button.disabled = true;
-                    if(card) card.style.opacity = '0.5';
-
-                    fetch(WEB_APP_URL, {
-                        method: 'POST', mode: 'no-cors',
-                        body: JSON.stringify({ action: 'withdraw', signupId: signupId, token: ID_TOKEN }),
-                    }).then(() => {
-                        showToast('Withdrawal successful!', 'success');
-                        fetchData(ID_TOKEN); // Refresh all data for simplicity
-                    }).catch(error => {
-                        showToast('Withdrawal failed. Please try again.', 'error');
-                        if(card) card.style.opacity = '1';
-                        button.textContent = 'Withdraw';
-                        button.disabled = false;
-                    });
-                }
-                
-                // ... All other click handlers from the original file go here.
-                // Example for signup:
-                if (button && button.matches('.signup-btn')) {
-                    const opportunityId = button.dataset.id;
-                    button.textContent = 'Signing up...';
-                    button.disabled = true;
-                    
-                    fetch(WEB_APP_URL, {
-                        method: 'POST', mode: 'no-cors',
-                        body: JSON.stringify({ action: 'signup', opportunityId: opportunityId, token: ID_TOKEN }),
-                    }).then(() => {
-                       showToast('Signup successful! Your lists will be updated.', 'success');
-                       fetchData(ID_TOKEN); 
-                    }).catch(error => {
-                        showToast('An error occurred during signup.', 'error');
-                        button.textContent = 'Sign Up';
-                        button.disabled = false;
-                    });
-                }
-
+            fetch(WEB_APP_URL, {
+                method: 'POST',
+                mode: 'no-cors', // Use no-cors to avoid preflight
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Use text/plain
+                body: JSON.stringify({ action: 'requestLoginPasskey', email: email })
+            })
+            .then(() => {
+                // We cannot read the response, so we just assume it was sent.
+                // The backend will send the email if the user is valid.
+                document.getElementById('passkey-email-display').textContent = email;
+                showLoginScreen('passkey-verify-screen');
+            })
+            .catch(err => {
+                console.error("Passkey Request Error:", err);
+                alert(`A network error occurred. Please try again.`);
+            })
+            .finally(() => {
+                button.disabled = false;
+                button.textContent = 'Send Login Link';
             });
-             // ... All other event listeners from original file ('submit', 'change', etc.) go here.
         }
-
+        
+        /**
+         * This function is no longer used for verification, as the magic link
+         * is handled by the doGet in the backend and the window.onload function here.
+         */
+        function handleVerifyPasskey(e) {
+            e.preventDefault();
+             alert("Please check your email for the login link.");
+        }
     </script>
 </body>
 </html>
