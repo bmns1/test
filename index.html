@@ -30,46 +30,43 @@
 <body class="antialiased text-slate-800">
 
     <div id="login-container" class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-        <div id="login-screen" class="p-8 bg-white rounded-2xl shadow-xl max-w-md w-full border border-slate-200">
-            <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-16 w-auto mx-auto mb-4">
-            <div class="text-center">
-                <h1 class="text-2xl font-bold text-slate-900">Parent Portal Login</h1>
-                <p class="text-slate-500 text-sm mt-1">Silicon Valley Academy (beta)</p>
-            </div>
+        <!-- Screen 1: Main Login Choice -->
+        <div id="login-screen" class="text-center p-8 bg-white rounded-xl shadow-lg max-w-md w-full">
+            <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
+            <h1 class="text-3xl font-bold text-slate-900 mt-4">Silicon Valley Academy</h1>
+            <p class="text-lg text-slate-600 mb-6">Parent Portal (beta)</p>
+            <p class="text-sm text-slate-500 mb-8">Please log in with your SVA-associated student email. For assistance or password issues, please contact: <a href="mailto:parent.portal@svaschool.org" class="font-medium text-teal-600 hover:underline">parent.portal@svaschool.org</a></p>
             
-            <p class="text-sm text-slate-600 my-6 text-center">Please log in with your SVA-associated student email.</p>
-
+            <!-- NEW: Error Message Area -->
             <div id="login-error-msg" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 text-left" role="alert">
                 <strong class="font-bold">Login Failed:</strong>
                 <span class="block sm:inline" id="login-error-text"></span>
             </div>
             
+            <!-- Google Sign-In Button -->
             <div id="google-signin-button-container" class="flex justify-center"></div>
             
-            <div class="my-6 flex items-center">
-                <span class="border-b border-slate-200 flex-grow"></span>
-                <span class="mx-4 text-xs font-medium text-slate-400 uppercase">OR</span>
-                <span class="border-b border-slate-200 flex-grow"></span>
+            <!-- Divider -->
+            <div class="my-6 flex items-center justify-center">
+                <span class="border-b border-slate-300 w-full"></span>
+                <span class="mx-4 text-sm font-medium text-slate-500">OR</span>
+                <span class="border-b border-slate-300 w-full"></span>
             </div>
             
+            <!-- Passkey Login Form -->
             <form id="passkey-request-form" class="space-y-4">
                 <div>
-                    <label for="email-input" class="block text-sm font-medium text-slate-700 mb-1">Student Email</label>
-                    <div class="relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <i class="ph-envelope text-slate-400"></i>
-                        </div>
-                        <input type="email" id="email-input" placeholder="student.email@svaschool.org" class="w-full pl-10 pr-4 py-2 rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500" required>
-                    </div>
+                    <label for="email-input" class="sr-only">Parent Email</label>
+                    <!-- <input type="email" id="email-input" placeholder="Enter your student email (beta)" class="w-full px-4 py-3 rounded-md border-slate-300 shadow-sm" required> -->
+                    <input type="email" id="email-input" placeholder="student.email@svaschool.org" class="w-full pl-10 pr-4 py-2 rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500" required>
                 </div>
-                <button type="submit" id="request-passkey-btn" class="w-full flex items-center justify-center bg-teal-600 text-white font-semibold py-2.5 px-6 rounded-lg hover:bg-teal-700 transition duration-300 shadow-sm">
-                    <i class="ph-paper-plane-tilt -ml-1 mr-2"></i>
+                <button type="submit" id="request-passkey-btn" class="w-full bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-teal-700 transition">
                     Send Login Link
                 </button>
             </form>
-            <p class="text-xs text-slate-500 mt-6 text-center">For assistance, contact: <a href="mailto:parent.portal@svaschool.org" class="font-medium text-teal-600 hover:underline">parent.portal@svaschool.org</a></p>
         </div>
 
+        <!-- Screen 2: Passkey Verification (Hidden by default) -->
         <div id="passkey-verify-screen" class="hidden text-center p-8 bg-white rounded-xl shadow-lg max-w-md w-full">
             <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
             <h2 class="text-2xl font-bold text-slate-900">Check Your Email</h2>
@@ -81,6 +78,8 @@
             </button>
         </div>
     </div>
+    <!-- ... rest of the file ... -->
+
     <div id="loading-overlay" class="fixed inset-0 bg-slate-100 flex items-center justify-center z-50 hidden">
         <div class="text-center">
             <i id="loading-icon" class="ph-spinner-gap text-6xl text-teal-600 mx-auto animate-spin"></i>
@@ -310,7 +309,7 @@
     <script src="https://unpkg.com/phosphor-icons"></script>
     <script>
         // --- CONFIGURATION ---
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3LGShhqFBG5Y2TocWHYYgg8Sp-mK2YbkZ2x6tWJwf6li0teEvIYYXa5zNxDKtV4U7/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbw3iy8-OGJ-ZeS93jP1LGjTE_6yQIiw1fZvuJ7yheYXCCl6D1Z6QBSJFJLSJxTQnqJN/exec';
         const NEWSLETTER_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdZkNNppgbr_FdH2FOAztYpujc9A4URAsQIlWnADSypDlb5_KnCiVP3EImRK96jWK3Yg/exec';
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         let ID_TOKEN = null;
@@ -653,6 +652,7 @@
                     contentContainer.innerHTML += `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg" role="alert"><p class="font-bold">Data Issue</p><p>An incomplete student record was found. Please check your 'Students' Google Sheet for any blank rows and delete them.</p></div>`;
                     return;
                 }
+                const studentCard = document.createElement('div');
                 let teachersHtml = '';
                 if (student.teachers && student.teachers.length > 0) {
                     const visibleTeachers = student.teachers.slice(0, 3);
@@ -683,14 +683,10 @@
                     eventsHtml = '<li><p class="text-slate-500 py-3">No upcoming events for this student.</p></li>';
                 }
 
-                // --- THIS IS THE FIX ---
-                const studentCard = document.createElement('div');
-                // ---------------------
-
                 const studentInitials = student.studentName.split(" ").map(n=>n[0]).join("");
                 studentCard.innerHTML = `
-                <div class="bg-white rounded-xl shadow-lg overflow-hidden border border-slate-200">
-                    <div class="p-6 bg-white border-b border-slate-200">
+                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
+                    <div class="p-6 bg-slate-50 border-b border-slate-200">
                         <div class="flex items-center">
                             <img class="h-16 w-16 rounded-full" src="https://placehold.co/100x100/E2E8F0/4A5568?text=${studentInitials}" alt="Student Photo">
                             <div class="ml-4">
@@ -702,23 +698,19 @@
                     <div class="grid grid-cols-1 lg:grid-cols-3">
                         <div class="lg:col-span-2 p-6">
                             <div class="mb-8">
-                                <h4 class="font-semibold text-lg text-slate-700 mb-3 flex items-center"><i class="ph-lightning text-xl mr-2 text-teal-500"></i> Quick Actions</h4>
+                                <h4 class="font-semibold text-lg text-slate-700 mb-3">Quick Actions</h4>
                                 <div class="flex flex-wrap gap-3">
-                                    <button data-student-id="${student.uniqueStudentId}" class="report-absence-nav-btn inline-flex items-center bg-teal-600 text-white font-semibold py-2 px-4 rounded-lg hover:bg-teal-700 transition-colors shadow-sm">
-                                        <i class="ph-calendar-x mr-2"></i> Report Absence/Tardy
-                                    </button>
-                                    <button onclick="switchToTabAndSubTab('faq-forms', 'quicklinks-content');" class="inline-flex items-center bg-white text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-100 transition-colors border border-slate-300 shadow-sm">
-                                        <i class="ph-book-open mr-2"></i> Student Handbook
-                                    </button>
+                                    <button data-student-id="${student.uniqueStudentId}" class="report-absence-nav-btn inline-flex items-center bg-teal-100 text-teal-800 font-semibold py-2 px-4 rounded-lg hover:bg-teal-200 transition-colors">Report Absence/Tardy</button>
+                                    <button onclick="switchToTabAndSubTab('faq-forms', 'quicklinks-content');" class="inline-flex items-center bg-slate-100 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors">View Student Handbook</button>
                                 </div>
                             </div>
                             <div>
-                                <h4 class="font-semibold text-lg text-slate-700 mb-2 flex items-center"><i class="ph-chalkboard-teacher text-xl mr-2 text-teal-500"></i> Teachers</h4>
+                                <h4 class="font-semibold text-lg text-slate-700 mb-2">Teachers</h4>
                                 <ul class="space-y-0">${teachersHtml}</ul>
                             </div>
                         </div>
                         <div class="bg-slate-50 p-6 lg:border-l border-slate-200">
-                            <h4 class="font-semibold text-lg text-slate-700 mb-4 flex items-center"><i class="ph-calendar-check text-xl mr-2 text-teal-500"></i> Upcoming Events</h4>
+                            <h4 class="font-semibold text-lg text-slate-700 mb-2">Upcoming Events</h4>
                             <ul class="space-y-4">${eventsHtml}</ul>
                         </div>
                     </div>
@@ -729,35 +721,25 @@
 
         function renderEventItem(event, student, index) {
             const volunteerStatusColor = event.totalSignedUp >= event.totalNeeded ? 'text-green-600' : 'text-orange-600';
-            const volunteerText = (event.totalNeeded > 0) ? `<p class="text-xs font-semibold ${volunteerStatusColor} mt-1">${event.totalSignedUp} of ${event.totalNeeded} Volunteers</p>` : '';
-            
-            const volunteerButtonHtml = (event.totalNeeded > event.totalSignedUp) 
-                ? `<button type="button" class="volunteer-for-event-btn w-full inline-flex items-center justify-center text-sm bg-teal-100 text-teal-800 font-semibold py-2 px-3 rounded-lg hover:bg-teal-200 transition-colors" data-event-id="${event.id}"><i class="ph-plus"></i> Volunteer</button>` 
-                : `<span class="w-full text-sm text-center inline-flex items-center justify-center bg-green-100 text-green-800 font-semibold py-2 px-3 rounded-lg"><i class="ph-check"></i> Full</span>`;
-
-            const calendarButtonHtml = `
-                <div class="relative inline-block text-left w-full">
-                    <button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-lg border border-slate-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${event.name}" data-event-date="${event.date}">
-                        <i class="ph-calendar-plus mr-2"></i> Add
-                    </button>
-                    <div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10">
-                        <div class="py-1">
-                            <a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100"><i class="ph-google-logo mr-2"></i> Google Calendar</a>
-                            <a href="#" class="ical-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100"><i class="ph-apple-logo mr-2"></i> iCal/Outlook</a>
-                        </div>
-                    </div>
-                </div>`;
-            
-            return `
-            <li class="bg-white p-4 rounded-lg border border-slate-200 shadow-sm">
-                <div>
+            const volunteerText = (event.totalNeeded > 0) ? `<p class="text-xs font-semibold ${volunteerStatusColor}">Volunteers: ${event.totalSignedUp} of ${event.totalNeeded}</p>` : '';
+            const volunteerButtonHtml = (event.totalNeeded > event.totalSignedUp) ? `<button type="button" class="volunteer-for-event-btn w-full text-sm bg-teal-100 text-teal-800 font-semibold py-1 px-3 rounded-lg hover:bg-teal-200 transition-colors" data-event-id="${event.id}">Volunteer</button>` : '';
+            return `<li class="flex justify-between items-start">
+                <div class="flex-1 pr-2">
                     <p class="font-semibold text-slate-800">${event.name}</p>
                     <p class="text-sm text-slate-500">${formatDate(event.date)}</p>
                     ${volunteerText}
                 </div>
-                <div class="mt-3 flex gap-2">
-                    ${(event.totalNeeded > 0) ? `<div class="flex-1">${volunteerButtonHtml}</div>` : ''}
-                    <div class="flex-1">${calendarButtonHtml}</div>
+                <div class="flex flex-col space-y-2 items-end w-24">
+                    ${volunteerButtonHtml}
+                    <div class="relative inline-block text-left w-full">
+                        <button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-md border border-slate-300 shadow-sm px-3 py-1 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${event.name}" data-event-date="${event.date}"><i class="ph-plus-circle mr-1"></i> Add</button>
+                        <div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10">
+                            <div class="py-1">
+                                <a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">Google Calendar</a>
+                                <a href="#" class="ical-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">iCal/Outlook</a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </li>`;
         }
@@ -891,7 +873,8 @@
                 document.getElementById('penalty-text-s2').textContent = s2.penalty > 0 ? `+ ${s2.penalty} penalty hours` : '';
             }
         }
-       /* function renderMySignupsList(signups) {
+       /* 
+        function renderMySignupsList(signups) {
             const upcomingList = document.getElementById('upcoming-signups-list');
             const completedList = document.getElementById('completed-signups-list');
             upcomingList.innerHTML = '';
@@ -956,68 +939,20 @@
                     
                     let actionButtonsHtml = '';
                     if (signup.status === 'Pending Approval') {
-                        actionButtonsHtml = `
-                        <div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0 w-full sm:w-56">
-                            <span class="inline-flex items-center justify-center w-full px-3 py-1.5 rounded-lg text-sm font-medium bg-yellow-100 text-yellow-800">
-                                <i class="ph-clock-countdown mr-2"></i> Pending Approval
-                            </span>
-                        </div>`;
+                        actionButtonsHtml = `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">Pending Approval</span>`;
                     } else {
-                        const withdrawButtonHtml = daysUntilEvent > 21 
-                            ? `<button data-signup-id="${signup.signupId}" class="withdraw-btn w-full inline-flex items-center justify-center text-sm bg-red-100 text-red-800 font-semibold py-2 px-3 rounded-lg hover:bg-red-200 transition"><i class="ph-trash mr-1.5"></i> Withdraw</button>` 
-                            : `<button class="w-full inline-flex items-center justify-center text-sm bg-slate-200 text-slate-500 font-semibold py-2 px-3 rounded-lg cursor-not-allowed" disabled><i class="ph-x-circle mr-1.5"></i> Withdrawal ended</button>`;
-
+                        const withdrawButtonHtml = daysUntilEvent > 21 ? `<button data-signup-id="${signup.signupId}" class="withdraw-btn w-full text-sm bg-red-100 text-red-800 font-semibold py-2 px-4 rounded-lg hover:bg-red-200 transition">Withdraw</button>` : `<button class="w-full text-sm bg-slate-200 text-slate-500 font-semibold py-2 px-4 rounded-lg cursor-not-allowed" disabled>Withdrawal ended</button>`;
                         let qrButtonHtml = '';
                         if (eventDate <= today) {
-                            qrButtonHtml = `<button data-signup-id="${signup.signupId}" class="show-qr-btn w-full inline-flex items-center justify-center text-sm bg-slate-800 text-white font-semibold py-2 px-3 rounded-lg hover:bg-slate-700 transition"><i class="ph-qr-code mr-1.5"></i> Check-in Code</button>`;
-                        } else {
-                            qrButtonHtml = `<button class="w-full inline-flex items-center justify-center text-sm bg-slate-200 text-slate-500 font-semibold py-2 px-3 rounded-lg cursor-not-allowed" disabled><i class="ph-timer mr-1.5"></i> Code not yet available</button>`;
+                            qrButtonHtml = `<button data-signup-id="${signup.signupId}" class="show-qr-btn w-full text-sm bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition">Show Check-in Code</button>`;
+                       } else {
+                            qrButtonHtml = `<button class="w-full text-sm bg-slate-200 text-slate-500 font-semibold py-2 px-4 rounded-lg cursor-not-allowed" disabled>Code not yet available until event date</button>`;
                         }
-                        
-                        const calendarButtonHtml = `
-                        <div class="relative w-full">
-                            <button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-lg border border-slate-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${signup.title}" data-event-date="${signup.date}">
-                                <i class="ph-calendar-plus mr-2"></i> Add to Calendar
-                            </button>
-                            <div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10">
-                                <div class="py-1">
-                                    <a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100"><i class="ph-google-logo mr-2"></i> Google Calendar</a>
-                                    <a href="#" class="ical-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100"><i class="ph-apple-logo mr-2"></i> iCal/Outlook</a>
-                                </div>
-                            </div>
-                        </div>`;
-                        
-                        actionButtonsHtml = `
-                        <div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0 w-full sm:w-56">
-                            <div class="grid grid-cols-1 gap-2">
-                                ${qrButtonHtml}
-                                ${calendarButtonHtml}
-                                ${withdrawButtonHtml}
-                            </div>
-                        </div>`;
+                        const calendarButtonHtml = `<div class="relative"><button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-md border border-slate-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${signup.title}" data-event-date="${signup.date}"><i class="ph-plus-circle mr-2"></i> Add to Calendar</button><div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10"><div class="py-1"><a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">Google Calendar</a><a href="#" class="ical-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">iCal/Outlook</a></div></div></div>`;
+                        actionButtonsHtml = `<div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0 flex flex-col space-y-2 w-full sm:w-48">${qrButtonHtml}${calendarButtonHtml}${withdrawButtonHtml}</div>`;
                     }
                     
-                    item.innerHTML = `
-                    <div class="flex flex-col sm:flex-row justify-between">
-                        <div class="flex-grow pr-4">
-                            <h4 class="text-lg font-bold text-slate-900">${signup.title}</h4>
-                            <div class="mt-2 space-y-2">
-                                <div class="flex items-start text-sm text-slate-600">
-                                    <i class="ph-info mr-2 text-slate-400 flex-shrink-0 mt-0.5"></i>
-                                    <p>${signup.description || 'No description provided.'}</p>
-                                </div>
-                                <div class="flex items-center text-sm text-slate-600">
-                                    <i class="ph-calendar-blank mr-2 text-slate-400"></i>
-                                    <p class="font-medium">${formatDate(signup.date)} at ${signup.time}</p>
-                                </div>
-                                <div class="flex items-center text-sm text-slate-600">
-                                    <i class="ph-map-pin mr-2 text-slate-400"></i>
-                                    <p>${signup.location}</p>
-                                </div>
-                            </div>
-                        </div>
-                        ${actionButtonsHtml}
-                    </div>`;
+                    item.innerHTML = `<div class="flex flex-col sm:flex-row justify-between"><div class="flex-grow"><h4 class="text-lg font-bold text-slate-900">${signup.title}</h4><div class="mt-2 space-y-1"><div class="flex items-center text-sm text-slate-500"><i class="ph-info mr-2"></i><p>${signup.description || 'No description provided.'}</p></div><div class="flex items-center text-sm text-slate-500"><i class="ph-calendar-blank mr-2"></i><p>${formatDate(signup.date)} at ${signup.time}</p></div><div class="flex items-center text-sm text-slate-500"><i class="ph-map-pin mr-2"></i><p>${signup.location}</p></div></div></div>${actionButtonsHtml}</div>`;
                     upcomingList.appendChild(item);
                 });
             }
@@ -1028,26 +963,7 @@
                     const item = document.createElement('div');
                     item.className = 'bg-white p-4 rounded-lg shadow-sm border border-slate-200';
                     const statusColor = signup.status === 'Completed' ? 'text-green-700 bg-green-100' : signup.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
-                    
-                    let statusIcon = 'ph-check-circle';
-                    if (signup.status === 'Penalty') statusIcon = 'ph-warning-circle';
-                    if (signup.status === 'Withdrawn') statusIcon = 'ph-arrow-u-left-up';
-
-                    item.innerHTML = `
-                    <div class="flex flex-col sm:flex-row justify-between">
-                        <div class="flex-grow">
-                            <h4 class="text-md font-bold text-slate-900">${signup.title}</h4>
-                            <p class="mt-1 text-sm text-slate-600">${signup.description || ''}</p>
-                            <div class="mt-2 text-sm text-slate-500">
-                                <p><i class="ph-calendar-blank mr-1"></i> ${formatDate(signup.date)} at ${signup.time}</p>
-                            </div>
-                        </div>
-                        <div class="mt-3 sm:mt-0 sm:ml-6 flex-shrink-0 flex items-center">
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">
-                                <i class="mr-1.5 ${statusIcon}"></i> ${signup.status}
-                            </span>
-                        </div>
-                    </div>`;
+                    item.innerHTML = `<div class="flex flex-col sm:flex-row justify-between"><div><h4 class="text-md font-bold text-slate-900">${signup.title}</h4><p class="mt-1 text-sm text-slate-600">${signup.description || ''}</p><div class="mt-2 text-sm text-slate-500"><p><i class="ph-calendar-blank mr-1"></i> ${formatDate(signup.date)} at ${signup.time}</p></div></div><div class="mt-3 sm:mt-0 sm:ml-6 flex-shrink-0 text-left sm:text-right"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">${signup.status}</span></div></div>`;
                     completedList.appendChild(item);
                 });
             }
@@ -1264,7 +1180,7 @@
         }
 
         // --- INITIALIZATION ---
-     /* window.onload = function() {
+     /*    window.onload = function() {
             try {
                 google.accounts.id.initialize({
                   client_id: CLIENT_ID,
