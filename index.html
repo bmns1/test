@@ -52,7 +52,7 @@
             <p class="text-lg text-slate-600 mb-6">Parent Portal (beta)</p>
             <p class="text-sm text-slate-500 mb-8">Please log in with your SVA-associated parent email. For assistance or password issues, please contact: <a href="mailto:parent.portal@svaschool.org" class="font-medium text-teal-600 hover:underline">parent.portal@svaschool.org</a></p>
             
-            <!-- NEW: Error Message Area -->
+            <!-- Error Message Area -->
             <div id="login-error-msg" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 text-left" role="alert">
                 <strong class="font-bold">Login Failed:</strong>
                 <span class="block sm:inline" id="login-error-text"></span>
@@ -247,7 +247,7 @@
                     </div>
                      <div id="volunteering-list" class="space-y-6"><p>Loading volunteering opportunities...</p></div>
                 </div>
-                
+
                 <div id="signups" class="tab-content">
                     <h2 class="text-3xl font-bold text-slate-900 mb-6">My Volunteer Hours</h2>
                     <div id="my-signups-content"></div>
@@ -327,8 +327,7 @@
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         let ID_TOKEN = null;
         let portalData = {};
-        let currentStudentId = null; // Track which student's orders are being viewed
-        let pendingOrders = {}; // Store {studentId: {date: itemId, ...}}
+        //let tempRequestToken = null; // No longer needed for magic link
         
         // --- GLOBAL HELPER FUNCTIONS ---
         function closeModal(modalId) {
@@ -343,6 +342,45 @@
             if (document.getElementById(screenId)) {
                 document.getElementById(screenId).classList.remove('hidden');
             }
+        }
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return !isNaN(date.getTime()) ? date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : dateString;
+        }
+        function decodeGrade(grade) {
+            const gradeStr = String(grade).toUpperCase();
+            if (gradeStr === 'P') return 'Pre-K';
+            if (gradeStr === '0' || gradeStr === 'K' ) return 'KG';
+            return `Grade ${gradeStr}`;
+        }
+        function switchToTab(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('tab-active'));
+            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('tab-content-active'));
+            document.querySelectorAll(`.tab-btn[data-tab="${tabName}"]`).forEach(b => b.classList.add('tab-active'));
+            document.getElementById(tabName).classList.add('tab-content-active');
+            const mobileMenu = document.getElementById('mobile-menu');
+            if(mobileMenu.style.display === 'block'){
+                mobileMenu.style.display = 'none';
+                document.getElementById('menu-icon-open').classList.remove('hidden');
+                document.getElementById('menu-icon-close').classList.add('hidden');
+            }
+        }
+        
+        function switchToTabAndSubTab(mainTabId, subTabId) {
+            switchToTab(mainTabId);
+            document.querySelectorAll('.faq-forms-tab-btn').forEach(btn => {
+                btn.classList.remove('tab-active');
+                btn.classList.add('text-slate-500');
+            });
+            const subTabButton = document.querySelector(`.faq-forms-tab-btn[data-tab="${subTabId}"]`);
+            if (subTabButton) {
+                subTabButton.classList.add('tab-active');
+                subTabButton.classList.remove('text-slate-500');
+            }
+            document.querySelectorAll('.faq-forms-tab-content').forEach(content => content.classList.add('hidden'));
+            const subTabContent = document.getElementById(subTabId);
+            if (subTabContent) subTabContent.classList.remove('hidden');
         }
         // --- END GLOBAL HELPERS ---
 
@@ -401,6 +439,41 @@
             portalData = {};
             window.location.href = window.location.pathname; // Reload to a clean login page
         }
+        
+        // --- HELPER FUNCTIONS ---
+        function formatGoogleDate(date) { return date.toISOString().split('T')[0].replace(/-/g, ''); }
+        
+        function generateICalLink(event) {
+            const startDate = new Date(event.date);
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 1);
+            const reminder1Date = new Date(startDate);
+            reminder1Date.setDate(reminder1Date.getDate() - 22);
+            const reminder1Trigger = `${formatGoogleDate(reminder1Date)}T090000`;
+            const reminder1 = `BEGIN:VALARM\nTRIGGER;VALUE=DATE-TIME:${reminder1Trigger}\nACTION:DISPLAY\nDESCRIPTION:Last chance to withdraw from this event is tomorrow\nEND:VALARM`;
+            const reminder2Date = new Date(startDate);
+            reminder2Date.setDate(reminder2Date.getDate() - 7);
+            const reminder2Trigger = `${formatGoogleDate(reminder2Date)}T090000`;
+            const reminder2 = `BEGIN:VALARM\nTRIGGER;VALUE=DATE-TIME:${reminder2Trigger}\nACTION:DISPLAY\nDESCRIPTION:Your event is a week away!\nEND:VALARM`;
+            const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nURL:${document.location.href}\nDTSTART;VALUE=DATE:${formatGoogleDate(startDate)}\nDTEND;VALUE=DATE:${formatGoogleDate(endDate)}\nSUMMARY:${event.name || event.title}\nDESCRIPTION:Event: ${event.name || event.title}\nLOCATION:Silicon Valley Academy\n${reminder1}\n${reminder2}\nEND:VEVENT\nEND:VCALENDAR`;
+            return `data:text/calendar;charset=utf-8,${encodeURIComponent(icsContent)}`;
+        }
+
+        function generateGoogleCalendarLink(event) {
+            const startDate = new Date(event.date);
+            const endDate = new Date(startDate);
+            endDate.setDate(startDate.getDate() + 1);
+            const reminderText1 = "Reminder: The last day to withdraw from this event is 21 days prior.";
+            const reminderText2 = "Reminder: This event is one week from today.";
+            const description = `For more details, visit the school portal.\n\n--- Reminders ---\n${reminderText1}\n${reminderText2}`;
+            const baseUrl = 'https://www.google.com/calendar/render?action=TEMPLATE';
+            const title = `&text=${encodeURIComponent(event.name || event.title)}`;
+            const dates = `&dates=${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}`;
+            const details = `&details=${encodeURIComponent(description)}`;
+            const location = `&location=${encodeURIComponent('Silicon Valley Academy')}`;
+            return `${baseUrl}${title}${dates}${details}${location}`;
+        }
+        
         
         // --- DATA FETCH & RENDER ---
         function fetchData(token) {
