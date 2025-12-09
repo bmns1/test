@@ -50,7 +50,7 @@
             <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
             <h1 class="text-3xl font-bold text-slate-900 mt-4">Silicon Valley Academy</h1>
             <p class="text-lg text-slate-600 mb-6">Parent Portal (beta)</p>
-            <p class="text-sm text-slate-500 mb-8">Please log in with your SVA-associated parent email. For assistance or password issues, please contact: <a href="mailto:parent.portal@svaschool.org" class="font-medium text-teal-600 hover:underline">parent.portal@svaschool.org</a></p>
+            <p class="text-sm text-slate-500 mb-8">Please log in with your SVA-associated student email. For assistance or password issues, please contact: <a href="mailto:parent.portal@svaschool.org" class="font-medium text-teal-600 hover:underline">parent.portal@svaschool.org</a></p>
             
             <!-- Error Message Area -->
             <div id="login-error-msg" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 text-left" role="alert">
@@ -71,8 +71,8 @@
             <!-- Passkey Login Form -->
             <form id="passkey-request-form" class="space-y-4">
                 <div>
-                    <label for="email-input" class="sr-only">Parent Email</label>
-                    <input type="email" id="email-input" placeholder="Enter your parent email" class="w-full px-4 py-3 rounded-md border-slate-300 shadow-sm" required>
+                    <label for="email-input" class="sr-only">Student Email</label>
+                    <input type="email" id="email-input" placeholder="Enter your student email" class="w-full px-4 py-3 rounded-md border-slate-300 shadow-sm" required>
                 </div>
                 <button type="submit" id="request-passkey-btn" class="w-full bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-teal-700 transition">
                     Send Login Link
@@ -1264,7 +1264,7 @@
                     document.getElementById('go-back-btn').addEventListener('click', () => showLoginScreen('login-screen'));
                 } catch (error) {
                     console.error("Google Sign-In initialization failed:", error);
-                    document.getElementById('login-screen').innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-lg text-red-600"><p>Could not initialize Google Sign-In. Please check your Client ID and that your website's URL is in the "Authorized JavaScript origins".</p></div>`;
+                    document.getElementById('login-screen').innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-lg text-red-600"><p>Could not initialize Google Sign-In.".</p></div>`;
                 }
             }
         };
