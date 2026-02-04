@@ -10,7 +10,8 @@
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
     <script src="https://unpkg.com/phosphor-icons"></script>
     <!-- PayPal SDK - REPLACE 'test' WITH YOUR LIVE CLIENT ID -->
-    <script src="https://www.paypal.com/sdk/js?client-id=AbiIIQaGjjsKptfoxNWoHVZj8emb1OrShMOwN5CxdrirjAZ6Vz8DBRAWHSuQPdgh3RqDMySAsEmGQDH9&currency=USD"></script>
+    <!--<script src="https://www.paypal.com/sdk/js?client-id=AbiIIQaGjjsKptfoxNWoHVZj8emb1OrShMOwN5CxdrirjAZ6Vz8DBRAWHSuQPdgh3RqDMySAsEmGQDH9&currency=USD"></script>-->
+    <script src="https://www.paypal.com/sdk/js?client-id=AbiIIQaGjjsKptfoxNWoHVZj8emb1OrShMOwN5CxdrirjAZ6Vz8DBRAWHSuQPdgh3RqDMySAsEmGQDH9&currency=USD&enable-funding=venmo&components=buttons"></script>
     
     <style>
         body {
@@ -735,7 +736,25 @@
             container.innerHTML = '';
             if (enrollmentState.paymentID) { container.innerHTML = '<p class="text-green-600 font-bold">Payment already completed.</p>'; return; }
             paypal.Buttons({
-                createOrder: function(data, actions) { return actions.order.create({ purchase_units: [{ amount: { value: enrollmentState.totalAmount.toFixed(2) } }] }); },
+                style: {
+                    shape: 'rect',
+                    color: 'gold',
+                    layout: 'vertical',
+                    label: 'pay'
+                },
+                createOrder: function(data, actions) {
+                    return actions.order.create({
+                        purchase_units: [{
+                            amount: { value: enrollmentState.totalAmount.toFixed(2) },
+                            description: "SVA Enrollment Fee Collection"
+                        }],
+                        application_context: {
+                            shipping_preference: 'NO_SHIPPING', // Removes shipping address requirement
+                            brand_name: 'Silicon Valley Academy',
+                            user_action: 'PAY_NOW'
+                        }
+                    });
+                },
                 onApprove: function(data, actions) { return actions.order.capture().then(function(details) {
                     enrollmentState.paymentID = details.id;
                     document.getElementById('payment-completed-msg').classList.remove('hidden');
