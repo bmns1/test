@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Silicon Valley Academy Parent Portal (beta)</title>
+    <title>Silicon Valley Academy Parent Portal</title>
     <script src="https://accounts.google.com/gsi/client" async defer></script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -11,808 +11,720 @@
     <script src="https://unpkg.com/phosphor-icons"></script>
     
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-        }
-        .tab-active {
-            border-bottom: 2px solid #0d9488; /* teal-600 */
-            color: #0d9488; /* teal-600 */
-            font-weight: 600;
-        }
+        body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
+        .tab-active { border-bottom: 2px solid #0d9488; color: #0d9488; font-weight: 600; }
         .tab-content { display: none; }
         .tab-content-active { display: block; }
-        #mobile-menu { display: none; }
         .rotate-180 { transform: rotate(180deg); }
-        .transition-transform { transition: transform 0.2s ease-in-out; }
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-        input[type=number] { -moz-appearance: textfield; }
+        .transition-transform { transition: transform 0.2s; }
         
         /* Enrollment Wizard Styles */
-        .step-indicator { @apply w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border-2; }
-        .step-active { @apply bg-teal-600 text-white border-teal-600; }
-        .step-inactive { @apply bg-white text-slate-400 border-slate-300; }
-        .step-completed { @apply bg-teal-100 text-teal-600 border-teal-600; }
+        .enrollment-step { display: none; }
+        .enrollment-step.active { display: block; animation: fadeIn 0.3s ease-in-out; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        .tuition-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; font-size: 0.9rem; }
+        .tuition-table th, .tuition-table td { border: 1px solid #e2e8f0; padding: 8px; text-align: left; }
+        .tuition-table th { background-color: #f8fafc; font-weight: 600; color: #334155; }
+        
+        .scrollable-agreement { 
+            height: 300px; overflow-y: scroll; background-color: #fff; 
+            border: 1px solid #cbd5e1; padding: 16px; font-size: 0.85rem; 
+            line-height: 1.6; margin-bottom: 15px; border-radius: 6px; color: #334155;
+        }
+        .scrollable-agreement p { margin-bottom: 10px; }
+        .wizard-dot { height: 8px; width: 8px; background-color: #cbd5e1; border-radius: 50%; display: inline-block; margin: 0 4px; }
+        .wizard-dot.active { background-color: #0d9488; transform: scale(1.2); }
     </style>
 </head>
-<body class="antialiased text-slate-800">
+<body class="min-h-screen">
 
-    <!-- Login Container -->
-    <div id="login-container" class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-        <div id="login-screen" class="text-center p-8 bg-white rounded-xl shadow-lg max-w-md w-full">
-            <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
-            <h1 class="text-3xl font-bold text-slate-900 mt-4">Silicon Valley Academy</h1>
-            <p class="text-lg text-slate-600 mb-6">Parent Portal (beta)</p>
-            <p class="text-sm text-slate-500 mb-8">Please log in with your SVA-associated student email.</p>
-            <div id="login-error-msg" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 text-left" role="alert">
-                <strong class="font-bold">Login Failed:</strong> <span class="block sm:inline" id="login-error-text"></span>
+    <div id="login-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-50 p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden border border-slate-100">
+            <div class="bg-teal-700 p-8 text-center">
+                <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                    <i class="ph-graduation-cap text-4xl text-teal-700"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-white">Welcome Back</h1>
+                <p class="text-teal-100 mt-2">Silicon Valley Academy Parent Portal</p>
             </div>
-            <div id="google-signin-button-container" class="flex justify-center"></div>
-            <div class="my-6 flex items-center justify-center">
-                <span class="border-b border-slate-300 w-full"></span><span class="mx-4 text-sm font-medium text-slate-500">OR</span><span class="border-b border-slate-300 w-full"></span>
+            
+            <div class="p-8">
+                <div id="login-view-email">
+                    <p class="text-slate-600 mb-6 text-center">Enter your email address to sign in.</p>
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-slate-700 mb-1">Email Address</label>
+                            <input type="email" id="login-email-input" class="w-full rounded-lg border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 py-3" placeholder="parent@example.com">
+                        </div>
+                        <button id="request-passkey-btn" onclick="handleRequestPasskey()" class="w-full bg-teal-600 text-white font-semibold py-3 rounded-lg hover:bg-teal-700 transition-colors shadow-md hover:shadow-lg">
+                            Send Login Link
+                        </button>
+                    </div>
+                </div>
+
+                <div id="passkey-verify-screen" class="hidden text-center">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="ph-envelope-simple-open text-3xl text-green-600"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-800 mb-2">Check your inbox</h3>
+                    <p class="text-slate-600 mb-6">We've sent a secure login link to <br><strong id="passkey-email-display" class="text-slate-800"></strong></p>
+                    <p class="text-sm text-slate-500">Click the link in the email to access your account.</p>
+                    <button onclick="location.reload()" class="mt-8 text-teal-600 font-medium hover:text-teal-800">Back to Login</button>
+                </div>
             </div>
-            <form id="passkey-request-form" class="space-y-4">
-                <div><label for="email-input" class="sr-only">Student Email</label><input type="email" id="email-input" placeholder="Enter your student email" class="w-full px-4 py-3 rounded-md border-slate-300 shadow-sm" required></div>
-                <button type="submit" id="request-passkey-btn" class="w-full bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-teal-700 transition">Send Login Link</button>
-            </form>
-        </div>
-        <div id="passkey-verify-screen" class="hidden text-center p-8 bg-white rounded-xl shadow-lg max-w-md w-full">
-            <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
-            <h2 class="text-2xl font-bold text-slate-900">Check Your Email</h2>
-            <p class="text-slate-600 my-4">A secure login link has been sent to <strong id="passkey-email-display">your email</strong>.</p>
-            <button type="button" id="go-back-btn" class="w-full text-sm text-slate-600 hover:text-slate-900 hover:underline mt-6">&larr; Go Back</button>
+            <div class="bg-slate-50 p-4 text-center border-t border-slate-100">
+                 <p class="text-xs text-slate-500">&copy; 2026 Silicon Valley Academy</p>
+            </div>
         </div>
     </div>
 
-    <!-- Loading Overlay -->
-    <div id="loading-overlay" class="fixed inset-0 bg-slate-100 flex items-center justify-center z-50 hidden">
-        <div class="text-center">
-            <i id="loading-icon" class="ph-spinner-gap text-6xl text-teal-600 mx-auto animate-spin"></i>
-            <h2 id="loading-title" class="text-2xl font-semibold text-slate-700 mt-4">Loading Portal Data...</h2>
-            <p id="loading-message" class="text-slate-500">Please wait a moment.</p>
-        </div>
-    </div>
-    
-    <!-- Main Portal -->
-    <div id="portal-container" class="hidden">
-        
-        <!-- Re-enrollment Modal -->
-        <div id="enrollment-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center">
-            <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col m-4">
-                <!-- Modal Header -->
-                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-slate-50 rounded-t-xl">
-                    <h3 class="text-xl font-bold text-slate-800">2026-2027 Re-enrollment</h3>
-                    <button onclick="closeModal('enrollment-modal')" class="text-gray-400 hover:text-gray-600"><i class="ph-x text-2xl"></i></button>
+    <div id="app-container" class="hidden max-w-4xl mx-auto pb-20">
+        <header class="bg-white sticky top-0 z-40 border-b border-slate-200 shadow-sm">
+            <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex justify-between items-center h-16">
+                    <div class="flex items-center">
+                        <i class="ph-graduation-cap text-3xl text-teal-700 mr-2"></i>
+                        <span class="font-bold text-xl text-slate-800 tracking-tight">SVA Portal</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <span id="user-name-display" class="text-sm font-medium text-slate-600 hidden sm:block"></span>
+                        <button onclick="handleSignOut()" class="text-slate-500 hover:text-red-600 transition-colors">
+                            <i class="ph-sign-out text-xl"></i>
+                        </button>
+                    </div>
                 </div>
                 
-                <!-- Progress Bar -->
-                <div class="px-6 py-4 bg-white">
-                    <div class="flex items-center justify-between max-w-2xl mx-auto">
-                        <div class="flex flex-col items-center step-item" data-step="1"><div class="step-indicator step-active">1</div><span class="text-xs mt-1">Start</span></div>
-                        <div class="flex-1 border-t-2 border-slate-200 mx-2"></div>
-                        <div class="flex flex-col items-center step-item" data-step="2"><div class="step-indicator step-inactive">2</div><span class="text-xs mt-1">Contact</span></div>
-                        <div class="flex-1 border-t-2 border-slate-200 mx-2"></div>
-                        <div class="flex flex-col items-center step-item" data-step="3"><div class="step-indicator step-inactive">3</div><span class="text-xs mt-1">Volunteer</span></div>
-                        <div class="flex-1 border-t-2 border-slate-200 mx-2"></div>
-                        <div class="flex flex-col items-center step-item" data-step="4"><div class="step-indicator step-inactive">4</div><span class="text-xs mt-1">Tuition</span></div>
-                        <div class="flex-1 border-t-2 border-slate-200 mx-2"></div>
-                        <div class="flex flex-col items-center step-item" data-step="5"><div class="step-indicator step-inactive">5</div><span class="text-xs mt-1">Agree</span></div>
-                        <div class="flex-1 border-t-2 border-slate-200 mx-2"></div>
-                        <div class="flex flex-col items-center step-item" data-step="6"><div class="step-indicator step-inactive">6</div><span class="text-xs mt-1">Payment</span></div>
+                <nav class="flex space-x-8 -mb-px overflow-x-auto no-scrollbar">
+                    <button onclick="switchTab('dashboard')" id="tab-dashboard" class="tab-active whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm">Dashboard</button>
+                    <button onclick="switchTab('actions')" id="tab-actions" class="whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300">Actions</button>
+                    <button onclick="switchTab('resources')" id="tab-resources" class="whitespace-nowrap py-4 px-1 border-b-2 border-transparent font-medium text-sm text-slate-500 hover:text-slate-700 hover:border-slate-300">Resources</button>
+                </nav>
+            </div>
+        </header>
+
+        <main class="p-4 sm:p-6 space-y-6">
+            
+            <div id="dashboard-content" class="tab-content tab-content-active">
+                <div id="students-container" class="space-y-6">
+                    <div class="animate-pulse space-y-4">
+                        <div class="h-48 bg-white rounded-xl"></div>
+                        <div class="h-48 bg-white rounded-xl"></div>
                     </div>
-                </div>
-
-                <!-- Modal Content (Scrollable) -->
-                <div class="p-6 overflow-y-auto flex-grow" id="enrollment-wizard-content">
-                    <!-- Step 1: Start -->
-                    <div id="step-1" class="wizard-step">
-                        <div class="text-center mb-8">
-                            <h2 class="text-2xl font-bold text-teal-700">Welcome to SVA Re-enrollment</h2>
-                            <p class="text-slate-600 mt-2">Secure your spot for the 2026-2027 Academic Year</p>
-                            <div class="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4 inline-block">
-                                <p class="text-sm font-semibold text-orange-800">Priority Window Ends In:</p>
-                                <div id="enrollment-countdown" class="text-2xl font-mono text-orange-600 font-bold mt-1">--:--:--:--</div>
-                                <p class="text-xs text-orange-600 mt-1">February 16, 2026 at 8:30am PST</p>
-                            </div>
-                        </div>
-                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 text-sm text-blue-800">
-                            <p class="font-bold mb-2">Important Documentation Note:</p>
-                            <p>If you require additional time for documents (Physician's Report, Health Report, etc.), you have until <strong>May 1, 2026</strong> to email them to the registrar. All other online application parts are required now.</p>
-                        </div>
-                        <h4 class="font-semibold text-lg mb-3">Select students to re-enroll:</h4>
-                        <div id="enrollment-student-list" class="space-y-3 mb-6"></div>
-                    </div>
-
-                    <!-- Step 2: Contacts -->
-                    <div id="step-2" class="wizard-step hidden">
-                        <h2 class="text-xl font-bold text-slate-800 mb-4">Verify Contact Information</h2>
-                        <div id="enrollment-contact-display" class="bg-slate-50 p-6 rounded-lg border border-slate-200 mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                            <!-- Populated via JS -->
-                        </div>
-                        <p class="font-medium text-slate-700 mb-3">Is the information above correct and up to date?</p>
-                        <div class="space-y-2">
-                            <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-slate-50">
-                                <input type="radio" name="contact-verify" value="Reviewed" class="form-radio text-teal-600" checked>
-                                <span class="ml-2">Yes, everything is correct.</span>
-                            </label>
-                            <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-slate-50">
-                                <input type="radio" name="contact-verify" value="Needs_Review" class="form-radio text-red-600">
-                                <span class="ml-2">No, I need to update this. (Please proceed, but verify on Gradelink later)</span>
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Step 3: Information (Volunteer) -->
-                    <div id="step-3" class="wizard-step hidden">
-                        <h2 class="text-xl font-bold text-slate-800 mb-4">Parent Volunteer Agreement</h2>
-                        <div class="prose prose-sm text-slate-600 mb-6 max-w-none">
-                            <p>Silicon Valley Academy strongly encourages parents to have a high level of involvement. Volunteer hours are critical to SVA’s success. Hours do not carry over or prorate.</p>
-                            <ul class="list-disc pl-5 my-2 font-medium text-slate-800">
-                                <li>1 child enrolled: 10 hours per semester</li>
-                                <li>2 or more children: 20 hours per semester</li>
-                            </ul>
-                        </div>
-                        
-                        <div class="bg-white border border-slate-200 rounded-xl p-5 mb-6">
-                            <h3 class="font-semibold text-slate-800 mb-3">Volunteer Interests</h3>
-                            <p class="text-xs text-slate-500 mb-3">Mark areas of expertise/interest:</p>
-                            <div class="grid grid-cols-2 gap-3 text-sm">
-                                <label class="flex items-center"><input type="checkbox" class="rounded text-teal-600"> <span class="ml-2">PTO Events</span></label>
-                                <label class="flex items-center"><input type="checkbox" class="rounded text-teal-600"> <span class="ml-2">Classroom Support</span></label>
-                                <label class="flex items-center"><input type="checkbox" class="rounded text-teal-600"> <span class="ml-2">Admin/Office</span></label>
-                                <label class="flex items-center"><input type="checkbox" class="rounded text-teal-600"> <span class="ml-2">Traffic Safety</span></label>
-                                <label class="flex items-center"><input type="checkbox" class="rounded text-teal-600"> <span class="ml-2">Field Trips</span></label>
-                                <label class="flex items-center"><input type="checkbox" class="rounded text-teal-600"> <span class="ml-2">Professional Services</span></label>
-                            </div>
-                        </div>
-
-                        <div class="bg-teal-50 border border-teal-200 rounded-xl p-5 mb-6">
-                            <h3 class="font-semibold text-teal-900 mb-3">Opt-Out Option</h3>
-                            <p class="text-sm text-teal-800 mb-4">Parents may choose to pay the volunteer fee up front ($350/semester) instead of volunteering. Unfulfilled hours are billed at $450/semester.</p>
-                            <div class="space-y-3">
-                                <label class="flex items-start">
-                                    <input type="checkbox" id="opt-out-s1" class="mt-1 rounded text-teal-600 focus:ring-teal-500">
-                                    <span class="ml-2 text-sm text-slate-800">I intend to <strong>not</strong> volunteer during <strong>Semester 1</strong> (Due 7/1/26).</span>
-                                </label>
-                                <label class="flex items-start">
-                                    <input type="checkbox" id="opt-out-s2" class="mt-1 rounded text-teal-600 focus:ring-teal-500">
-                                    <span class="ml-2 text-sm text-slate-800">I intend to <strong>not</strong> volunteer during <strong>Semester 2</strong> (Due 1/1/27).</span>
-                                </label>
-                            </div>
-                        </div>
-                        <label class="flex items-center text-sm font-semibold text-slate-800">
-                            <input type="checkbox" id="volunteer-agree-check" class="rounded text-teal-600 mr-2"> I understand and agree to the volunteer requirements.
-                        </label>
-                    </div>
-
-                    <!-- Step 4: Tuition -->
-                    <div id="step-4" class="wizard-step hidden">
-                        <h2 class="text-xl font-bold text-slate-800 mb-4">2026-2027 Tuition & Fees</h2>
-                        <div class="overflow-x-auto mb-6 border rounded-lg">
-                            <table class="min-w-full text-xs sm:text-sm text-left">
-                                <thead class="bg-slate-100 font-semibold text-slate-700 border-b">
-                                    <tr>
-                                        <th class="p-3">Grade Level</th>
-                                        <th class="p-3">Annual (Lump Sum)</th>
-                                        <th class="p-3">Monthly (10-mo)</th>
-                                        <th class="p-3">Reg. Fee</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100" id="tuition-table-body">
-                                    <!-- Dynamic rows -->
-                                </tbody>
-                            </table>
-                        </div>
-                        
-                        <div class="bg-white border border-slate-200 rounded-xl p-6">
-                            <h3 class="font-semibold text-slate-800 mb-4">Select Payment Plan</h3>
-                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                <label class="border-2 border-slate-200 rounded-xl p-4 cursor-pointer hover:border-teal-500 transition-colors has-[:checked]:border-teal-500 has-[:checked]:bg-teal-50">
-                                    <input type="radio" name="payment-plan" value="Once" class="sr-only" checked>
-                                    <div class="font-bold text-slate-900">Lump Sum Payment</div>
-                                    <div class="text-xs text-slate-500 mt-1">Invoiced and due by June 1, 2026</div>
-                                </label>
-                                <label class="border-2 border-slate-200 rounded-xl p-4 cursor-pointer hover:border-teal-500 transition-colors has-[:checked]:border-teal-500 has-[:checked]:bg-teal-50">
-                                    <input type="radio" name="payment-plan" value="10Month" class="sr-only">
-                                    <div class="font-bold text-slate-900">10-Monthly Payments</div>
-                                    <div class="text-xs text-slate-500 mt-1">June 1, 2026 to March 1, 2027</div>
-                                </label>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Step 5: Tuition Agreement -->
-                    <div id="step-5" class="wizard-step hidden">
-                        <h2 class="text-xl font-bold text-slate-800 mb-4">Tuition & Enrollment Agreement</h2>
-                        <p class="text-sm text-slate-500 mb-2">Please scroll to the bottom to agree.</p>
-                        <div id="agreement-scroll-box" class="h-64 overflow-y-scroll bg-slate-50 p-4 rounded-lg border border-slate-300 text-sm text-slate-700 mb-4 leading-relaxed">
-                            <p class="font-bold mb-2">Silicon Valley Academy’s Tuition Policy requires that:</p>
-                            <p class="mb-2">Tuition payments will be invoiced and paid through GradeLink. Accepted payment forms include ACH/checking account and credit card.</p>
-                            <p class="mb-2">Once your child has been formally admitted for the 2026-2027 school year, you will be required to set-up an auto payment plan within two weeks to keep your child's admission active. Based on the payment option you selected during the enrollment process, you will need to either set up a one-time lump sum payment to be made on 6/1/26 or 10-monthly payments with the first payment starting on 6/1/26 in the parent GradeLink account. If an auto payment plan is not set up within two weeks, your child’s name will be removed from SVA enrollment and moved to the bottom of the waitlist.</p>
-                            <p class="mb-4">At the time of registration, a $150 non-refundable registration fee is due per child.</p>
-                            
-                            <h4 class="font-bold mt-4 mb-2">Tuition Liability & Early Termination Policy</h4>
-                            <p class="mb-2"><strong>1. Nature of the Financial Obligation:</strong> Enrollment at Silicon Valley Academy constitutes a binding financial contract for the entire academic year (or the remaining portion thereof for mid-year enrollees). The School’s expenses are fixed annually; therefore, the family’s financial obligation is for the full Total Contract Value, not on a "pay-as-you-go" basis. The School expressly reserves the legal right to demand and collect the full annual tuition balance regardless of the date of withdrawal.</p>
-                            <p class="mb-2"><strong>2. Voluntary Withdrawal & Settlement Calculation:</strong> Should the School agree to a settlement based on early termination, liability is determined strictly according to the 10-Month Fiscal Accrual Schedule (June 1 – April 1) as follows:</p>
-                            <ul class="list-disc pl-5 mb-2">
-                                <li><strong>A. Minimum Earned Tuition (Non-Refundable Deposit):</strong> Immediately upon enrollment, 30% of the Total Contract Value is considered fully earned by the School. This portion represents reasonable liquidated damages for administrative overhead, seat reservation, and the initial billing quarter (June, July, August) and is non-refundable under any circumstances.</li>
-                                <li><strong>B. Accrual of Instructional Tuition:</strong> Commencing on September 1st, tuition is earned by the School in monthly installments of 10%. Mid-Month Withdrawals: For any partial month of attendance, tuition is earned on a pro-rata basis calculated daily from the first day of that month through the date of withdrawal.</li>
-                                <li><strong>C. Liquidated Damages for Early Termination:</strong> In recognition of the difficulty in filling vacancies mid-year, an Early Termination Fee equal to 20% of the remaining unearned contract balance will be assessed. This fee is agreed to be a reasonable estimate of the School’s damages and is not a penalty.</li>
-                            </ul>
-                            <p class="mb-2"><strong>3. Contract Maturity (The "April 1st Lock"):</strong> By April 1st, the sum of the Minimum Earned Tuition and Accrued Instructional Tuition equals 100% of the Contract Value. Consequently, any withdrawal occurring on or after April 1st results in full financial liability for the entire annual tuition, with no refunds or adjustments permitted.</p>
-                            <p class="mb-4"><strong>4. Hardship & Compassionate Review:</strong> While the financial obligations outlined above are binding to ensure the School's operational stability, Silicon Valley Academy remains deeply committed to supporting our families. We understand that unforeseen life events occur. Appeal Process: In cases of severe, documented financial hardship (e.g., significant loss of income, medical emergency, or relocation due to employment), families may submit a formal written appeal to the Board of Directors regarding the Early Termination Fee. Discretionary Relief: Modifications to the liability policy are rare and granted solely at the Board's discretion on a case-by-case basis. This provision does not guarantee a waiver but ensures every family is heard with compassion.</p>
-                            
-                            <p class="mb-2 font-bold">Volunteer Policy Fees:</p>
-                            <p class="mb-2">If a family chooses to opt out of volunteering upon enrollment for the first semester, a volunteer fee of $350 will be charged to the family’s Gradelink account and due 7/1/26.</p>
-                            <p class="mb-2">If a family chooses to opt out of volunteering upon enrollment for the second semester, a volunteer fee of $350 will be charged to the family’s Gradelink account and due 1/1/27.</p>
-                            <p class="mb-2">If a family’s required volunteer hours from the first semester are not fulfilled by January 14, 2027, a volunteer fee of $450 will be charged to the family’s February statement in GradeLink.</p>
-                            <p class="mb-2">If a family’s required volunteer hours from the second semester are not fulfilled by June 4, 2027, a volunteer fee of $450 will be charged to the family’s July statement in GradeLink.</p>
-                            <p class="mb-2">Parent(s)/guardian(s) will be assessed a $35 fee on any charge that is late or does not clear.</p>
-                            <p class="mb-2">Parent(s)/guardian(s) will be assessed a 2.5% convenience fee for credit card payments.</p>
-                        </div>
-                        <label class="flex items-center text-sm font-semibold text-slate-800 opacity-50 cursor-not-allowed" id="agreement-checkbox-label">
-                            <input type="checkbox" id="tuition-agree-check" class="rounded text-teal-600 mr-2" disabled> I have read and agree to the Tuition & Enrollment Policy.
-                        </label>
-                    </div>
-
-                    <!-- Step 6: Payment -->
-                    <div id="step-6" class="wizard-step hidden">
-                        <h2 class="text-xl font-bold text-slate-800 mb-4">Registration Payment</h2>
-                        <p class="text-sm text-slate-600 mb-4">Please download, read, and review SVA's Parent Handbook found at the parent portal with SVA's policies and procedures.</p>
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center mb-6">
-                            <p class="text-slate-600 mb-2">Registration Fee ($150 per student)</p>
-                            <div class="text-4xl font-bold text-slate-900 mb-4" id="total-payment-amount">$0.00</div>
-                            <p class="text-xs text-red-500 mb-4">If you have a balance due on Gradelink, enrollment will be held.</p>
-                            
-                            <!-- PayPal Placeholder -->
-                            <button id="paypal-btn" class="bg-[#FFC439] hover:bg-[#F4BB30] text-blue-900 font-bold py-3 px-8 rounded-full shadow-sm transition-transform transform hover:scale-105 flex items-center justify-center mx-auto mb-4 w-64">
-                                <i class="ph-paypal-logo text-2xl mr-2"></i> Pay Now with PayPal
-                            </button>
-                            <p id="payment-status-text" class="text-sm font-bold text-slate-400">Payment Pending...</p>
-                        </div>
-
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
-                            <p class="text-sm text-slate-700 mb-3"><strong>Final Agreement:</strong> By initialing below and submitting, I hereby agree to all Silicon Valley Academy policies and procedures, including but not limited to the tuition policy, parent-volunteer policy, parent honor code, and student disciplinary code.</p>
-                            <div class="flex items-center justify-center">
-                                <label class="mr-3 font-semibold text-slate-700">Initials:</label>
-                                <input type="text" id="final-initials" class="w-24 uppercase text-center border-slate-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" maxlength="4" placeholder="XX">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Footer Navigation -->
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-between rounded-b-xl">
-                    <button id="wizard-prev-btn" class="px-4 py-2 text-slate-600 hover:text-slate-900 font-medium hidden">Back</button>
-                    <button id="wizard-next-btn" class="px-6 py-2 bg-teal-600 text-white font-bold rounded-lg hover:bg-teal-700 shadow-sm">Next</button>
-                    <button id="wizard-submit-btn" class="hidden px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">Submit Enrollment</button>
                 </div>
             </div>
-        </div>
 
-        <!-- Portal Header/Nav (Existing) -->
-        <div class="min-h-screen bg-slate-50">
-            <header class="bg-white shadow-sm sticky top-0 z-40">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div class="flex items-center justify-between h-20">
-                        <div class="flex items-center">
-                            <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-12 w-auto">
-                            <div class="ml-4">
-                                <h1 class="text-2xl font-bold text-slate-900">Silicon Valley Academy</h1>
-                                <p class="text-sm text-slate-500">Parent Portal (beta)</p>
-                            </div>
-                        </div>
-                        <div class="hidden sm:flex items-center">
-                            <div id="user-info-desktop" class="mr-4 text-right"></div>
-                            <button onclick="signOut();" class="bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition duration-300">Sign Out</button>
-                        </div>
-                        <div class="sm:hidden flex items-center">
-                            <button id="mobile-menu-button" class="p-2 rounded-md text-slate-500 hover:bg-teal-600 hover:text-white">
-                                <i id="menu-icon-open" class="ph-list text-2xl"></i><i id="menu-icon-close" class="ph-x text-2xl hidden"></i>
-                            </button>
-                        </div>
+            <div id="actions-content" class="tab-content">
+                <div id="actions-content-container">
                     </div>
-                </div>
-                <div class="sm:hidden hidden" id="mobile-menu">
-                    <div class="pt-4 pb-3 border-b border-slate-200"><div id="user-info-mobile" class="px-5"></div></div>
-                    <div id="main-nav-mobile" class="px-2 pt-2 pb-3 space-y-1"></div>
-                    <div class="pt-4 pb-3 border-t border-slate-200 px-2"><button onclick="signOut();" class="w-full bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg">Sign Out</button></div>
-                </div>
-            </header>
+            </div>
 
-            <nav class="hidden sm:block bg-white border-b border-slate-200">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center -mb-px" id="main-nav">
-                    <button class="tab-btn tab-active text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="dashboard"><i class="ph-house mr-2"></i>Dashboard</button>
-                    <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="actions"><i class="ph-bell-ringing mr-2"></i>Actions</button>
-                    <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="volunteering"><i class="ph-hands-clapping mr-2"></i>Volunteering</button>
-                    <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="signups"><i class="ph-list-checks mr-2"></i>My Signups</button>
-                    <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="pto"><i class="ph-users-three mr-2"></i>PTO</button>
-                    <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="faq-forms"><i class="ph-link mr-2"></i>Resources</button>
-                    <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="live-event"><i class="ph-video-camera-fill mr-2"></i>Live Events</button>
-                    <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="calendar"><i class="ph-calendar mr-2"></i>Calendar</button>
-                </div>
-            </nav>
-
-            <main class="max-w-7xl mx-auto py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
-                <div id="dashboard" class="tab-content tab-content-active"><h2 class="text-3xl font-bold text-slate-900 mb-6">My Students</h2><div id="student-content-container" class="space-y-12"></div></div>
-                <div id="actions" class="tab-content"><h2 class="text-3xl font-bold text-slate-900 mb-6">Actions</h2><div id="actions-content-container" class="space-y-10"></div></div>
-                <div id="volunteering" class="tab-content">
-                    <h2 class="text-3xl font-bold text-slate-900 mb-6">Volunteering Opportunities</h2>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div><label class="block text-sm font-medium text-slate-700">Semester</label><select id="filter-semester" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option value="all">All</option><option value="1">Semester 1</option><option value="2">Semester 2</option></select></div>
-                            <div><label class="block text-sm font-medium text-slate-700">Event</label><select id="filter-event" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option value="all">All Events</option></select></div>
-                            <div><label class="block text-sm font-medium text-slate-700">Time</label><select id="filter-time" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option>All</option><option>Morning</option><option>Afternoon</option><option>Evening</option></select></div>
-                            <div><label class="block text-sm font-medium text-slate-700">Hours</label><select id="filter-hours" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option value="99">Any</option><option value="2">Up to 2</option><option value="4">Up to 4</option></select></div>
-                            <div><label class="block text-sm font-medium text-slate-700">Location</label><select id="filter-location" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option>All</option><option>On-Campus</option><option>Remote</option></select></div>
-                            <div><label class="block text-sm font-medium text-slate-700">Sort</label><select id="filter-sort" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option value="default">Default</option><option value="recent">Recently Added</option></select></div>
+            <div id="resources-content" class="tab-content">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <a href="#" class="block p-6 bg-white border border-slate-200 rounded-xl hover:shadow-md transition-shadow">
+                        <div class="flex items-center mb-2">
+                            <i class="ph-book-open text-2xl text-teal-600 mr-3"></i>
+                            <h3 class="font-semibold text-slate-800">Parent Handbook</h3>
                         </div>
-                    </div>
-                    <div id="volunteering-list" class="space-y-6"><p>Loading...</p></div>
+                        <p class="text-slate-500 text-sm">View the 2025-2026 handbook.</p>
+                    </a>
+                    <a href="#" class="block p-6 bg-white border border-slate-200 rounded-xl hover:shadow-md transition-shadow">
+                        <div class="flex items-center mb-2">
+                            <i class="ph-calendar text-2xl text-teal-600 mr-3"></i>
+                            <h3 class="font-semibold text-slate-800">Academic Calendar</h3>
+                        </div>
+                        <p class="text-slate-500 text-sm">Key dates and holidays.</p>
+                    </a>
                 </div>
-                <div id="signups" class="tab-content"><h2 class="text-3xl font-bold text-slate-900 mb-6">My Volunteer Hours</h2><div id="my-signups-content"></div></div>
-                <div id="pto" class="tab-content"><h2 class="text-3xl font-bold text-slate-900 mb-6">PTO</h2><div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200"><p class="text-slate-600">The PTO provides a valuable opportunity for parents to have a voice and actively contribute to their children's journey at SVA. To reach the PTO leadership, please email <a href="mailto:pto@svamail.com" class="text-teal-600 hover:underline">pto@svamail.com</a>.</p></div></div>
-                <div id="faq-forms" class="tab-content">
-                    <h2 class="text-3xl font-bold text-slate-900 mb-6">Resources</h2>
-                    <div class="flex border-b border-gray-200"><button class="faq-forms-tab-btn tab-active px-6 py-3 text-sm font-medium" data-tab="faq-content">FAQ</button><button class="faq-forms-tab-btn px-6 py-3 text-sm font-medium text-slate-500" data-tab="forms-content">Forms</button><button class="faq-forms-tab-btn px-6 py-3 text-sm font-medium text-slate-500" data-tab="newsletters-content">Newsletters</button><button class="faq-forms-tab-btn px-6 py-3 text-sm font-medium text-slate-500" data-tab="quicklinks-content">Quick Links</button></div>
-                    <div class="bg-white p-6 rounded-b-xl shadow-sm border border-t-0 border-slate-200"><div id="faq-content" class="faq-forms-tab-content"></div><div id="forms-content" class="faq-forms-tab-content hidden"></div><div id="newsletters-content" class="faq-forms-tab-content hidden"></div><div id="quicklinks-content" class="faq-forms-tab-content hidden"></div></div>
-                </div>
-                <div id="live-event" class="tab-content"></div>
-                <div id="calendar" class="tab-content"><h2 class="text-3xl font-bold text-slate-900 mb-6">Calendar</h2><div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"><iframe src="https://calendar.google.com/calendar/embed?src=svaschool.org_us4ga4j1cfs27epj0f2dfegcl0%40group.calendar.google.com&ctz=America/Los_Angeles" style="border: 0" width="100%" height="600" frameborder="0" scrolling="no"></iframe></div></div>
-            </main>
-            <footer class="bg-white mt-12 border-t border-slate-200"><div class="max-w-7xl mx-auto py-6 text-center text-slate-500 text-sm"><p>&copy; 2025 BMNS. All Rights Reserved - (parent.portal@svaschool.org)</p></div></footer>
-        </div>
-        <!-- QR Modal -->
-        <div id="qr-code-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center">
-            <div class="relative bg-white rounded-md p-5 w-96 shadow-lg text-center"><h3 class="text-lg font-medium text-gray-900">Event Check-in QR Code</h3><div id="qrcode" class="mx-auto my-4"></div><button onclick="closeModal('qr-code-modal')" class="px-4 py-2 bg-teal-600 text-white rounded-md w-full">Close</button></div>
-        </div>
+            </div>
+        </main>
     </div>
 
     <script>
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNo5dyu7Rg_78PwCaZdtbg3LJEwMlU5sxoyiGgM3E2xITjDtwLzshFdDCMQSAX8w2T/exec';
-        const NEWSLETTER_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdZkNNppgbr_FdH2FOAztYpujc9A4URAsQIlWnADSypDlb5_KnCiVP3EImRK96jWK3Yg/exec';
-        const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
-        let ID_TOKEN = null;
-        let portalData = {};
-        let enrollmentState = { step: 1, selectedStudents: [], isPaymentComplete: false };
-
-        // --- GLOBAL HELPERS ---
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function showLoginScreen(id) { document.getElementById('login-screen').classList.add('hidden'); document.getElementById('passkey-verify-screen').classList.add('hidden'); if(document.getElementById(id)) document.getElementById(id).classList.remove('hidden'); }
-        function formatDate(d) { if(!d) return 'N/A'; const date = new Date(d); return !isNaN(date.getTime()) ? date.toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'}) : d; }
-        function decodeGrade(g) { const s = String(g).toUpperCase(); return s==='P'?'Pre-K':(s==='0'||s==='K'?'KG':`Grade ${s}`); }
-        function switchToTab(t) { 
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active')); 
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('tab-content-active')); 
-            document.querySelectorAll(`.tab-btn[data-tab="${t}"]`).forEach(b => b.classList.add('tab-active')); 
-            document.getElementById(t).classList.add('tab-content-active'); 
-            document.getElementById('mobile-menu').style.display = 'none';
-        }
-        function switchToTabAndSubTab(main, sub) { switchToTab(main); document.querySelectorAll('.faq-forms-tab-btn').forEach(b => { b.classList.remove('tab-active'); b.classList.add('text-slate-500'); }); document.querySelector(`.faq-forms-tab-btn[data-tab="${sub}"]`).classList.add('tab-active'); document.querySelectorAll('.faq-forms-tab-content').forEach(c => c.classList.add('hidden')); document.getElementById(sub).classList.remove('hidden'); }
-
-        // --- ENROLLMENT WIZARD LOGIC ---
-        function startEnrollment() {
-            enrollmentState = { step: 1, selectedStudents: [], isPaymentComplete: false };
-            updateWizardStep(1);
-            
-            // Start Countdown
-            const end = new Date("2026-02-16T08:30:00-08:00").getTime();
-            const timer = setInterval(() => {
-                const now = new Date().getTime();
-                const dist = end - now;
-                if (dist < 0) { clearInterval(timer); document.getElementById('enrollment-countdown').innerHTML = "EXPIRED"; }
-                else {
-                    const d = Math.floor(dist / (1000 * 60 * 60 * 24));
-                    const h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                    const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
-                    const s = Math.floor((dist % (1000 * 60)) / 1000);
-                    document.getElementById('enrollment-countdown').innerHTML = `${d}d ${h}h ${m}m ${s}s`;
-                }
-            }, 1000);
-
-            // Using existing student data, so no extra fetch needed immediately
-            renderEnrollmentStudents(portalData.students); 
-            openModal('enrollment-modal');
-        }
-
-        function renderEnrollmentStudents(students) {
-            const list = document.getElementById('enrollment-student-list');
-            list.innerHTML = students.map(s => `
-                <label class="flex items-center p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
-                    <input type="checkbox" class="enroll-student-check h-5 w-5 text-teal-600 rounded" value="${s.uniqueStudentId}" data-name="${s.studentName}" data-grade="${s.grade}">
-                    <div class="ml-3">
-                        <span class="block font-semibold text-slate-900">${s.studentName}</span>
-                        <span class="block text-xs text-slate-500">Current Grade: ${decodeGrade(s.grade)}</span>
-                    </div>
-                </label>
-            `).join('');
-            
-            // Populate Contact Info (Step 2)
-            const contactDiv = document.getElementById('enrollment-contact-display');
-            // Mock family info retrieval (assuming first student has family contact info)
-            const fam = students[0]; 
-            // In a real app, you might want to fetch 'family' object separately
-            contactDiv.innerHTML = `
-                <div><span class="block text-xs text-slate-500">Mother</span><span class="font-medium">${fam.motherName || 'N/A'}</span></div>
-                <div><span class="block text-xs text-slate-500">Father</span><span class="font-medium">${fam.fatherName || 'N/A'}</span></div>
-                <div><span class="block text-xs text-slate-500">Email(s)</span><span class="font-medium">${fam.parentEmail || 'N/A'}</span></div>
-                <div><span class="block text-xs text-slate-500">Phone</span><span class="font-medium">${fam.phone || 'N/A'}</span></div>
-                <div><span class="block text-xs text-slate-500">Address</span><span class="font-medium">${fam.address || 'N/A'}</span></div>
-            `;
-        }
-
-        function updateWizardStep(step) {
-            document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
-            document.getElementById(`step-${step}`).classList.remove('hidden');
-            
-            // Update Header Indicators
-            document.querySelectorAll('.step-item').forEach(el => {
-                const s = parseInt(el.dataset.step);
-                const indicator = el.querySelector('.step-indicator');
-                if (s < step) { indicator.className = 'step-indicator step-completed'; indicator.innerHTML = '<i class="ph-check"></i>'; }
-                else if (s === step) { indicator.className = 'step-indicator step-active'; indicator.innerHTML = s; }
-                else { indicator.className = 'step-indicator step-inactive'; indicator.innerHTML = s; }
-            });
-
-            // Button Logic
-            const prevBtn = document.getElementById('wizard-prev-btn');
-            const nextBtn = document.getElementById('wizard-next-btn');
-            const submitBtn = document.getElementById('wizard-submit-btn');
-            
-            prevBtn.classList.toggle('hidden', step === 1);
-            nextBtn.classList.toggle('hidden', step === 6);
-            submitBtn.classList.toggle('hidden', step !== 6);
-            
-            // Step Specific Logic
-            if (step === 4) renderTuitionTable();
-            if (step === 6) {
-                const total = enrollmentState.selectedStudents.length * 150;
-                document.getElementById('total-payment-amount').textContent = `$${total.toFixed(2)}`;
-                document.getElementById('wizard-submit-btn').disabled = true; // Wait for payment
-                enrollmentState.isPaymentComplete = false;
-                document.getElementById('paypal-btn').disabled = false;
-                document.getElementById('paypal-btn').classList.remove('opacity-50', 'cursor-not-allowed');
-                document.getElementById('payment-status-text').innerHTML = 'Payment Pending...';
+        // --- CONFIGURATION ---
+        const WEB_APP_URL = "https://script.google.com/macros/s/AKfycbyiXpPzUeU-vE5JqD9P_wXn_ZqWv_gNqV_K9_X_n_ExampleID/exec"; 
+        
+        // --- STATE ---
+        let currentUserEmail = "";
+        let globalStudentData = [];
+        let ID_TOKEN = "";
+        
+        // --- LOGIN FLOW ---
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            if (token) {
+                // Magic Link Login
+                ID_TOKEN = token;
+                document.getElementById('login-screen').classList.add('hidden');
+                document.getElementById('app-container').classList.remove('hidden');
+                fetchData(token);
+            } else {
+                // Show Login Screen
+                document.getElementById('login-screen').classList.remove('hidden');
             }
+        };
+
+        function handleRequestPasskey() {
+            const emailInput = document.getElementById('login-email-input');
+            const email = emailInput.value.trim();
+            if (!email) { alert("Please enter your email."); return; }
+
+            const btn = document.getElementById('request-passkey-btn');
+            btn.disabled = true; btn.textContent = "Sending...";
+
+            // Send request to backend
+            fetch(WEB_APP_URL, {
+                method: 'POST', mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                body: JSON.stringify({ action: 'requestLoginPasskey', email: email })
+            }).then(() => {
+                document.getElementById('passkey-email-display').textContent = email;
+                document.getElementById('login-view-email').classList.add('hidden');
+                document.getElementById('passkey-verify-screen').classList.remove('hidden');
+            }).catch(err => {
+                console.error(err); alert("Error sending link. Please try again.");
+                btn.disabled = false; btn.textContent = "Send Login Link";
+            });
         }
 
-        function renderTuitionTable() {
-            const tbody = document.getElementById('tuition-table-body');
-            tbody.innerHTML = enrollmentState.selectedStudents.map(id => {
-                const s = portalData.students.find(st => String(st.uniqueStudentId) === String(id));
-                let nextGrade = 'Unknown';
-                let fees = { annual: '$0', monthly: '$0' };
-                // Logic based on user provided table
-                const g = String(s.grade).toUpperCase();
-                
-                // Determine next grade
-                if (g === 'P' || g === 'PRE-K') nextGrade = 'KG';
-                else if (g === 'K' || g === '0') nextGrade = '1';
-                else {
-                    const num = parseInt(g);
-                    nextGrade = !isNaN(num) ? (num + 1).toString() : 'Unknown';
-                }
+        function handleSignOut() {
+            ID_TOKEN = "";
+            window.location.href = window.location.pathname; // Clear URL params
+        }
 
-                // Determine fees based on NEXT grade
-                if (nextGrade === 'KG' || ['1','2','3','4','5'].includes(nextGrade)) { 
-                    fees = { annual:'$12,800', monthly:'$1,280' }; 
-                } else if (['6','7','8'].includes(nextGrade)) { 
-                    fees = { annual:'$14,200', monthly:'$1,420' }; 
-                } else if (nextGrade === '9' || nextGrade === 'High School') {
-                    fees = { annual:'$10,500', monthly:'$1,050' };
-                } else {
-                    // Fallback for PreK if current was younger
-                    fees = { annual:'$16,300', monthly:'$1,630' }; // Half-day assumption
-                }
+        // --- DATA FETCHING ---
+        function fetchData(token) {
+            // Using 'action=getData' with token authentication
+            const scriptUrl = `${WEB_APP_URL}?action=getData&token=${encodeURIComponent(token)}`;
+            
+            fetch(scriptUrl)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        currentUserEmail = data.email;
+                        globalStudentData = data.data;
+                        document.getElementById('user-name-display').textContent = currentUserEmail;
+                        renderDashboard(globalStudentData);
+                        renderActionsTab(globalStudentData);
+                    } else {
+                        alert("Session expired or invalid. Please login again.");
+                        handleSignOut();
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert("Failed to load data.");
+                });
+        }
+
+        // --- RENDER DASHBOARD ---
+        function renderDashboard(students) {
+            const container = document.getElementById('students-container');
+            if (!students || students.length === 0) {
+                container.innerHTML = '<div class="text-center py-10 text-slate-500">No student records found.</div>';
+                return;
+            }
+
+            container.innerHTML = students.map(student => {
+                // Teachers HTML
+                const teachersHtml = student.teachers.map(t => `
+                    <div class="flex items-center p-3 bg-slate-50 rounded-lg border border-slate-100">
+                        <img src="${t.photoUrl}" class="w-10 h-10 rounded-full mr-3 border border-slate-200">
+                        <div>
+                            <p class="text-sm font-semibold text-slate-800">${t.teacherName}</p>
+                            <p class="text-xs text-slate-500">${t.role} &bull; ${t.email}</p>
+                        </div>
+                    </div>`).join('');
                 
-                return `<tr>
-                    <td class="p-3 border-b text-slate-800 font-medium">${s.studentName} <span class="text-xs text-slate-500 block">Next Grade: ${nextGrade}</span></td>
-                    <td class="p-3 border-b">${fees.annual}</td>
-                    <td class="p-3 border-b">${fees.monthly}</td>
-                    <td class="p-3 border-b">$250</td>
-                </tr>`;
+                // Volunteering HTML (Summary)
+                const volunteerHtml = `
+                    <div class="mt-4 p-4 bg-orange-50 rounded-xl border border-orange-100">
+                        <h4 class="font-semibold text-orange-800 mb-2 flex items-center"><i class="ph-hand-heart mr-2"></i>Volunteering Opportunities</h4>
+                        <div class="space-y-2">
+                             ${student.events.slice(0, 2).map(e => `
+                                <div class="flex justify-between items-center text-sm">
+                                    <span class="text-slate-700">${e.name}</span>
+                                    <span class="text-xs bg-white px-2 py-1 rounded border border-orange-200 text-orange-600">${e.totalNeeded - e.totalSignedUp} spots left</span>
+                                </div>`).join('')}
+                        </div>
+                        <button onclick="switchTab('actions')" class="w-full mt-3 text-sm text-orange-700 font-medium hover:text-orange-900 text-center">View all & Sign up</button>
+                    </div>`;
+
+                return `
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="bg-teal-700 p-4 text-white flex justify-between items-center">
+                        <div>
+                            <h2 class="text-xl font-bold">${student.studentName}</h2>
+                            <p class="text-teal-100 text-sm">Grade ${decodeGrade(student.grade)} &bull; ${student.classroom}</p>
+                        </div>
+                        <div class="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm">
+                            <span class="font-bold">${student.studentName.charAt(0)}</span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <div class="mb-4">
+                            <h3 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Teachers</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">${teachersHtml}</div>
+                        </div>
+                        ${volunteerHtml}
+                    </div>
+                </div>`;
             }).join('');
         }
 
-        // --- AUTH & INIT ---
-        function handleCredentialResponse(response) { handleLoginSuccess(response.credential); }
-        function handleLoginSuccess(token) {
-            ID_TOKEN = token; localStorage.setItem('sva_id_token', token);
-            const p = JSON.parse(atob(token.split('.')[1]));
-            document.getElementById('login-container').classList.add('hidden');
-            document.getElementById('loading-overlay').classList.remove('hidden');
-            const pic = p.picture || `https://placehold.co/100x100/E2E8F0/4A5568?text=${p.email[0].toUpperCase()}`;
-            const info = `<div class="flex items-center"><img class="h-8 w-8 rounded-full" src="${pic}"><div class="ml-3"><div class="text-base font-medium text-slate-800">${p.name||p.email}</div><div class="text-sm font-medium text-slate-500">${p.email}</div></div></div>`;
-            document.getElementById('user-info-desktop').innerHTML = info; document.getElementById('user-info-mobile').innerHTML = info;
-            fetchData(token); fetchAndRenderResources(token); addEventListeners();
-        }
-        function signOut() { google.accounts.id.disableAutoSelect(); localStorage.removeItem('sva_id_token'); window.location.reload(); }
+        // --- RENDER ACTIONS & ENROLLMENT ---
+        let enrollmentState = {
+            selectedStudents: [],
+            volunteerOption: 'None',
+            contactStatus: 'Needs_Review',
+            paymentPlan: 'Once',
+            regFee: 0,
+            paymentId: ''
+        };
 
-        // --- FETCHERS ---
-        function fetchData(token) {
-            fetch(`${WEB_APP_URL}?token=${token}`).then(r=>r.json()).then(d=>{
-                document.getElementById('loading-overlay').classList.add('hidden');
-                if(d.status!=='success') throw new Error(d.error);
-                portalData = d.data;
-                document.getElementById('portal-container').classList.remove('hidden');
-                renderDashboard(portalData.students); renderActionsTab(portalData.students); populateEventFilter(portalData.allEvents); applyAndRenderFilters(); renderMySignups(portalData.volunteerProgress); renderMySignupsList(portalData.mySignups); renderMobileMenu();
-                if(typeof phosphor !== 'undefined') phosphor.replace();
-            }).catch(e=>{ console.error(e); alert("Failed to load portal data."); });
-        }
-        
-        function fetchAndRenderResources(token) {
-            fetch(`${NEWSLETTER_WEB_APP_URL}?token=${token}`).then(r=>r.json()).then(d=>{
-                if(d.status==='success') { renderFAQ(d.data.faq); renderForms(d.data.forms); renderNewsletters(d.data.newsletters); renderQuickLinks(d.data.quickLinks); renderLiveEvent(d.data.liveEvent); }
-            }).catch(console.error);
-        }
-
-        // --- RENDERERS ---
-        function renderDashboard(students) {
-            const c = document.getElementById('student-content-container'); c.innerHTML = '';
-            students.forEach(s => {
-                const card = document.createElement('div');
-                card.innerHTML = `<div class="bg-white rounded-xl shadow-md p-6 border border-slate-200"><h3 class="text-2xl font-bold text-slate-900 mb-1">${s.studentName}</h3><p class="text-slate-600">${decodeGrade(s.grade)} - Room ${s.classroom}</p></div>`;
-                c.appendChild(card);
-            });
-        }
-        
         function renderActionsTab(students) {
             const container = document.getElementById('actions-content-container');
-            const reEnrollHtml = `
-            <div class="bg-gradient-to-r from-teal-500 to-teal-700 rounded-xl shadow-lg p-6 text-white mb-8">
-                <div class="flex flex-col md:flex-row justify-between items-center">
-                    <div>
-                        <h2 class="text-2xl font-bold mb-2">2026-2027 Re-enrollment</h2>
-                        <p class="text-teal-100 mb-4 md:mb-0">Priority window is now open. Secure your spot by Feb 16, 2026.</p>
-                    </div>
-                    <button onclick="startEnrollment()" class="bg-white text-teal-700 font-bold py-3 px-6 rounded-lg shadow-md hover:bg-teal-50 transition transform hover:scale-105">
-                        Begin Re-enrollment
-                    </button>
-                </div>
-            </div>`;
             
+            // 1. Enrollment Wizard
+            const enrollmentHtml = renderReEnrollmentWizard(students);
+
+            // 2. Absence Form (Existing logic simplified for space)
             const studentOptions = students.map(s => `<option value="${s.uniqueStudentId}">${s.studentName}</option>`).join('');
-            const standardActions = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="font-semibold text-lg text-slate-800 mb-4">Report Absence</h3>
-                    <form id="absence-form" class="space-y-4">
-                        <select id="student-select" class="block w-full rounded-md border-slate-300 shadow-sm">${studentOptions}</select>
-                        <button type="submit" class="w-full bg-slate-100 text-slate-700 font-semibold py-2 rounded-lg hover:bg-slate-200">Send Notification</button>
-                    </form>
-                </div>
-                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <h3 class="font-semibold text-lg text-slate-800 mb-4">Authorized Pickup</h3>
-                    <form id="pickup-form" class="space-y-4">
-                        <input type="text" placeholder="Pickup Name" class="block w-full rounded-md border-slate-300 shadow-sm">
-                        <button type="submit" class="w-full bg-slate-100 text-slate-700 font-semibold py-2 rounded-lg hover:bg-slate-200">Send Request</button>
-                    </form>
-                </div>
+            const absenceForm = `
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl mx-auto mb-8">
+                <h3 class="font-semibold text-lg text-slate-800 mb-4">Report Absence</h3>
+                <form onsubmit="event.preventDefault(); alert('Absence reported (Simulated)');">
+                     <select class="w-full mb-3 rounded-md border-slate-300 shadow-sm">${studentOptions}</select>
+                     <button type="submit" class="bg-teal-600 text-white px-4 py-2 rounded">Submit Report</button>
+                </form>
             </div>`;
+
+            container.innerHTML = enrollmentHtml + absenceForm;
             
-            container.innerHTML = reEnrollHtml + standardActions;
+            // Initialize Timer
+            startPriorityCountdown();
         }
 
-        function renderVolunteering(opportunities) {
-            const list = document.getElementById('volunteering-list');
-            list.innerHTML = '';
-            if (!opportunities || opportunities.length === 0) {
-                list.innerHTML = '<div class="text-center text-slate-500 bg-white p-6 rounded-lg shadow-sm border border-slate-200">No volunteering opportunities match your current filters.</div>';
-                return;
-            }
-            const groupedByEvent = opportunities.reduce((acc, opp) => {
-                const eventName = portalData.allEvents.find(e => e.id === opp.eventid)?.name || 'General Opportunities';
-                if (!acc[eventName]) { acc[eventName] = []; }
-                acc[eventName].push(opp);
-                return acc;
-            }, {});
-            Object.keys(groupedByEvent).forEach((eventName, index) => {
-                const opportunitiesInEvent = groupedByEvent[eventName];
-                const card = document.createElement('div');
-                card.className = 'bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4';
-                card.innerHTML = `<h3 class="text-xl font-bold text-slate-900 mb-2">${eventName}</h3>` + 
-                    opportunitiesInEvent.map(opp => `
-                        <div class="border-t pt-3 mt-3 first:border-0 first:pt-0 first:mt-0">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <h4 class="font-semibold text-slate-800">${opp.title}</h4>
-                                    <p class="text-sm text-slate-500">${formatDate(opp.date)} - ${opp.time}</p>
-                                </div>
-                                <button class="signup-btn bg-teal-100 text-teal-800 px-3 py-1 rounded text-sm font-bold" data-id="${opp.id}">Sign Up</button>
+        function renderReEnrollmentWizard(students) {
+            const familyInfo = students[0] || {}; 
+            
+            // Generate Student Checkboxes with Next Grade Logic
+            const studentCheckboxes = students.map(s => {
+                const currentGrade = String(s.grade).trim();
+                let nextGrade = 'KG';
+                // Simple next grade logic for Display
+                if (currentGrade === 'Pre-K' || currentGrade === 'PK') nextGrade = 'KG';
+                else if (currentGrade === 'K' || currentGrade === 'KG') nextGrade = '1';
+                else {
+                    const g = parseInt(currentGrade);
+                    nextGrade = isNaN(g) ? 'KG' : String(g + 1);
+                }
+
+                return `
+                <div class="flex items-center justify-between p-3 border border-slate-200 rounded-lg mb-2 bg-slate-50">
+                    <label class="flex items-center cursor-pointer">
+                        <input type="checkbox" class="enrollment-checkbox form-checkbox h-5 w-5 rounded border-slate-300 text-teal-600 focus:ring-teal-500" 
+                            value="${s.uniqueStudentId}" 
+                            data-current-grade="${currentGrade}"
+                            data-next-grade="${nextGrade}"
+                            data-name="${s.studentName}">
+                        <div class="ml-3">
+                            <span class="block font-medium text-slate-800">${s.studentName}</span>
+                            <span class="block text-xs text-slate-500">Current: ${decodeGrade(currentGrade)} &rarr; Next: ${decodeGrade(nextGrade)}</span>
+                        </div>
+                    </label>
+                </div>`;
+            }).join('');
+
+            return `
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl mx-auto mb-8 border-t-4 border-t-teal-600">
+                <h3 class="font-bold text-xl text-slate-800 mb-4">2026-2027 Re-enrollment</h3>
+                
+                <div id="enrollment-wizard-container">
+                    
+                    <div id="step-start" class="enrollment-step active">
+                        <p class="text-slate-600 mb-4">Thank you for enrolling your student at Silicon Valley Academy for the 2026-2027 school year.</p>
+                        <div class="bg-yellow-50 p-4 rounded-md border border-yellow-200 text-sm text-yellow-800 mb-6">
+                            <strong>Note:</strong> Additional time is available for Physician's Reports (PreK), Health/Oral Reports (KG), and Immunization Records until <strong>May 1, 2026</strong>. All other documents are required now.
+                        </div>
+                        
+                        <h4 class="font-semibold text-slate-700 mb-2">Select students to re-enroll:</h4>
+                        <div class="mb-6">${studentCheckboxes}</div>
+                        
+                        <div class="bg-teal-50 p-4 rounded-lg text-center mb-6 border border-teal-100">
+                            <span class="text-xs font-bold text-teal-600 uppercase tracking-wide">Priority Window Ends In</span>
+                            <div id="priority-countdown" class="text-3xl font-mono font-bold text-teal-800 my-1">Loading...</div>
+                            <span class="text-xs text-slate-500">February 16, 2026 at 8:30am PST</span>
+                        </div>
+                        <button onclick="enrollmentNext('step-contacts')" class="w-full bg-teal-600 text-white font-semibold py-3 rounded-lg hover:bg-teal-700 shadow-sm">Next</button>
+                    </div>
+
+                    <div id="step-contacts" class="enrollment-step">
+                        <h4 class="font-bold text-lg text-slate-800 mb-4">Review Contact Information</h4>
+                        <div class="space-y-3 text-sm text-slate-700 bg-slate-50 p-5 rounded-lg border border-slate-200 mb-6">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div><p class="text-xs text-slate-500 uppercase">Father</p><p class="font-medium">${familyInfo.fatherName || '-'}</p></div>
+                                <div><p class="text-xs text-slate-500 uppercase">Mother</p><p class="font-medium">${familyInfo.motherName || '-'}</p></div>
+                                <div><p class="text-xs text-slate-500 uppercase">Phone 1</p><p class="font-medium">${familyInfo.phone1 || '-'}</p></div>
+                                <div><p class="text-xs text-slate-500 uppercase">Phone 2</p><p class="font-medium">${familyInfo.phone2 || '-'}</p></div>
+                                <div class="col-span-2"><p class="text-xs text-slate-500 uppercase">Email</p><p class="font-medium">${familyInfo.parentEmail || '-'}</p></div>
+                                <div class="col-span-2"><p class="text-xs text-slate-500 uppercase">Address</p><p class="font-medium">${familyInfo.street || ''}<br>${familyInfo.city || ''}, ${familyInfo.state || ''} ${familyInfo.zip || ''}</p></div>
                             </div>
                         </div>
-                    `).join('');
-                list.appendChild(card);
-            });
-        }
+                        <p class="text-slate-600 text-sm mb-4 font-medium">Is this information correct?</p>
+                        <div class="flex gap-4">
+                            <button onclick="handleContactVerification(false)" class="flex-1 bg-white border border-slate-300 text-slate-700 font-semibold py-2 rounded-lg hover:bg-slate-50">No, I'll update in Gradelink</button>
+                            <button onclick="handleContactVerification(true)" class="flex-1 bg-teal-600 text-white font-semibold py-2 rounded-lg hover:bg-teal-700">Yes, Correct</button>
+                        </div>
+                    </div>
 
-        function renderMySignups(progress) {
-            const container = document.getElementById('my-signups-content');
-            // Progress Bars
-            const s1 = progress?.semester1 || {completed:0, baseRequired:10, inProgress:0};
-            const s2 = progress?.semester2 || {completed:0, baseRequired:10, inProgress:0};
-            
-            const progressHtml = `
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div>
-                        <h3 class="font-semibold text-slate-800">Semester 1 Progress</h3>
-                        <div class="w-full bg-slate-200 rounded-full h-4 mt-2">
-                            <div class="bg-teal-600 h-4 rounded-full" style="width: ${(s1.completed/s1.baseRequired)*100}%"></div>
+                    <div id="step-volunteer" class="enrollment-step">
+                        <h4 class="font-bold text-lg text-slate-800 mb-2">Parent Volunteer Agreement</h4>
+                        <div class="scrollable-agreement h-64">
+                            <p>Silicon Valley Academy strongly encourages parents to have a high level of involvement in their child(ren)’s education. Volunteer hours are critical to the success of SVA’s programs...</p>
+                            <p class="font-bold mt-2">2026-2027 Volunteer Hours Requirement:</p>
+                            <ul class="list-disc pl-5 mb-2">
+                                <li>1 child enrolled: 10 hours per semester</li>
+                                <li>2 or more children enrolled: 20 hours per semester</li>
+                            </ul>
+                            <p>Parents may choose to opt out of volunteering for the 2026-2027 academic year by paying the fee upfront.</p>
+                            
+                            <div class="my-4 bg-slate-100 p-3 rounded">
+                                <label class="flex items-start space-x-2 mb-2">
+                                    <input type="checkbox" id="vol-opt-s1" class="mt-1 form-checkbox text-teal-600" onchange="updateVolunteerState()">
+                                    <span class="text-sm">I intend to <strong>not volunteer</strong> during the <strong>first semester</strong> and choose to pay up front on Gradelink the volunteer fee of $350 due 7/1/26.</span>
+                                </label>
+                                <label class="flex items-start space-x-2">
+                                    <input type="checkbox" id="vol-opt-s2" class="mt-1 form-checkbox text-teal-600" onchange="updateVolunteerState()">
+                                    <span class="text-sm">I intend to <strong>not volunteer</strong> during the <strong>second semester</strong> and choose to pay up front on Gradelink the volunteer fee of $350 due 1/1/27.</span>
+                                </label>
+                            </div>
+                            
+                            <p class="text-red-600 text-xs italic">
+                                Note: If you choose to volunteer but do not fulfill hours, a fee of $450/semester will be charged.
+                            </p>
                         </div>
-                        <p class="text-xs text-slate-500 mt-1">${s1.completed} / ${s1.baseRequired} hours completed</p>
-                    </div>
-                    <div>
-                        <h3 class="font-semibold text-slate-800">Semester 2 Progress</h3>
-                        <div class="w-full bg-slate-200 rounded-full h-4 mt-2">
-                            <div class="bg-teal-600 h-4 rounded-full" style="width: ${(s2.completed/s2.baseRequired)*100}%"></div>
+                        <div class="mb-6">
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" id="vol-agree-chk" class="form-checkbox text-teal-600 w-5 h-5">
+                                <span class="text-sm font-semibold text-slate-800">I understand the above requirements and agree to fulfill my volunteer obligation.</span>
+                            </label>
                         </div>
-                        <p class="text-xs text-slate-500 mt-1">${s2.completed} / ${s2.baseRequired} hours completed</p>
+                        <button onclick="validateVolunteerAndNext()" class="w-full bg-teal-600 text-white font-semibold py-3 rounded-lg hover:bg-teal-700">Agree and Continue</button>
                     </div>
+
+                    <div id="step-tuition" class="enrollment-step">
+                        <h4 class="font-bold text-lg text-slate-800 mb-2">Tuition Plan (2026-2027)</h4>
+                        <p class="text-sm text-slate-600 mb-4">The following calculations are based on the selected students.</p>
+                        
+                        <div id="calculated-tuition-display" class="mb-6 overflow-x-auto"></div>
+
+                        <div class="space-y-3 mb-6">
+                            <h5 class="text-sm font-bold text-slate-700">Select Payment Plan:</h5>
+                            <label class="flex items-center p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                                <input type="radio" name="pay-plan" value="Once" class="form-radio text-teal-600 h-5 w-5" checked onchange="enrollmentState.paymentPlan='Once'">
+                                <div class="ml-3">
+                                    <span class="block font-medium text-slate-800">Lump Sum Payment</span>
+                                    <span class="block text-xs text-slate-500">Invoiced and due by June 1, 2026</span>
+                                </div>
+                            </label>
+                            <label class="flex items-center p-4 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 transition-colors">
+                                <input type="radio" name="pay-plan" value="10Month" class="form-radio text-teal-600 h-5 w-5" onchange="enrollmentState.paymentPlan='10Month'">
+                                <div class="ml-3">
+                                    <span class="block font-medium text-slate-800">10-Monthly Payments</span>
+                                    <span class="block text-xs text-slate-500">June 1, 2026 to March 1, 2027</span>
+                                </div>
+                            </label>
+                        </div>
+                        <button onclick="enrollmentNext('step-agreement')" class="w-full bg-teal-600 text-white font-semibold py-3 rounded-lg hover:bg-teal-700">Next</button>
+                    </div>
+
+                    <div id="step-agreement" class="enrollment-step">
+                        <h4 class="font-bold text-lg text-slate-800 mb-2">Tuition Agreement</h4>
+                        <div class="scrollable-agreement">
+                            <p><strong>Silicon Valley Academy’s Tuition Policy requires that:</strong></p>
+                            <p>Tuition payments will be invoiced and paid through GradeLink. Accepted payment forms include ACH/checking account and credit card.</p>
+                            <p>Once your child has been formally admitted for the 2026-2027 school year, you will be required to set-up an auto payment plan within two weeks. If not set up, your child's name will be removed from enrollment.</p>
+                            <p>At the time of registration, a $150 non-refundable registration fee is due per child.</p>
+                            <hr class="my-4">
+                            <p class="font-bold">Tuition Liability & Early Termination Policy</p>
+                            <p><strong>1. Nature of the Financial Obligation:</strong> Enrollment constitutes a binding financial contract for the entire academic year...</p>
+                            <p><strong>2. Voluntary Withdrawal & Settlement Calculation:</strong></p>
+                            <p>A. Minimum Earned Tuition (Non-Refundable Deposit): Immediately upon enrollment, 30% of the Total Contract Value is considered fully earned...</p>
+                            <p>B. Accrual of Instructional Tuition: Commencing Sept 1st, tuition is earned in monthly installments of 10%.</p>
+                            <p>C. Liquidated Damages for Early Termination: 20% of the remaining unearned contract balance.</p>
+                            <p><strong>3. Contract Maturity (The "April 1st Lock"):</strong> Any withdrawal on or after April 1st results in full financial liability.</p>
+                            <p><strong>4. Hardship & Compassionate Review:</strong> Appeals may be submitted to the Board of Directors.</p>
+                            <p>Parent(s)/guardian(s) will be assessed a $35 fee on any late charge and a 2.5% convenience fee for credit cards.</p>
+                        </div>
+                        <div class="mb-6">
+                            <label class="flex items-center space-x-2">
+                                <input type="checkbox" id="tuition-agree-chk" class="form-checkbox text-teal-600 w-5 h-5">
+                                <span class="text-sm font-semibold text-slate-800">I have read and agree to the Tuition Policy and Terms above.</span>
+                            </label>
+                        </div>
+                        <button onclick="validateTuitionAgreement()" class="w-full bg-teal-600 text-white font-semibold py-3 rounded-lg hover:bg-teal-700">Agree and Continue</button>
+                    </div>
+
+                    <div id="step-payment" class="enrollment-step">
+                        <h4 class="font-bold text-lg text-slate-800 mb-4">Registration Payment</h4>
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 text-sm text-blue-800 mb-6">
+                            <i class="ph-info mr-1"></i> Please download, read, and review SVA's Parent Handbook found at the portal resources.
+                        </div>
+                        
+                        <div class="bg-white p-6 rounded-xl border border-slate-200 text-center mb-8 shadow-sm">
+                            <p class="text-slate-600 mb-1">Total Registration Fee Due:</p>
+                            <p id="final-reg-fee-display" class="text-4xl font-bold text-teal-700 mb-2">$0.00</p>
+                            <p class="text-xs text-red-500">Note: If you have a balance due on Gradelink, enrollment will be put on hold.</p>
+                        </div>
+
+                        <div id="paypal-container" class="mb-8 text-center">
+                            <button onclick="mockPayPalPayment()" id="mock-pay-btn" class="bg-[#003087] text-white font-bold py-3 px-8 rounded-full hover:bg-[#001c64] transition-colors shadow-md w-full sm:w-auto flex items-center justify-center mx-auto">
+                                <i class="ph-paypal-logo text-xl mr-2"></i> Pay Now with PayPal
+                            </button>
+                            <div id="payment-success-msg" class="hidden bg-green-50 text-green-700 p-3 rounded-lg border border-green-200 mt-2">
+                                <i class="ph-check-circle weight-fill text-lg align-middle"></i> 
+                                <strong>Payment Successful!</strong><br>
+                                <span class="text-xs">Transaction ID: <span id="trans-id"></span></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-6 border-t pt-6">
+                            <label class="flex items-start space-x-3 mb-3">
+                                <input type="checkbox" id="final-submit-chk" class="mt-1 form-checkbox text-teal-600 w-5 h-5" disabled>
+                                <span class="text-sm text-slate-600 leading-snug">By initialing here and pressing submit, I hereby agree to all Silicon Valley Academy policies and procedures, including but not limited to the tuition policy, parent-volunteer policy, parent honor code, and student disciplinary code.</span>
+                            </label>
+                            <div class="flex items-center">
+                                <span class="text-sm font-bold text-slate-700 mr-2">Initials:</span>
+                                <input type="text" id="initials-input" placeholder="XYZ" class="w-24 border-slate-300 rounded-md shadow-sm uppercase font-mono text-center" maxlength="4" disabled>
+                            </div>
+                        </div>
+
+                        <button onclick="submitEnrollment()" id="final-submit-btn" class="w-full bg-teal-600 text-white font-semibold py-3 rounded-lg hover:bg-teal-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed transition-colors" disabled>Submit Enrollment</button>
+                        <p class="text-xs text-center text-slate-400 mt-3">You will not be able to re-enter registration once submitted.</p>
+                    </div>
+
+                    <div id="step-confirmation" class="enrollment-step text-center py-8">
+                        <div class="h-20 w-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
+                            <i class="ph-check text-4xl"></i>
+                        </div>
+                        <h4 class="font-bold text-2xl text-slate-800 mb-2">Registration Completed!</h4>
+                        <p class="text-slate-600 mb-6">You have successfully re-enrolled:</p>
+                        <div class="inline-block text-left bg-slate-50 p-6 rounded-xl border border-slate-200 mb-8">
+                            <ul id="enrolled-students-list" class="space-y-2 text-slate-800 font-medium"></ul>
+                        </div>
+                        <p class="text-sm text-slate-500">New sibling enrollment window opens on <strong>2/16/2026 at 8:30am PST</strong>.</p>
+                        <button onclick="location.reload()" class="mt-8 text-teal-600 hover:text-teal-800 font-medium">Return to Dashboard</button>
+                    </div>
+
                 </div>
             </div>`;
-            
-            // Signups Lists
-            const listsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div><h3 class="font-semibold mb-2">Upcoming Signups</h3><div id="upcoming-signups-list" class="space-y-3"></div></div>
-                <div><h3 class="font-semibold mb-2">Completed & Past</h3><div id="completed-signups-list" class="space-y-3"></div></div>
-            </div>`;
-            
-            // Matching Info
-            const matchingHtml = getMatchingInfoHtml(portalData.mySignups);
-            
-            container.innerHTML = progressHtml + listsHtml + matchingHtml;
         }
 
-        function renderMySignupsList(signups) {
-            const upcoming = document.getElementById('upcoming-signups-list');
-            const completed = document.getElementById('completed-signups-list');
-            if (!signups) return;
-            
-            const up = signups.filter(s => ['In Progress','Pending Approval'].includes(s.status));
-            const past = signups.filter(s => !['In Progress','Pending Approval'].includes(s.status));
-            
-            upcoming.innerHTML = up.length ? up.map(s => `<div class="bg-white p-4 rounded border border-slate-200 shadow-sm"><h4 class="font-bold">${s.title}</h4><p class="text-sm text-slate-500">${formatDate(s.date)}</p><button class="withdraw-btn text-red-600 text-xs mt-2 hover:underline" data-signup-id="${s.signupId}">Withdraw</button></div>`).join('') : '<p class="text-slate-500 text-sm">No upcoming signups.</p>';
-            
-            completed.innerHTML = past.length ? past.map(s => `<div class="bg-white p-4 rounded border border-slate-200 shadow-sm"><h4 class="font-bold">${s.title}</h4><p class="text-sm text-slate-500">${formatDate(s.date)}</p><span class="text-xs font-bold px-2 py-1 rounded bg-slate-100 text-slate-700">${s.status}</span></div>`).join('') : '<p class="text-slate-500 text-sm">No past signups.</p>';
-        }
+        // --- ENROLLMENT WIZARD LOGIC ---
 
-        function getMatchingInfoHtml(signups) {
-            if (!signups) return '';
-            const twoMonthsAgo = new Date(); twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-            const valid = signups.filter(s => s.status === 'Completed' && new Date(s.date) >= twoMonthsAgo);
-            const rows = valid.map(s => `<tr><td class="p-2 border-b">${formatDate(s.date)}</td><td class="p-2 border-b">${s.title}</td><td class="p-2 border-b font-bold">${s.hours}</td></tr>`).join('');
-            return `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mt-8"><h3 class="font-bold text-lg mb-4">Corporate Matching</h3><p class="text-sm text-slate-600 mb-4">Submit these hours to your employer:</p><table class="w-full text-sm text-left"><thead><tr><th class="p-2 border-b">Date</th><th class="p-2 border-b">Activity</th><th class="p-2 border-b">Hours</th></tr></thead><tbody>${rows || '<tr><td colspan="3" class="p-2 text-center text-slate-500">No recent completed hours.</td></tr>'}</tbody></table></div>`;
-        }
-
-        function populateEventFilter(events) {
-            const select = document.getElementById('filter-event');
-            if(!select || !events) return;
-            const unique = [...new Set(events.map(e => JSON.stringify({id:e.id, name:e.name})))].map(s => JSON.parse(s));
-            unique.forEach(e => {
-                const opt = document.createElement('option');
-                opt.value = e.id;
-                opt.textContent = e.name;
-                select.appendChild(opt);
-            });
-        }
-
-        function applyAndRenderFilters() {
-            // Simplified filter logic for demo
-            if (portalData.volunteering) renderVolunteering(portalData.volunteering);
-        }
-
-        // --- WIZARD EVENTS ---
-        function addEventListeners() {
-            // Wizard Nav
-            document.getElementById('wizard-next-btn').addEventListener('click', () => {
-                if (enrollmentState.step === 1) {
-                    const checkboxes = document.querySelectorAll('.enroll-student-check:checked');
-                    if (checkboxes.length === 0) { alert("Please select at least one student."); return; }
-                    enrollmentState.selectedStudents = Array.from(checkboxes).map(c => c.value);
-                }
-                if (enrollmentState.step === 3) {
-                    if (!document.getElementById('volunteer-agree-check').checked) { alert("You must agree to the volunteer requirements."); return; }
-                }
-                if (enrollmentState.step === 5) {
-                    if (!document.getElementById('tuition-agree-check').checked) { alert("You must agree to the tuition policy."); return; }
-                }
-                enrollmentState.step++;
-                updateWizardStep(enrollmentState.step);
-            });
-            
-            document.getElementById('wizard-prev-btn').addEventListener('click', () => {
-                if (enrollmentState.step > 1) { enrollmentState.step--; updateWizardStep(enrollmentState.step); }
-            });
-
-            // Agreement Scroll
-            document.getElementById('agreement-scroll-box').addEventListener('scroll', function() {
-                if (this.scrollTop + this.clientHeight >= this.scrollHeight - 10) {
-                    const cb = document.getElementById('tuition-agree-check');
-                    cb.disabled = false;
-                    document.getElementById('agreement-checkbox-label').classList.remove('opacity-50', 'cursor-not-allowed');
-                }
-            });
-
-            // PayPal Mock
-            document.getElementById('paypal-btn').addEventListener('click', () => {
-                alert("Redirecting to PayPal for secure payment...");
-                // Simulate Payment Success
-                setTimeout(() => {
-                    enrollmentState.isPaymentComplete = true;
-                    document.getElementById('payment-status-text').innerHTML = '<span class="text-green-600"><i class="ph-check-circle"></i> Payment Verified</span>';
-                    document.getElementById('wizard-submit-btn').disabled = false;
-                    document.getElementById('paypal-btn').classList.add('opacity-50', 'cursor-not-allowed');
-                    document.getElementById('paypal-btn').disabled = true;
-                }, 1500);
-            });
-
-            // Final Submit
-            document.getElementById('wizard-submit-btn').addEventListener('click', () => {
-                const initials = document.getElementById('final-initials').value;
-                if (!initials || initials.length < 2) { alert("Please enter your initials."); return; }
-                
-                // Collect Data
-                const payload = {
-                    action: 'submitEnrollment',
-                    token: ID_TOKEN,
-                    students: enrollmentState.selectedStudents,
-                    contactStatus: document.querySelector('input[name="contact-verify"]:checked').value,
-                    volunteerOptOut: {
-                        s1: document.getElementById('opt-out-s1').checked,
-                        s2: document.getElementById('opt-out-s2').checked
-                    },
-                    paymentPlan: document.querySelector('input[name="payment-plan"]:checked').value,
-                    paymentId: 'PAY-' + Date.now()
-                };
-
-                const btn = document.getElementById('wizard-submit-btn');
-                btn.textContent = 'Submitting...'; btn.disabled = true;
-
-                fetch(WEB_APP_URL, {
-                    method: 'POST', mode: 'no-cors',
-                    body: JSON.stringify(payload)
-                }).then(() => {
-                    alert("Enrollment Submitted Successfully!");
-                    closeModal('enrollment-modal');
-                    // Refresh data or update UI to show completion
-                }).catch(e => { console.error(e); alert("Submission error."); });
-            });
-
-            // Generic Tab Logic
-            document.body.addEventListener('click', e => {
-                const t = e.target;
-                if (t.matches('.tab-btn')) switchToTab(t.dataset.tab);
-                if (t.matches('.faq-forms-tab-btn')) switchToTabAndSubTab('faq-forms', t.dataset.tab);
-                if (t.closest('#mobile-menu-button')) document.getElementById('mobile-menu').style.display = 'block';
-                
-                // --- Resource Rendering Helper Calls ---
-                if (t.matches('.filter-control')) applyAndRenderFilters();
-            });
-            
-            // Standard Forms
-            const absForm = document.getElementById('absence-form');
-            if(absForm) absForm.addEventListener('submit', e => {
-               e.preventDefault(); alert("Notification sent (Demo)");
-            });
-        }
-
-        window.onload = () => {
-            const t = localStorage.getItem('sva_id_token');
-            if (t) handleLoginSuccess(t);
-            else { 
-                try { google.accounts.id.initialize({ client_id: CLIENT_ID, callback: handleCredentialResponse }); google.accounts.id.renderButton(document.getElementById('google-signin-button-container'), { theme: "outline", size: "large", width: "300" }); }
-                catch(e){ console.error(e); }
+        function enrollmentNext(nextStepId) {
+            // Logic to transition steps
+            if(nextStepId === 'step-contacts') {
+                const checkboxes = document.querySelectorAll('.enrollment-checkbox:checked');
+                if(checkboxes.length === 0) { alert("Please select at least one student."); return; }
+                enrollmentState.selectedStudents = Array.from(checkboxes).map(cb => ({
+                    id: cb.value,
+                    nextGrade: cb.dataset.nextGrade,
+                    name: cb.dataset.name
+                }));
+                calculateTuition();
             }
+
+            document.querySelectorAll('.enrollment-step').forEach(s => s.classList.remove('active'));
+            document.getElementById(nextStepId).classList.add('active');
+            window.scrollTo(0,0);
+        }
+
+        function startPriorityCountdown() {
+            const endDate = new Date("February 16, 2026 08:30:00 PST").getTime();
+            const elem = document.getElementById("priority-countdown");
+            if(!elem) return;
+
+            const timer = setInterval(function() {
+                const now = new Date().getTime();
+                const distance = endDate - now;
+                if (distance < 0) {
+                    clearInterval(timer);
+                    elem.innerHTML = "EXPIRED";
+                    return;
+                }
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                elem.innerHTML = `${days}d ${hours}h ${minutes}m`;
+            }, 60000);
             
-            // Render specific components for tabs
-            renderFAQ = (items) => { document.getElementById('faq-content').innerHTML = items.map(i=>`<div class="mb-4"><h4 class="font-bold">${i.question}</h4><p>${i.answer}</p></div>`).join(''); };
-            renderForms = (items) => { document.getElementById('forms-content').innerHTML = items.map(i=>`<div class="mb-2"><a href="${i.link}" class="text-teal-600 font-bold">${i.title}</a><p>${i.description}</p></div>`).join(''); };
-            renderNewsletters = (items) => { document.getElementById('newsletters-content').innerHTML = items.map(i=>`<li><a href="${i.link}" class="text-blue-600 underline">${i.title}</a></li>`).join(''); };
-            renderQuickLinks = (items) => { document.getElementById('quicklinks-content').innerHTML = items.map(i=>`<li><a href="${i.link}" class="text-blue-600 underline">${i.title}</a></li>`).join(''); };
-            renderLiveEvent = (events) => { if(events && events.length) document.getElementById('live-event').innerHTML = events.map(e=>`<h2 class="text-2xl font-bold">${e.title}</h2><iframe src="${e.link}" class="w-full h-96 mt-4"></iframe>`).join(''); };
-        };
+            // Initial calc
+            const now = new Date().getTime();
+            const distance = endDate - now;
+            if(distance > 0) {
+                const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+                elem.innerHTML = `${days}d ...`;
+            }
+        }
+
+        function handleContactVerification(isCorrect) {
+            enrollmentState.contactStatus = isCorrect ? 'Reviewed' : 'Needs_Review';
+            if(!isCorrect) alert("Please note: You will need to update your information in Gradelink.");
+            enrollmentNext('step-volunteer');
+        }
+
+        function updateVolunteerState() {
+            const s1 = document.getElementById('vol-opt-s1').checked;
+            const s2 = document.getElementById('vol-opt-s2').checked;
+            if(s1 && s2) enrollmentState.volunteerOption = 'None'; 
+            else if (s1) enrollmentState.volunteerOption = 'S2';
+            else if (s2) enrollmentState.volunteerOption = 'S1';
+            else enrollmentState.volunteerOption = 'S1&2';
+        }
+
+        function validateVolunteerAndNext() {
+            if(!document.getElementById('vol-agree-chk').checked) {
+                alert("You must agree to the volunteer obligation.");
+                return;
+            }
+            updateVolunteerState(); // Ensure state is fresh
+            enrollmentNext('step-tuition');
+        }
+
+        function calculateTuition() {
+            const rates = {
+                'ES': 12800, 'MS': 14200, 'HS': 10500, 
+                'PreK': 17700 // Using School-Day as base
+            };
+            let regFeeTotal = 0;
+            let items = [];
+
+            enrollmentState.selectedStudents.forEach(s => {
+                regFeeTotal += 150;
+                let cost = 0; 
+                let type = '';
+                const g = String(s.nextGrade).toUpperCase();
+
+                if(['K','0','1','2','3','4','5'].includes(g)) { cost = rates.ES; type = 'Elementary (KG-5)'; }
+                else if(['6','7','8'].includes(g)) { cost = rates.MS; type = 'Middle School (6-8)'; }
+                else if(parseInt(g) >= 9) { cost = rates.HS; type = 'High School'; }
+                else { cost = rates.PreK; type = 'Pre-Kindergarten'; }
+
+                items.push({ name: s.name, grade: g, cost: cost, type: type, discount: 0 });
+            });
+
+            // Sibling Discount: 10% off lowest tuition(s) for K-8 only
+            // Sort by cost descending
+            items.sort((a,b) => b.cost - a.cost);
+            let discountEligibleCount = 0;
+            
+            items.forEach(item => {
+                const isK8 = item.type.includes('Elementary') || item.type.includes('Middle');
+                if(isK8) {
+                    if(discountEligibleCount > 0) {
+                        item.discount = item.cost * 0.10; // 10% Discount
+                    }
+                    discountEligibleCount++;
+                }
+            });
+
+            let table = `<table class="tuition-table"><thead><tr><th>Student</th><th>Grade</th><th>Tuition</th><th>Discount</th><th>Net</th></tr></thead><tbody>`;
+            items.forEach(i => {
+                table += `<tr>
+                    <td>${i.name}</td>
+                    <td>${decodeGrade(i.grade)}</td>
+                    <td>$${i.cost.toLocaleString()}</td>
+                    <td class="text-green-600">${i.discount > 0 ? '-$'+i.discount.toLocaleString() : '-'}</td>
+                    <td class="font-bold">$${(i.cost - i.discount).toLocaleString()}</td>
+                </tr>`;
+            });
+            table += `</tbody></table>`;
+            
+            document.getElementById('calculated-tuition-display').innerHTML = table;
+            document.getElementById('final-reg-fee-display').textContent = `$${regFeeTotal.toLocaleString()}`;
+            enrollmentState.regFee = regFeeTotal;
+        }
+
+        function validateTuitionAgreement() {
+            if(!document.getElementById('tuition-agree-chk').checked) {
+                alert("You must agree to the Tuition Policy."); return;
+            }
+            enrollmentNext('step-payment');
+        }
+
+        function mockPayPalPayment() {
+            const btn = document.getElementById('mock-pay-btn');
+            btn.innerHTML = '<i class="ph-spinner animate-spin"></i> Processing...'; btn.disabled = true;
+            
+            setTimeout(() => {
+                enrollmentState.paymentId = 'PAY-' + Math.floor(10000000 + Math.random() * 90000000);
+                btn.classList.add('hidden');
+                document.getElementById('payment-success-msg').classList.remove('hidden');
+                document.getElementById('trans-id').textContent = enrollmentState.paymentId;
+                
+                document.getElementById('final-submit-chk').disabled = false;
+                document.getElementById('initials-input').disabled = false;
+                document.getElementById('final-submit-btn').disabled = false;
+            }, 1500);
+        }
+
+        function submitEnrollment() {
+            const initials = document.getElementById('initials-input').value.trim();
+            if(!document.getElementById('final-submit-chk').checked || initials.length < 2) {
+                alert("Please agree to the policies and sign with your initials."); return;
+            }
+
+            const btn = document.getElementById('final-submit-btn');
+            btn.textContent = 'Submitting...'; btn.disabled = true;
+
+            const payload = {
+                action: 'enrollment',
+                token: ID_TOKEN,
+                students: enrollmentState.selectedStudents,
+                contactStatus: enrollmentState.contactStatus,
+                volunteerOption: enrollmentState.volunteerOption,
+                paymentPlan: enrollmentState.paymentPlan,
+                paymentId: enrollmentState.paymentId,
+                timestamp: new Date().toISOString()
+            };
+
+            fetch(WEB_APP_URL, {
+                method: 'POST', mode: 'no-cors',
+                body: JSON.stringify(payload),
+                headers: {'Content-Type': 'application/json'}
+            }).then(() => {
+                enrollmentNext('step-confirmation');
+                const list = document.getElementById('enrolled-students-list');
+                enrollmentState.selectedStudents.forEach(s => {
+                    list.innerHTML += `<li class="flex items-center"><i class="ph-check-circle text-green-500 mr-2"></i> ${s.name}</li>`;
+                });
+            }).catch(err => {
+                console.error(err);
+                alert("Submission failed. Please try again or contact support.");
+                btn.disabled = false; btn.textContent = 'Submit Enrollment';
+            });
+        }
+
+        // --- UTILS ---
+        function switchTab(tabId) {
+            document.querySelectorAll('nav button').forEach(b => {
+                b.classList.remove('tab-active', 'border-b-2');
+                b.classList.add('border-transparent', 'text-slate-500');
+            });
+            document.getElementById('tab-' + tabId).classList.add('tab-active', 'border-b-2');
+            document.getElementById('tab-' + tabId).classList.remove('border-transparent', 'text-slate-500');
+            
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('tab-content-active'));
+            document.getElementById(tabId + '-content').classList.add('tab-content-active');
+        }
+
+        function decodeGrade(g) {
+            const map = { '0': 'KG', 'K': 'KG', '-1': 'PK' };
+            return map[String(g).trim()] || String(g);
+        }
     </script>
 </body>
 </html>
