@@ -13,7 +13,7 @@
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* A softer slate-50 background */
+            background-color: #f8fafc;
         }
         .tab-active {
             border-bottom: 2px solid #0d9488; /* teal-600 */
@@ -23,77 +23,49 @@
         .tab-content { display: none; }
         .tab-content-active { display: block; }
         #mobile-menu { display: none; }
-        /* Simple animation for accordion */
         .rotate-180 { transform: rotate(180deg); }
         .transition-transform { transition: transform 0.2s ease-in-out; }
-        /* Hide number input arrows */
         input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-          -webkit-appearance: none; 
-          margin: 0; 
-        }
-        input[type=number] {
-          -moz-appearance: textfield;
-        }
-        .student-tab-active {
-            border-bottom: 3px solid #0d9488;
-            color: #0d9488;
-            font-weight: 600;
-        }
+        input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+        input[type=number] { -moz-appearance: textfield; }
+        
+        /* Enrollment Wizard Styles */
+        .step-indicator { @apply w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm border-2; }
+        .step-active { @apply bg-teal-600 text-white border-teal-600; }
+        .step-inactive { @apply bg-white text-slate-400 border-slate-300; }
+        .step-completed { @apply bg-teal-100 text-teal-600 border-teal-600; }
     </style>
 </head>
 <body class="antialiased text-slate-800">
 
+    <!-- Login Container -->
     <div id="login-container" class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-        <!-- Screen 1: Main Login Choice -->
         <div id="login-screen" class="text-center p-8 bg-white rounded-xl shadow-lg max-w-md w-full">
             <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
             <h1 class="text-3xl font-bold text-slate-900 mt-4">Silicon Valley Academy</h1>
             <p class="text-lg text-slate-600 mb-6">Parent Portal (beta)</p>
-            <p class="text-sm text-slate-500 mb-8">Please log in with your SVA-associated student email. For assistance or password issues, please contact: <a href="mailto:parent.portal@svaschool.org" class="font-medium text-teal-600 hover:underline">parent.portal@svaschool.org</a></p>
-            
-            <!-- Error Message Area -->
+            <p class="text-sm text-slate-500 mb-8">Please log in with your SVA-associated student email.</p>
             <div id="login-error-msg" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 text-left" role="alert">
-                <strong class="font-bold">Login Failed:</strong>
-                <span class="block sm:inline" id="login-error-text"></span>
+                <strong class="font-bold">Login Failed:</strong> <span class="block sm:inline" id="login-error-text"></span>
             </div>
-
-            <!-- Google Sign-In Button -->
             <div id="google-signin-button-container" class="flex justify-center"></div>
-            
-            <!-- Divider -->
             <div class="my-6 flex items-center justify-center">
-                <span class="border-b border-slate-300 w-full"></span>
-                <span class="mx-4 text-sm font-medium text-slate-500">OR</span>
-                <span class="border-b border-slate-300 w-full"></span>
+                <span class="border-b border-slate-300 w-full"></span><span class="mx-4 text-sm font-medium text-slate-500">OR</span><span class="border-b border-slate-300 w-full"></span>
             </div>
-            
-            <!-- Passkey Login Form -->
             <form id="passkey-request-form" class="space-y-4">
-                <div>
-                    <label for="email-input" class="sr-only">Student Email</label>
-                    <input type="email" id="email-input" placeholder="Enter your student email" class="w-full px-4 py-3 rounded-md border-slate-300 shadow-sm" required>
-                </div>
-                <button type="submit" id="request-passkey-btn" class="w-full bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-teal-700 transition">
-                    Send Login Link
-                </button>
+                <div><label for="email-input" class="sr-only">Student Email</label><input type="email" id="email-input" placeholder="Enter your student email" class="w-full px-4 py-3 rounded-md border-slate-300 shadow-sm" required></div>
+                <button type="submit" id="request-passkey-btn" class="w-full bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-teal-700 transition">Send Login Link</button>
             </form>
         </div>
-
-        <!-- Screen 2: "Check Email" Screen (Hidden by default) -->
         <div id="passkey-verify-screen" class="hidden text-center p-8 bg-white rounded-xl shadow-lg max-w-md w-full">
             <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
             <h2 class="text-2xl font-bold text-slate-900">Check Your Email</h2>
             <p class="text-slate-600 my-4">A secure login link has been sent to <strong id="passkey-email-display">your email</strong>.</p>
-             <p class="text-sm text-slate-500">Please click the link in that email to log in. The link will expire in 10 minutes. You may need to check your spam folder.</p>
-            
-            <button type="button" id="go-back-btn" class="w-full text-sm text-slate-600 hover:text-slate-900 hover:underline mt-6">
-                &larr; Go Back
-            </button>
+            <button type="button" id="go-back-btn" class="w-full text-sm text-slate-600 hover:text-slate-900 hover:underline mt-6">&larr; Go Back</button>
         </div>
     </div>
 
-
+    <!-- Loading Overlay -->
     <div id="loading-overlay" class="fixed inset-0 bg-slate-100 flex items-center justify-center z-50 hidden">
         <div class="text-center">
             <i id="loading-icon" class="ph-spinner-gap text-6xl text-teal-600 mx-auto animate-spin"></i>
@@ -102,32 +74,230 @@
         </div>
     </div>
     
+    <!-- Main Portal -->
     <div id="portal-container" class="hidden">
-        <div id="qr-code-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center">
-            <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-                <div class="mt-3 text-center">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Event Check-in QR Code</h3>
-                    <div class="mt-2 px-7 py-3">
-                        <div id="qrcode" class="mx-auto"></div>
-                        <p class="text-sm text-gray-500 mt-4">Have an admin scan this code when you arrive at the event to get credit for your hours.</p>
+        
+        <!-- Re-enrollment Modal -->
+        <div id="enrollment-modal" class="fixed inset-0 bg-gray-900 bg-opacity-75 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center">
+            <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col m-4">
+                <!-- Modal Header -->
+                <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-slate-50 rounded-t-xl">
+                    <h3 class="text-xl font-bold text-slate-800">2026-2027 Re-enrollment</h3>
+                    <button onclick="closeModal('enrollment-modal')" class="text-gray-400 hover:text-gray-600"><i class="ph-x text-2xl"></i></button>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="px-6 py-4 bg-white">
+                    <div class="flex items-center justify-between max-w-2xl mx-auto">
+                        <div class="flex flex-col items-center step-item" data-step="1"><div class="step-indicator step-active">1</div><span class="text-xs mt-1">Start</span></div>
+                        <div class="flex-1 border-t-2 border-slate-200 mx-2"></div>
+                        <div class="flex flex-col items-center step-item" data-step="2"><div class="step-indicator step-inactive">2</div><span class="text-xs mt-1">Contact</span></div>
+                        <div class="flex-1 border-t-2 border-slate-200 mx-2"></div>
+                        <div class="flex flex-col items-center step-item" data-step="3"><div class="step-indicator step-inactive">3</div><span class="text-xs mt-1">Volunteer</span></div>
+                        <div class="flex-1 border-t-2 border-slate-200 mx-2"></div>
+                        <div class="flex flex-col items-center step-item" data-step="4"><div class="step-indicator step-inactive">4</div><span class="text-xs mt-1">Tuition</span></div>
+                        <div class="flex-1 border-t-2 border-slate-200 mx-2"></div>
+                        <div class="flex flex-col items-center step-item" data-step="5"><div class="step-indicator step-inactive">5</div><span class="text-xs mt-1">Agree</span></div>
+                        <div class="flex-1 border-t-2 border-slate-200 mx-2"></div>
+                        <div class="flex flex-col items-center step-item" data-step="6"><div class="step-indicator step-inactive">6</div><span class="text-xs mt-1">Payment</span></div>
                     </div>
-                    <div class="items-center px-4 py-3">
-                        <button id="close-qr-modal-btn" class="px-4 py-2 bg-teal-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-teal-700 focus:outline-none focus:ring-2 focus:ring-teal-400">
-                            Close
-                        </button>
+                </div>
+
+                <!-- Modal Content (Scrollable) -->
+                <div class="p-6 overflow-y-auto flex-grow" id="enrollment-wizard-content">
+                    <!-- Step 1: Start -->
+                    <div id="step-1" class="wizard-step">
+                        <div class="text-center mb-8">
+                            <h2 class="text-2xl font-bold text-teal-700">Welcome to SVA Re-enrollment</h2>
+                            <p class="text-slate-600 mt-2">Secure your spot for the 2026-2027 Academic Year</p>
+                            <div class="mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4 inline-block">
+                                <p class="text-sm font-semibold text-orange-800">Priority Window Ends In:</p>
+                                <div id="enrollment-countdown" class="text-2xl font-mono text-orange-600 font-bold mt-1">--:--:--:--</div>
+                                <p class="text-xs text-orange-600 mt-1">February 16, 2026 at 8:30am PST</p>
+                            </div>
+                        </div>
+                        <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-6 text-sm text-blue-800">
+                            <p class="font-bold mb-2">Important Documentation Note:</p>
+                            <p>If you require additional time for documents (Physician's Report, Health Report, etc.), you have until <strong>May 1, 2026</strong> to email them to the registrar. All other online application parts are required now.</p>
+                        </div>
+                        <h4 class="font-semibold text-lg mb-3">Select students to re-enroll:</h4>
+                        <div id="enrollment-student-list" class="space-y-3 mb-6"></div>
                     </div>
+
+                    <!-- Step 2: Contacts -->
+                    <div id="step-2" class="wizard-step hidden">
+                        <h2 class="text-xl font-bold text-slate-800 mb-4">Verify Contact Information</h2>
+                        <div id="enrollment-contact-display" class="bg-slate-50 p-6 rounded-lg border border-slate-200 mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <!-- Populated via JS -->
+                        </div>
+                        <p class="font-medium text-slate-700 mb-3">Is the information above correct and up to date?</p>
+                        <div class="space-y-2">
+                            <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="contact-verify" value="Reviewed" class="form-radio text-teal-600" checked>
+                                <span class="ml-2">Yes, everything is correct.</span>
+                            </label>
+                            <label class="flex items-center p-3 border rounded-lg cursor-pointer hover:bg-slate-50">
+                                <input type="radio" name="contact-verify" value="Needs_Review" class="form-radio text-red-600">
+                                <span class="ml-2">No, I need to update this. (Please proceed, but verify on Gradelink later)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Information (Volunteer) -->
+                    <div id="step-3" class="wizard-step hidden">
+                        <h2 class="text-xl font-bold text-slate-800 mb-4">Parent Volunteer Agreement</h2>
+                        <div class="prose prose-sm text-slate-600 mb-6 max-w-none">
+                            <p>Silicon Valley Academy strongly encourages parents to have a high level of involvement. Volunteer hours are critical to SVA’s success. Hours do not carry over or prorate.</p>
+                            <ul class="list-disc pl-5 my-2 font-medium text-slate-800">
+                                <li>1 child enrolled: 10 hours per semester</li>
+                                <li>2 or more children: 20 hours per semester</li>
+                            </ul>
+                        </div>
+                        
+                        <div class="bg-white border border-slate-200 rounded-xl p-5 mb-6">
+                            <h3 class="font-semibold text-slate-800 mb-3">Volunteer Interests</h3>
+                            <p class="text-xs text-slate-500 mb-3">Mark areas of expertise/interest:</p>
+                            <div class="grid grid-cols-2 gap-3 text-sm">
+                                <label class="flex items-center"><input type="checkbox" class="rounded text-teal-600"> <span class="ml-2">PTO Events</span></label>
+                                <label class="flex items-center"><input type="checkbox" class="rounded text-teal-600"> <span class="ml-2">Classroom Support</span></label>
+                                <label class="flex items-center"><input type="checkbox" class="rounded text-teal-600"> <span class="ml-2">Admin/Office</span></label>
+                                <label class="flex items-center"><input type="checkbox" class="rounded text-teal-600"> <span class="ml-2">Traffic Safety</span></label>
+                                <label class="flex items-center"><input type="checkbox" class="rounded text-teal-600"> <span class="ml-2">Field Trips</span></label>
+                                <label class="flex items-center"><input type="checkbox" class="rounded text-teal-600"> <span class="ml-2">Professional Services</span></label>
+                            </div>
+                        </div>
+
+                        <div class="bg-teal-50 border border-teal-200 rounded-xl p-5 mb-6">
+                            <h3 class="font-semibold text-teal-900 mb-3">Opt-Out Option</h3>
+                            <p class="text-sm text-teal-800 mb-4">Parents may choose to pay the volunteer fee up front ($350/semester) instead of volunteering. Unfulfilled hours are billed at $450/semester.</p>
+                            <div class="space-y-3">
+                                <label class="flex items-start">
+                                    <input type="checkbox" id="opt-out-s1" class="mt-1 rounded text-teal-600 focus:ring-teal-500">
+                                    <span class="ml-2 text-sm text-slate-800">I intend to <strong>not</strong> volunteer during <strong>Semester 1</strong> (Due 7/1/26).</span>
+                                </label>
+                                <label class="flex items-start">
+                                    <input type="checkbox" id="opt-out-s2" class="mt-1 rounded text-teal-600 focus:ring-teal-500">
+                                    <span class="ml-2 text-sm text-slate-800">I intend to <strong>not</strong> volunteer during <strong>Semester 2</strong> (Due 1/1/27).</span>
+                                </label>
+                            </div>
+                        </div>
+                        <label class="flex items-center text-sm font-semibold text-slate-800">
+                            <input type="checkbox" id="volunteer-agree-check" class="rounded text-teal-600 mr-2"> I understand and agree to the volunteer requirements.
+                        </label>
+                    </div>
+
+                    <!-- Step 4: Tuition -->
+                    <div id="step-4" class="wizard-step hidden">
+                        <h2 class="text-xl font-bold text-slate-800 mb-4">2026-2027 Tuition & Fees</h2>
+                        <div class="overflow-x-auto mb-6 border rounded-lg">
+                            <table class="min-w-full text-xs sm:text-sm text-left">
+                                <thead class="bg-slate-100 font-semibold text-slate-700 border-b">
+                                    <tr>
+                                        <th class="p-3">Grade Level</th>
+                                        <th class="p-3">Annual (Lump Sum)</th>
+                                        <th class="p-3">Monthly (10-mo)</th>
+                                        <th class="p-3">Reg. Fee</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100" id="tuition-table-body">
+                                    <!-- Dynamic rows -->
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="bg-white border border-slate-200 rounded-xl p-6">
+                            <h3 class="font-semibold text-slate-800 mb-4">Select Payment Plan</h3>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <label class="border-2 border-slate-200 rounded-xl p-4 cursor-pointer hover:border-teal-500 transition-colors has-[:checked]:border-teal-500 has-[:checked]:bg-teal-50">
+                                    <input type="radio" name="payment-plan" value="Once" class="sr-only" checked>
+                                    <div class="font-bold text-slate-900">Lump Sum Payment</div>
+                                    <div class="text-xs text-slate-500 mt-1">Invoiced and due by June 1, 2026</div>
+                                </label>
+                                <label class="border-2 border-slate-200 rounded-xl p-4 cursor-pointer hover:border-teal-500 transition-colors has-[:checked]:border-teal-500 has-[:checked]:bg-teal-50">
+                                    <input type="radio" name="payment-plan" value="10Month" class="sr-only">
+                                    <div class="font-bold text-slate-900">10-Monthly Payments</div>
+                                    <div class="text-xs text-slate-500 mt-1">June 1, 2026 to March 1, 2027</div>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Tuition Agreement -->
+                    <div id="step-5" class="wizard-step hidden">
+                        <h2 class="text-xl font-bold text-slate-800 mb-4">Tuition & Enrollment Agreement</h2>
+                        <p class="text-sm text-slate-500 mb-2">Please scroll to the bottom to agree.</p>
+                        <div id="agreement-scroll-box" class="h-64 overflow-y-scroll bg-slate-50 p-4 rounded-lg border border-slate-300 text-sm text-slate-700 mb-4 leading-relaxed">
+                            <p class="font-bold mb-2">Silicon Valley Academy’s Tuition Policy requires that:</p>
+                            <p class="mb-2">Tuition payments will be invoiced and paid through GradeLink. Accepted payment forms include ACH/checking account and credit card.</p>
+                            <p class="mb-2">Once your child has been formally admitted for the 2026-2027 school year, you will be required to set-up an auto payment plan within two weeks to keep your child's admission active. Based on the payment option you selected during the enrollment process, you will need to either set up a one-time lump sum payment to be made on 6/1/26 or 10-monthly payments with the first payment starting on 6/1/26 in the parent GradeLink account. If an auto payment plan is not set up within two weeks, your child’s name will be removed from SVA enrollment and moved to the bottom of the waitlist.</p>
+                            <p class="mb-4">At the time of registration, a $150 non-refundable registration fee is due per child.</p>
+                            
+                            <h4 class="font-bold mt-4 mb-2">Tuition Liability & Early Termination Policy</h4>
+                            <p class="mb-2"><strong>1. Nature of the Financial Obligation:</strong> Enrollment at Silicon Valley Academy constitutes a binding financial contract for the entire academic year (or the remaining portion thereof for mid-year enrollees). The School’s expenses are fixed annually; therefore, the family’s financial obligation is for the full Total Contract Value, not on a "pay-as-you-go" basis. The School expressly reserves the legal right to demand and collect the full annual tuition balance regardless of the date of withdrawal.</p>
+                            <p class="mb-2"><strong>2. Voluntary Withdrawal & Settlement Calculation:</strong> Should the School agree to a settlement based on early termination, liability is determined strictly according to the 10-Month Fiscal Accrual Schedule (June 1 – April 1) as follows:</p>
+                            <ul class="list-disc pl-5 mb-2">
+                                <li><strong>A. Minimum Earned Tuition (Non-Refundable Deposit):</strong> Immediately upon enrollment, 30% of the Total Contract Value is considered fully earned by the School. This portion represents reasonable liquidated damages for administrative overhead, seat reservation, and the initial billing quarter (June, July, August) and is non-refundable under any circumstances.</li>
+                                <li><strong>B. Accrual of Instructional Tuition:</strong> Commencing on September 1st, tuition is earned by the School in monthly installments of 10%. Mid-Month Withdrawals: For any partial month of attendance, tuition is earned on a pro-rata basis calculated daily from the first day of that month through the date of withdrawal.</li>
+                                <li><strong>C. Liquidated Damages for Early Termination:</strong> In recognition of the difficulty in filling vacancies mid-year, an Early Termination Fee equal to 20% of the remaining unearned contract balance will be assessed. This fee is agreed to be a reasonable estimate of the School’s damages and is not a penalty.</li>
+                            </ul>
+                            <p class="mb-2"><strong>3. Contract Maturity (The "April 1st Lock"):</strong> By April 1st, the sum of the Minimum Earned Tuition and Accrued Instructional Tuition equals 100% of the Contract Value. Consequently, any withdrawal occurring on or after April 1st results in full financial liability for the entire annual tuition, with no refunds or adjustments permitted.</p>
+                            <p class="mb-4"><strong>4. Hardship & Compassionate Review:</strong> While the financial obligations outlined above are binding to ensure the School's operational stability, Silicon Valley Academy remains deeply committed to supporting our families. We understand that unforeseen life events occur. Appeal Process: In cases of severe, documented financial hardship (e.g., significant loss of income, medical emergency, or relocation due to employment), families may submit a formal written appeal to the Board of Directors regarding the Early Termination Fee. Discretionary Relief: Modifications to the liability policy are rare and granted solely at the Board's discretion on a case-by-case basis. This provision does not guarantee a waiver but ensures every family is heard with compassion.</p>
+                            
+                            <p class="mb-2 font-bold">Volunteer Policy Fees:</p>
+                            <p class="mb-2">If a family chooses to opt out of volunteering upon enrollment for the first semester, a volunteer fee of $350 will be charged to the family’s Gradelink account and due 7/1/26.</p>
+                            <p class="mb-2">If a family chooses to opt out of volunteering upon enrollment for the second semester, a volunteer fee of $350 will be charged to the family’s Gradelink account and due 1/1/27.</p>
+                            <p class="mb-2">If a family’s required volunteer hours from the first semester are not fulfilled by January 14, 2027, a volunteer fee of $450 will be charged to the family’s February statement in GradeLink.</p>
+                            <p class="mb-2">If a family’s required volunteer hours from the second semester are not fulfilled by June 4, 2027, a volunteer fee of $450 will be charged to the family’s July statement in GradeLink.</p>
+                            <p class="mb-2">Parent(s)/guardian(s) will be assessed a $35 fee on any charge that is late or does not clear.</p>
+                            <p class="mb-2">Parent(s)/guardian(s) will be assessed a 2.5% convenience fee for credit card payments.</p>
+                        </div>
+                        <label class="flex items-center text-sm font-semibold text-slate-800 opacity-50 cursor-not-allowed" id="agreement-checkbox-label">
+                            <input type="checkbox" id="tuition-agree-check" class="rounded text-teal-600 mr-2" disabled> I have read and agree to the Tuition & Enrollment Policy.
+                        </label>
+                    </div>
+
+                    <!-- Step 6: Payment -->
+                    <div id="step-6" class="wizard-step hidden">
+                        <h2 class="text-xl font-bold text-slate-800 mb-4">Registration Payment</h2>
+                        <p class="text-sm text-slate-600 mb-4">Please download, read, and review SVA's Parent Handbook found at the parent portal with SVA's policies and procedures.</p>
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 text-center mb-6">
+                            <p class="text-slate-600 mb-2">Registration Fee ($150 per student)</p>
+                            <div class="text-4xl font-bold text-slate-900 mb-4" id="total-payment-amount">$0.00</div>
+                            <p class="text-xs text-red-500 mb-4">If you have a balance due on Gradelink, enrollment will be held.</p>
+                            
+                            <!-- PayPal Placeholder -->
+                            <button id="paypal-btn" class="bg-[#FFC439] hover:bg-[#F4BB30] text-blue-900 font-bold py-3 px-8 rounded-full shadow-sm transition-transform transform hover:scale-105 flex items-center justify-center mx-auto mb-4 w-64">
+                                <i class="ph-paypal-logo text-2xl mr-2"></i> Pay Now with PayPal
+                            </button>
+                            <p id="payment-status-text" class="text-sm font-bold text-slate-400">Payment Pending...</p>
+                        </div>
+
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6">
+                            <p class="text-sm text-slate-700 mb-3"><strong>Final Agreement:</strong> By initialing below and submitting, I hereby agree to all Silicon Valley Academy policies and procedures, including but not limited to the tuition policy, parent-volunteer policy, parent honor code, and student disciplinary code.</p>
+                            <div class="flex items-center justify-center">
+                                <label class="mr-3 font-semibold text-slate-700">Initials:</label>
+                                <input type="text" id="final-initials" class="w-24 uppercase text-center border-slate-300 rounded-md shadow-sm focus:ring-teal-500 focus:border-teal-500" maxlength="4" placeholder="XX">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Footer Navigation -->
+                <div class="px-6 py-4 bg-slate-50 border-t border-slate-200 flex justify-between rounded-b-xl">
+                    <button id="wizard-prev-btn" class="px-4 py-2 text-slate-600 hover:text-slate-900 font-medium hidden">Back</button>
+                    <button id="wizard-next-btn" class="px-6 py-2 bg-teal-600 text-white font-bold rounded-lg hover:bg-teal-700 shadow-sm">Next</button>
+                    <button id="wizard-submit-btn" class="hidden px-6 py-2 bg-green-600 text-white font-bold rounded-lg hover:bg-green-700 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed">Submit Enrollment</button>
                 </div>
             </div>
         </div>
 
+        <!-- Portal Header/Nav (Existing) -->
         <div class="min-h-screen bg-slate-50">
             <header class="bg-white shadow-sm sticky top-0 z-40">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                     <div class="flex items-center justify-between h-20">
                         <div class="flex items-center">
-                            <div class="flex-shrink-0">
-                                <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-12 w-auto">
-                            </div>
+                            <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-12 w-auto">
                             <div class="ml-4">
                                 <h1 class="text-2xl font-bold text-slate-900">Silicon Valley Academy</h1>
                                 <p class="text-sm text-slate-500">Parent Portal (beta)</p>
@@ -138,636 +308,290 @@
                             <button onclick="signOut();" class="bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition duration-300">Sign Out</button>
                         </div>
                         <div class="sm:hidden flex items-center">
-                            <button id="mobile-menu-button" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-slate-500 hover:text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
-                                <span class="sr-only">Open main menu</span>
-                                <i id="menu-icon-open" class="ph-list text-2xl"></i>
-                                <i id="menu-icon-close" class="ph-x text-2xl hidden"></i>
+                            <button id="mobile-menu-button" class="p-2 rounded-md text-slate-500 hover:bg-teal-600 hover:text-white">
+                                <i id="menu-icon-open" class="ph-list text-2xl"></i><i id="menu-icon-close" class="ph-x text-2xl hidden"></i>
                             </button>
                         </div>
                     </div>
                 </div>
-                 <div class="sm:hidden" id="mobile-menu">
-                    <div class="pt-4 pb-3 border-b border-slate-200">
-                        <div id="user-info-mobile" class="px-5"></div>
-                    </div>
+                <div class="sm:hidden hidden" id="mobile-menu">
+                    <div class="pt-4 pb-3 border-b border-slate-200"><div id="user-info-mobile" class="px-5"></div></div>
                     <div id="main-nav-mobile" class="px-2 pt-2 pb-3 space-y-1"></div>
-                    <div class="pt-4 pb-3 border-t border-slate-200">
-                        <div class="px-2">
-                             <button onclick="signOut();" class="w-full bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition duration-300">Sign Out</button>
-                        </div>
-                    </div>
+                    <div class="pt-4 pb-3 border-t border-slate-200 px-2"><button onclick="signOut();" class="w-full bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg">Sign Out</button></div>
                 </div>
             </header>
 
             <nav class="hidden sm:block bg-white border-b border-slate-200">
-                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div id="main-nav" class="flex justify-center -mb-px">
-                        <button class="tab-btn tab-active text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="dashboard"><i class="ph-house mr-2"></i>Student Dashboard</button>
-                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="actions"><i class="ph-bell-ringing mr-2"></i>Actions</button>
-                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="volunteering"><i class="ph-hands-clapping mr-2"></i>Volunteering</button>
-                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="signups"><i class="ph-list-checks mr-2"></i>My Signups</button>
-                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="pto"><i class="ph-users-three mr-2"></i>PTO</button>
-                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="faq-forms"><i class="ph-link mr-2"></i>Resources</button>
-                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="live-event"><i class="ph-video-camera-fill mr-2"></i>Live Events</button>  
-                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="calendar"><i class="ph-calendar mr-2"></i>Calendar</button>
-                    </div>
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex justify-center -mb-px" id="main-nav">
+                    <button class="tab-btn tab-active text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="dashboard"><i class="ph-house mr-2"></i>Dashboard</button>
+                    <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="actions"><i class="ph-bell-ringing mr-2"></i>Actions</button>
+                    <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="volunteering"><i class="ph-hands-clapping mr-2"></i>Volunteering</button>
+                    <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="signups"><i class="ph-list-checks mr-2"></i>My Signups</button>
+                    <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="pto"><i class="ph-users-three mr-2"></i>PTO</button>
+                    <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="faq-forms"><i class="ph-link mr-2"></i>Resources</button>
+                    <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="live-event"><i class="ph-video-camera-fill mr-2"></i>Live Events</button>
+                    <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block font-medium text-sm" data-tab="calendar"><i class="ph-calendar mr-2"></i>Calendar</button>
                 </div>
             </nav>
 
             <main class="max-w-7xl mx-auto py-8 sm:py-10 px-4 sm:px-6 lg:px-8">
-                <div id="dashboard" class="tab-content tab-content-active">
-                     <h2 class="text-3xl font-bold text-slate-900 mb-6">My Students</h2>
-                    <div id="student-content-container" class="space-y-12"></div>
-                </div>
-                
-                <div id="actions" class="tab-content">
-                    <h2 class="text-3xl font-bold text-slate-900 mb-6">Actions</h2>
-                    <div id="actions-content-container" class="space-y-10"></div>
-                </div>
-
+                <div id="dashboard" class="tab-content tab-content-active"><h2 class="text-3xl font-bold text-slate-900 mb-6">My Students</h2><div id="student-content-container" class="space-y-12"></div></div>
+                <div id="actions" class="tab-content"><h2 class="text-3xl font-bold text-slate-900 mb-6">Actions</h2><div id="actions-content-container" class="space-y-10"></div></div>
                 <div id="volunteering" class="tab-content">
-                     <h2 class="text-3xl font-bold text-slate-900 mb-6">Volunteering Opportunities</h2>
-                    <div class="mb-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                        <h3 class="text-lg font-semibold text-slate-800 mb-2">Volunteering Objectives & Rules</h3>
-                        <p class="text-slate-600 text-sm">
-                            Our parent volunteer program is essential to the success of our school community. The primary objective is to foster a strong partnership between parents and the school, enriching our students' educational experience. We require each family to complete a set number of volunteer hours per school year, divided between two semesters. Please sign up for opportunities that match your interests and schedule. If you must withdraw from a commitment, please do so at least three weeks in advance to allow another parent to take the spot. Failure to show up for a signed-up event without prior cancellation will result in a penalty, increasing your total required hours. For safety reasons, we ask that you do not bring small children while volunteering. We recommend arranging childcare during your volunteer shift. Thank you for your dedication to our students and school!
-                        </p>
-                    </div>
+                    <h2 class="text-3xl font-bold text-slate-900 mb-6">Volunteering Opportunities</h2>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 mb-6">
                         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                            <div>
-                                <label for="filter-semester" class="block text-sm font-medium text-slate-700">Semester</label>
-                                <select id="filter-semester" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                    <option value="all">All</option>
-                                    <option value="1">Semester 1</option>
-                                    <option value="2">Semester 2</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="filter-event" class="block text-sm font-medium text-slate-700">Filter by Event</label>
-                                <select id="filter-event" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                    <option value="all">All Events</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="filter-time" class="block text-sm font-medium text-slate-700">Time of Day</label>
-                                <select id="filter-time" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                    <option>All</option>
-                                    <option>Morning</option>
-                                    <option>Afternoon</option>
-                                    <option>Evening</option>
-                                    <option>All Day</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="filter-hours" class="block text-sm font-medium text-slate-700">Max Hours</label>
-                                <select id="filter-hours" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                    <option value="99">Any</option>
-                                    <option value="2">Up to 2</option>
-                                    <option value="4">Up to 4</option>
-                                    <option value="8">Up to 8</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="filter-location" class="block text-sm font-medium text-slate-700">Location</label>
-                                <select id="filter-location" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                    <option>All</option>
-                                    <option>On-Campus</option>
-                                    <option>Remote</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label for="filter-sort" class="block text-sm font-medium text-slate-700">Sort By</label>
-                                <select id="filter-sort" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:border-teal-500 focus:ring-teal-500 sm:text-sm">
-                                    <option value="default">Default</option>
-                                    <option value="recent">Recently Added</option>
-                                </select>
-                            </div>
+                            <div><label class="block text-sm font-medium text-slate-700">Semester</label><select id="filter-semester" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option value="all">All</option><option value="1">Semester 1</option><option value="2">Semester 2</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700">Event</label><select id="filter-event" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option value="all">All Events</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700">Time</label><select id="filter-time" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option>All</option><option>Morning</option><option>Afternoon</option><option>Evening</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700">Hours</label><select id="filter-hours" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option value="99">Any</option><option value="2">Up to 2</option><option value="4">Up to 4</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700">Location</label><select id="filter-location" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option>All</option><option>On-Campus</option><option>Remote</option></select></div>
+                            <div><label class="block text-sm font-medium text-slate-700">Sort</label><select id="filter-sort" class="filter-control mt-1 block w-full rounded-md border-slate-300 shadow-sm"><option value="default">Default</option><option value="recent">Recently Added</option></select></div>
                         </div>
                     </div>
-                     <div id="volunteering-list" class="space-y-6"><p>Loading volunteering opportunities...</p></div>
+                    <div id="volunteering-list" class="space-y-6"><p>Loading...</p></div>
                 </div>
-
-                <div id="signups" class="tab-content">
-                    <h2 class="text-3xl font-bold text-slate-900 mb-6">My Volunteer Hours</h2>
-                    <div id="my-signups-content"></div>
+                <div id="signups" class="tab-content"><h2 class="text-3xl font-bold text-slate-900 mb-6">My Volunteer Hours</h2><div id="my-signups-content"></div></div>
+                <div id="pto" class="tab-content"><h2 class="text-3xl font-bold text-slate-900 mb-6">PTO</h2><div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200"><p class="text-slate-600">The PTO provides a valuable opportunity for parents to have a voice and actively contribute to their children's journey at SVA. To reach the PTO leadership, please email <a href="mailto:pto@svamail.com" class="text-teal-600 hover:underline">pto@svamail.com</a>.</p></div></div>
+                <div id="faq-forms" class="tab-content">
+                    <h2 class="text-3xl font-bold text-slate-900 mb-6">Resources</h2>
+                    <div class="flex border-b border-gray-200"><button class="faq-forms-tab-btn tab-active px-6 py-3 text-sm font-medium" data-tab="faq-content">FAQ</button><button class="faq-forms-tab-btn px-6 py-3 text-sm font-medium text-slate-500" data-tab="forms-content">Forms</button><button class="faq-forms-tab-btn px-6 py-3 text-sm font-medium text-slate-500" data-tab="newsletters-content">Newsletters</button><button class="faq-forms-tab-btn px-6 py-3 text-sm font-medium text-slate-500" data-tab="quicklinks-content">Quick Links</button></div>
+                    <div class="bg-white p-6 rounded-b-xl shadow-sm border border-t-0 border-slate-200"><div id="faq-content" class="faq-forms-tab-content"></div><div id="forms-content" class="faq-forms-tab-content hidden"></div><div id="newsletters-content" class="faq-forms-tab-content hidden"></div><div id="quicklinks-content" class="faq-forms-tab-content hidden"></div></div>
                 </div>
-
-                <div id="pto" class="tab-content">
-                    <h2 class="text-3xl font-bold text-slate-900 mb-6">Parent-Teacher Organization (PTO)</h2>
-                    <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 space-y-8">
-                        <div>
-                            <h3 class="text-xl font-semibold text-teal-700 mb-2">Building a Strong School Community Together</h3>
-                            <p class="text-slate-600 leading-relaxed">As-salamu alaykum! The SVA Parent-Teacher Organization (PTO) warmly welcomes all new and returning families. We believe that a high level of parent participation is critical to the success of our students' education, tarbiyah, and development. The PTO is a formal, volunteer-based organization of parents, teachers, and staff working together to enhance the SVA student experience.</p>
-                        </div>
-                        <div class="border-t border-slate-200 pt-6">
-                            <h3 class="text-xl font-semibold text-teal-700 mb-3">Our Mission & Key Roles</h3>
-                            <ul class="list-disc list-inside space-y-3 text-slate-600">
-                                <li><strong>Organize Enriching Events:</strong> We plan and execute co-curricular events and activities like International Day, Book Fairs, Movie Nights, and the Hajj Simulation to enrich our children's education.</li>
-                                <li><strong>Raise Funds:</strong> Through community efforts, we raise funds to support vital school programs, classroom needs, and new initiatives.</li>
-                                <li><strong>Build Community:</strong> We strive to create a strong, collaborative, and supportive environment that connects parents, teachers, and staff.</li>
-                                <li><strong>Shape the Educational Experience:</strong> The PTO provides a valuable opportunity for parents to have a voice and actively contribute to their children's journey at SVA.</li>
-                            </ul>
-                        </div>
-                         <div class="border-t border-slate-200 pt-6">
-                            <h3 class="text-xl font-semibold text-teal-700 mb-2">Get Involved</h3>
-                            <p class="text-slate-600 mb-4">Every parent and guardian at SVA is automatically a member of the PTO! We encourage you to get involved. You can sign up to be a committee member for a specific event or support year-long school programs.</p>
-                            <div class="bg-teal-50 p-5 rounded-lg border border-teal-200">
-                                <h4 class="font-semibold text-slate-800">2025-26 PTO Volunteering Leads:</h4>
-                                <ul class="list-disc list-inside mt-2 text-slate-700">
-                                    <li>Sara M.</li>
-                                    <li>Rubeka A.</li>
-                                    <li>Esraa El T.</li>
-                                    <li>Ahmed S.</li>
-                                </ul>
-                                <p class="mt-4 text-sm">Interested in becoming a PTO lead, helping out, or have a question? To reach the PTO leadership, please email <a href="mailto:pto@svamail.com" class="text-teal-600 font-semibold hover:underline">pto@svamail.com</a>.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-
-               <div id="faq-forms" class="tab-content">
-                    <h2 class="text-3xl font-bold text-slate-900 mb-6">Resources, Newsletters & FAQs</h2>
-                    <div class="flex border-b border-gray-200">
-                        <button class="faq-forms-tab-btn tab-active px-6 py-3 text-sm font-medium" data-tab="faq-content">FAQ</button>
-                        <button class="faq-forms-tab-btn px-6 py-3 text-sm font-medium text-slate-500" data-tab="forms-content">Forms</button>
-                        <button class="faq-forms-tab-btn px-6 py-3 text-sm font-medium text-slate-500" data-tab="newsletters-content">Newsletters</button>
-                        <button class="faq-forms-tab-btn px-6 py-3 text-sm font-medium text-slate-500" data-tab="quicklinks-content">Quick Links</button>
-                    </div>
-                    <div class="bg-white p-6 rounded-b-xl shadow-sm border border-t-0 border-slate-200">
-                        <div id="faq-content" class="faq-forms-tab-content"></div>
-                        <div id="forms-content" class="faq-forms-tab-content hidden"></div>
-                        <div id="newsletters-content" class="faq-forms-tab-content hidden"></div>
-                        <div id="quicklinks-content" class="faq-forms-tab-content hidden"></div>
-                    </div>
-                </div>
-
-                <div id="live-event" class="tab-content">
-                    </div>
-                
-                <div id="calendar" class="tab-content">
-                     <h2 class="text-3xl font-bold text-slate-900 mb-6">School Calendar</h2>
-                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                        <iframe src="https://calendar.google.com/calendar/embed?src=svaschool.org_us4ga4j1cfs27epj0f2dfegcl0%40group.calendar.google.com&ctz=America/Los_Angeles" style="border: 0" width="100%" height="600" frameborder="0" scrolling="no"></iframe>
-                    </div>
-                </div>
+                <div id="live-event" class="tab-content"></div>
+                <div id="calendar" class="tab-content"><h2 class="text-3xl font-bold text-slate-900 mb-6">Calendar</h2><div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden"><iframe src="https://calendar.google.com/calendar/embed?src=svaschool.org_us4ga4j1cfs27epj0f2dfegcl0%40group.calendar.google.com&ctz=America/Los_Angeles" style="border: 0" width="100%" height="600" frameborder="0" scrolling="no"></iframe></div></div>
             </main>
-            
-            <footer class="bg-white mt-12 border-t border-slate-200">
-                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-sm"><p>&copy; 2025 BMNS. All Rights Reserved - (parent.portal@svaschool.org)</p></div>
-            </footer>
+            <footer class="bg-white mt-12 border-t border-slate-200"><div class="max-w-7xl mx-auto py-6 text-center text-slate-500 text-sm"><p>&copy; 2025 BMNS. All Rights Reserved - (parent.portal@svaschool.org)</p></div></footer>
+        </div>
+        <!-- QR Modal -->
+        <div id="qr-code-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center">
+            <div class="relative bg-white rounded-md p-5 w-96 shadow-lg text-center"><h3 class="text-lg font-medium text-gray-900">Event Check-in QR Code</h3><div id="qrcode" class="mx-auto my-4"></div><button onclick="closeModal('qr-code-modal')" class="px-4 py-2 bg-teal-600 text-white rounded-md w-full">Close</button></div>
         </div>
     </div>
-    
+
     <script>
-        // --- CONFIGURATION ---
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3LGShhqFBG5Y2TocWHYYgg8Sp-mK2YbkZ2x6tWJwf6li0teEvIYYXa5zNxDKtV4U7/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNo5dyu7Rg_78PwCaZdtbg3LJEwMlU5sxoyiGgM3E2xITjDtwLzshFdDCMQSAX8w2T/exec';
         const NEWSLETTER_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdZkNNppgbr_FdH2FOAztYpujc9A4URAsQIlWnADSypDlb5_KnCiVP3EImRK96jWK3Yg/exec';
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         let ID_TOKEN = null;
         let portalData = {};
-        //let tempRequestToken = null; // No longer needed for magic link
-        
-        // --- GLOBAL HELPER FUNCTIONS ---
-        function closeModal(modalId) {
-            document.getElementById(modalId).classList.add('hidden');
+        let enrollmentState = { step: 1, selectedStudents: [], isPaymentComplete: false };
+
+        // --- GLOBAL HELPERS ---
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function showLoginScreen(id) { document.getElementById('login-screen').classList.add('hidden'); document.getElementById('passkey-verify-screen').classList.add('hidden'); if(document.getElementById(id)) document.getElementById(id).classList.remove('hidden'); }
+        function formatDate(d) { if(!d) return 'N/A'; const date = new Date(d); return !isNaN(date.getTime()) ? date.toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'}) : d; }
+        function decodeGrade(g) { const s = String(g).toUpperCase(); return s==='P'?'Pre-K':(s==='0'||s==='K'?'KG':`Grade ${s}`); }
+        function switchToTab(t) { 
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('tab-active')); 
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('tab-content-active')); 
+            document.querySelectorAll(`.tab-btn[data-tab="${t}"]`).forEach(b => b.classList.add('tab-active')); 
+            document.getElementById(t).classList.add('tab-content-active'); 
+            document.getElementById('mobile-menu').style.display = 'none';
         }
-        function openModal(modalId) {
-            document.getElementById(modalId).classList.remove('hidden');
+        function switchToTabAndSubTab(main, sub) { switchToTab(main); document.querySelectorAll('.faq-forms-tab-btn').forEach(b => { b.classList.remove('tab-active'); b.classList.add('text-slate-500'); }); document.querySelector(`.faq-forms-tab-btn[data-tab="${sub}"]`).classList.add('tab-active'); document.querySelectorAll('.faq-forms-tab-content').forEach(c => c.classList.add('hidden')); document.getElementById(sub).classList.remove('hidden'); }
+
+        // --- ENROLLMENT WIZARD LOGIC ---
+        function startEnrollment() {
+            enrollmentState = { step: 1, selectedStudents: [], isPaymentComplete: false };
+            updateWizardStep(1);
+            
+            // Start Countdown
+            const end = new Date("2026-02-16T08:30:00-08:00").getTime();
+            const timer = setInterval(() => {
+                const now = new Date().getTime();
+                const dist = end - now;
+                if (dist < 0) { clearInterval(timer); document.getElementById('enrollment-countdown').innerHTML = "EXPIRED"; }
+                else {
+                    const d = Math.floor(dist / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((dist % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((dist % (1000 * 60 * 60)) / (1000 * 60));
+                    const s = Math.floor((dist % (1000 * 60)) / 1000);
+                    document.getElementById('enrollment-countdown').innerHTML = `${d}d ${h}h ${m}m ${s}s`;
+                }
+            }, 1000);
+
+            // Using existing student data, so no extra fetch needed immediately
+            renderEnrollmentStudents(portalData.students); 
+            openModal('enrollment-modal');
         }
-        function showLoginScreen(screenId) {
-            document.getElementById('login-screen').classList.add('hidden');
-            document.getElementById('passkey-verify-screen').classList.add('hidden');
-            if (document.getElementById(screenId)) {
-                document.getElementById(screenId).classList.remove('hidden');
-            }
+
+        function renderEnrollmentStudents(students) {
+            const list = document.getElementById('enrollment-student-list');
+            list.innerHTML = students.map(s => `
+                <label class="flex items-center p-3 border rounded-lg hover:bg-slate-50 cursor-pointer">
+                    <input type="checkbox" class="enroll-student-check h-5 w-5 text-teal-600 rounded" value="${s.uniqueStudentId}" data-name="${s.studentName}" data-grade="${s.grade}">
+                    <div class="ml-3">
+                        <span class="block font-semibold text-slate-900">${s.studentName}</span>
+                        <span class="block text-xs text-slate-500">Current Grade: ${decodeGrade(s.grade)}</span>
+                    </div>
+                </label>
+            `).join('');
+            
+            // Populate Contact Info (Step 2)
+            const contactDiv = document.getElementById('enrollment-contact-display');
+            // Mock family info retrieval (assuming first student has family contact info)
+            const fam = students[0]; 
+            // In a real app, you might want to fetch 'family' object separately
+            contactDiv.innerHTML = `
+                <div><span class="block text-xs text-slate-500">Mother</span><span class="font-medium">${fam.motherName || 'N/A'}</span></div>
+                <div><span class="block text-xs text-slate-500">Father</span><span class="font-medium">${fam.fatherName || 'N/A'}</span></div>
+                <div><span class="block text-xs text-slate-500">Email(s)</span><span class="font-medium">${fam.parentEmail || 'N/A'}</span></div>
+                <div><span class="block text-xs text-slate-500">Phone</span><span class="font-medium">${fam.phone || 'N/A'}</span></div>
+                <div><span class="block text-xs text-slate-500">Address</span><span class="font-medium">${fam.address || 'N/A'}</span></div>
+            `;
         }
-        function formatDate(dateString) {
-            if (!dateString) return 'N/A';
-            const date = new Date(dateString);
-            return !isNaN(date.getTime()) ? date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : dateString;
-        }
-        function decodeGrade(grade) {
-            const gradeStr = String(grade).toUpperCase();
-            if (gradeStr === 'P') return 'Pre-K';
-            if (gradeStr === '0' || gradeStr === 'K' ) return 'KG';
-            return `Grade ${gradeStr}`;
-        }
-        function switchToTab(tabName) {
-            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('tab-active'));
-            document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('tab-content-active'));
-            document.querySelectorAll(`.tab-btn[data-tab="${tabName}"]`).forEach(b => b.classList.add('tab-active'));
-            document.getElementById(tabName).classList.add('tab-content-active');
-            const mobileMenu = document.getElementById('mobile-menu');
-            if(mobileMenu.style.display === 'block'){
-                mobileMenu.style.display = 'none';
-                document.getElementById('menu-icon-open').classList.remove('hidden');
-                document.getElementById('menu-icon-close').classList.add('hidden');
-            }
-        }
-        
-        function switchToTabAndSubTab(mainTabId, subTabId) {
-            switchToTab(mainTabId);
-            document.querySelectorAll('.faq-forms-tab-btn').forEach(btn => {
-                btn.classList.remove('tab-active');
-                btn.classList.add('text-slate-500');
+
+        function updateWizardStep(step) {
+            document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`step-${step}`).classList.remove('hidden');
+            
+            // Update Header Indicators
+            document.querySelectorAll('.step-item').forEach(el => {
+                const s = parseInt(el.dataset.step);
+                const indicator = el.querySelector('.step-indicator');
+                if (s < step) { indicator.className = 'step-indicator step-completed'; indicator.innerHTML = '<i class="ph-check"></i>'; }
+                else if (s === step) { indicator.className = 'step-indicator step-active'; indicator.innerHTML = s; }
+                else { indicator.className = 'step-indicator step-inactive'; indicator.innerHTML = s; }
             });
-            const subTabButton = document.querySelector(`.faq-forms-tab-btn[data-tab="${subTabId}"]`);
-            if (subTabButton) {
-                subTabButton.classList.add('tab-active');
-                subTabButton.classList.remove('text-slate-500');
+
+            // Button Logic
+            const prevBtn = document.getElementById('wizard-prev-btn');
+            const nextBtn = document.getElementById('wizard-next-btn');
+            const submitBtn = document.getElementById('wizard-submit-btn');
+            
+            prevBtn.classList.toggle('hidden', step === 1);
+            nextBtn.classList.toggle('hidden', step === 6);
+            submitBtn.classList.toggle('hidden', step !== 6);
+            
+            // Step Specific Logic
+            if (step === 4) renderTuitionTable();
+            if (step === 6) {
+                const total = enrollmentState.selectedStudents.length * 150;
+                document.getElementById('total-payment-amount').textContent = `$${total.toFixed(2)}`;
+                document.getElementById('wizard-submit-btn').disabled = true; // Wait for payment
+                enrollmentState.isPaymentComplete = false;
+                document.getElementById('paypal-btn').disabled = false;
+                document.getElementById('paypal-btn').classList.remove('opacity-50', 'cursor-not-allowed');
+                document.getElementById('payment-status-text').innerHTML = 'Payment Pending...';
             }
-            document.querySelectorAll('.faq-forms-tab-content').forEach(content => content.classList.add('hidden'));
-            const subTabContent = document.getElementById(subTabId);
-            if (subTabContent) subTabContent.classList.remove('hidden');
-        }
-        // --- END GLOBAL HELPERS ---
-
-        // --- GOOGLE SIGN-IN & LOGIN LOGIC ---
-        function handleCredentialResponse(response) {
-            handleLoginSuccess(response.credential);
         }
 
-        /**
-         * Handles the final stage of login for both Google Sign-In and Passkey.
-         * @param {string} idToken - A valid JWT (from Google or our backend).
-         */
-        function handleLoginSuccess(idToken) {
-            ID_TOKEN = idToken;
-            localStorage.setItem('sva_id_token', idToken); // <-- SAVE THE TOKEN
-            const profile = JSON.parse(atob(ID_TOKEN.split('.')[1]));
+        function renderTuitionTable() {
+            const tbody = document.getElementById('tuition-table-body');
+            tbody.innerHTML = enrollmentState.selectedStudents.map(id => {
+                const s = portalData.students.find(st => String(st.uniqueStudentId) === String(id));
+                let nextGrade = 'Unknown';
+                let fees = { annual: '$0', monthly: '$0' };
+                // Logic based on user provided table
+                const g = String(s.grade).toUpperCase();
+                
+                // Determine next grade
+                if (g === 'P' || g === 'PRE-K') nextGrade = 'KG';
+                else if (g === 'K' || g === '0') nextGrade = '1';
+                else {
+                    const num = parseInt(g);
+                    nextGrade = !isNaN(num) ? (num + 1).toString() : 'Unknown';
+                }
+
+                // Determine fees based on NEXT grade
+                if (nextGrade === 'KG' || ['1','2','3','4','5'].includes(nextGrade)) { 
+                    fees = { annual:'$12,800', monthly:'$1,280' }; 
+                } else if (['6','7','8'].includes(nextGrade)) { 
+                    fees = { annual:'$14,200', monthly:'$1,420' }; 
+                } else if (nextGrade === '9' || nextGrade === 'High School') {
+                    fees = { annual:'$10,500', monthly:'$1,050' };
+                } else {
+                    // Fallback for PreK if current was younger
+                    fees = { annual:'$16,300', monthly:'$1,630' }; // Half-day assumption
+                }
+                
+                return `<tr>
+                    <td class="p-3 border-b text-slate-800 font-medium">${s.studentName} <span class="text-xs text-slate-500 block">Next Grade: ${nextGrade}</span></td>
+                    <td class="p-3 border-b">${fees.annual}</td>
+                    <td class="p-3 border-b">${fees.monthly}</td>
+                    <td class="p-3 border-b">$250</td>
+                </tr>`;
+            }).join('');
+        }
+
+        // --- AUTH & INIT ---
+        function handleCredentialResponse(response) { handleLoginSuccess(response.credential); }
+        function handleLoginSuccess(token) {
+            ID_TOKEN = token; localStorage.setItem('sva_id_token', token);
+            const p = JSON.parse(atob(token.split('.')[1]));
             document.getElementById('login-container').classList.add('hidden');
             document.getElementById('loading-overlay').classList.remove('hidden');
-            // Use placeholder for picture if not provided (for passkey)
-            const picture = profile.picture || `https://placehold.co/100x100/E2E8F0/4A5568?text=${profile.email[0].toUpperCase()}`;
-            const name = profile.name || profile.email;
-            const userInfoHtml = `<div class="flex items-center"><img class="h-8 w-8 rounded-full" src="${picture}" alt=""><div class="ml-3"><div class="text-base font-medium text-slate-800">${name}</div><div class="text-sm font-medium text-slate-500">${profile.email}</div></div></div>`;
-            document.getElementById('user-info-desktop').innerHTML = userInfoHtml;
-            document.getElementById('user-info-mobile').innerHTML = userInfoHtml;
-            document.getElementById('login-error-msg').classList.add('hidden'); // Hide any previous errors
-
-            fetchData(ID_TOKEN);
-            fetchAndRenderResources();
-            addEventListeners(); // Event listeners are added *after* login
+            const pic = p.picture || `https://placehold.co/100x100/E2E8F0/4A5568?text=${p.email[0].toUpperCase()}`;
+            const info = `<div class="flex items-center"><img class="h-8 w-8 rounded-full" src="${pic}"><div class="ml-3"><div class="text-base font-medium text-slate-800">${p.name||p.email}</div><div class="text-sm font-medium text-slate-500">${p.email}</div></div></div>`;
+            document.getElementById('user-info-desktop').innerHTML = info; document.getElementById('user-info-mobile').innerHTML = info;
+            fetchData(token); fetchAndRenderResources(token); addEventListeners();
         }
+        function signOut() { google.accounts.id.disableAutoSelect(); localStorage.removeItem('sva_id_token'); window.location.reload(); }
 
-        /**
-         * NEW: Handles an expired or invalid token.
-         * Clears storage and shows the login screen with an error.
-         */
-        function handleTokenExpired(message) {
-            localStorage.removeItem('sva_id_token'); // Clear the bad token
-            ID_TOKEN = null;
-            portalData = {};
-
-            // Hide portal, show login screen
-            document.getElementById('loading-overlay').classList.add('hidden');
-            document.getElementById('portal-container').classList.add('hidden');
-            document.getElementById('login-container').classList.remove('hidden');
-            showLoginScreen('login-screen'); // Make sure the main login screen is visible
-
-            // Display the error message
-            document.getElementById('login-error-text').textContent = message || "Your session has expired. Please log in again to continue.";
-            document.getElementById('login-error-msg').classList.remove('hidden');
-        }
-
-        function signOut() {
-            google.accounts.id.disableAutoSelect();
-            localStorage.removeItem('sva_id_token'); // <-- CLEAR THE TOKEN
-            ID_TOKEN = null;
-            portalData = {};
-            window.location.href = window.location.pathname; // Reload to a clean login page
-        }
-        
-        // --- HELPER FUNCTIONS ---
-        function formatGoogleDate(date) { return date.toISOString().split('T')[0].replace(/-/g, ''); }
-        
-        function generateICalLink(event) {
-            const startDate = new Date(event.date);
-            const endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + 1);
-            const reminder1Date = new Date(startDate);
-            reminder1Date.setDate(reminder1Date.getDate() - 22);
-            const reminder1Trigger = `${formatGoogleDate(reminder1Date)}T090000`;
-            const reminder1 = `BEGIN:VALARM\nTRIGGER;VALUE=DATE-TIME:${reminder1Trigger}\nACTION:DISPLAY\nDESCRIPTION:Last chance to withdraw from this event is tomorrow\nEND:VALARM`;
-            const reminder2Date = new Date(startDate);
-            reminder2Date.setDate(reminder2Date.getDate() - 7);
-            const reminder2Trigger = `${formatGoogleDate(reminder2Date)}T090000`;
-            const reminder2 = `BEGIN:VALARM\nTRIGGER;VALUE=DATE-TIME:${reminder2Trigger}\nACTION:DISPLAY\nDESCRIPTION:Your event is a week away!\nEND:VALARM`;
-            const icsContent = `BEGIN:VCALENDAR\nVERSION:2.0\nBEGIN:VEVENT\nURL:${document.location.href}\nDTSTART;VALUE=DATE:${formatGoogleDate(startDate)}\nDTEND;VALUE=DATE:${formatGoogleDate(endDate)}\nSUMMARY:${event.name || event.title}\nDESCRIPTION:Event: ${event.name || event.title}\nLOCATION:Silicon Valley Academy\n${reminder1}\n${reminder2}\nEND:VEVENT\nEND:VCALENDAR`;
-            return `data:text/calendar;charset=utf-8,${encodeURIComponent(icsContent)}`;
-        }
-
-        function generateGoogleCalendarLink(event) {
-            const startDate = new Date(event.date);
-            const endDate = new Date(startDate);
-            endDate.setDate(startDate.getDate() + 1);
-            const reminderText1 = "Reminder: The last day to withdraw from this event is 21 days prior.";
-            const reminderText2 = "Reminder: This event is one week from today.";
-            const description = `For more details, visit the school portal.\n\n--- Reminders ---\n${reminderText1}\n${reminderText2}`;
-            const baseUrl = 'https://www.google.com/calendar/render?action=TEMPLATE';
-            const title = `&text=${encodeURIComponent(event.name || event.title)}`;
-            const dates = `&dates=${formatGoogleDate(startDate)}/${formatGoogleDate(endDate)}`;
-            const details = `&details=${encodeURIComponent(description)}`;
-            const location = `&location=${encodeURIComponent('Silicon Valley Academy')}`;
-            return `${baseUrl}${title}${dates}${details}${location}`;
-        }
-        
-        
-        // --- DATA FETCH & RENDER ---
+        // --- FETCHERS ---
         function fetchData(token) {
-            fetch(`${WEB_APP_URL}?token=${token}`)
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('loading-overlay').classList.add('hidden');
-                    if (data.status !== 'success' || !data.data) {
-                        // Check for explicit auth failure from backend
-                        if (data.error && data.error.includes("Authentication failed")) {
-                           return handleTokenExpired(data.error);
-                        }
-                        throw new Error(data.error || 'Invalid data from backend.');
-                    }
-                    portalData = data.data;
-                    document.getElementById('portal-container').classList.remove('hidden');
-                    
-                    renderDashboard(portalData.students);
-                    renderActionsTab(portalData.students);
-                    populateEventFilter(portalData.allEvents);
-                    applyAndRenderFilters(); 
-                    renderMySignups(portalData.volunteerProgress);
-                    renderMySignupsList(portalData.mySignups);
-                    renderMobileMenu();
-                    if (typeof phosphor !== 'undefined') phosphor.replace();
-                })
-                .catch(error => {
-                    console.error('Fetch Error:', error);
-                    let errorMsg = String(error.message);
-
-                    if (errorMsg.includes('Authentication failed')) {
-                        handleTokenExpired(errorMsg);
-                    } else {
-                        const loadingOverlay = document.getElementById('loading-overlay');
-                        if (loadingOverlay) loadingOverlay.innerHTML = `<div class="text-center"><i class="ph-x-circle text-6xl text-red-500 mx-auto"></i><h2 class="text-2xl font-semibold text-slate-700 mt-4">Failed to Load Portal</h2><p class="text-slate-500">${errorMsg}</p></div>`;
-                    }
-                });
-        }
-
-        function fetchAndRenderResources() {
-            fetch(`${NEWSLETTER_WEB_APP_URL}?token=${ID_TOKEN}`)
-                .then(response => response.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        renderFAQ(data.data.faq);
-                        renderForms(data.data.forms);
-                        renderNewsletters(data.data.newsletters);
-                        renderQuickLinks(data.data.quickLinks);
-                        renderLiveEvent(data.data.liveEvent);
-                    } else { throw new Error(data.error); }
-                })
-                .catch(error => {
-                    console.error('Resources Fetch Error:', error);
-                    if (document.getElementById('newsletters-content')) document.getElementById('newsletters-content').innerHTML = '<p class="text-red-500">Could not load newsletters.</p>';
-                    if (document.getElementById('quicklinks-content')) document.getElementById('quicklinks-content').innerHTML = '<p class="text-red-500">Could not load quick links.</p>';
-                });
+            fetch(`${WEB_APP_URL}?token=${token}`).then(r=>r.json()).then(d=>{
+                document.getElementById('loading-overlay').classList.add('hidden');
+                if(d.status!=='success') throw new Error(d.error);
+                portalData = d.data;
+                document.getElementById('portal-container').classList.remove('hidden');
+                renderDashboard(portalData.students); renderActionsTab(portalData.students); populateEventFilter(portalData.allEvents); applyAndRenderFilters(); renderMySignups(portalData.volunteerProgress); renderMySignupsList(portalData.mySignups); renderMobileMenu();
+                if(typeof phosphor !== 'undefined') phosphor.replace();
+            }).catch(e=>{ console.error(e); alert("Failed to load portal data."); });
         }
         
-        function renderFAQ(faqItems) {
-            const container = document.getElementById('faq-content');
-            if (!container) return;
-            if (!faqItems || faqItems.length === 0) {
-                container.innerHTML = '<p class="text-slate-500">No FAQ items found.</p>';
-                return;
-            }
-            container.innerHTML = faqItems.map(item => `
-                <div class="mb-4 py-2 border-b border-slate-200 last:border-b-0">
-                    <h4 class="font-bold text-slate-800">Q: ${item.question}</h4>
-                    <p class="text-slate-600 mt-1">A: ${item.answer}</p>
-                </div>
-            `).join('');
+        function fetchAndRenderResources(token) {
+            fetch(`${NEWSLETTER_WEB_APP_URL}?token=${token}`).then(r=>r.json()).then(d=>{
+                if(d.status==='success') { renderFAQ(d.data.faq); renderForms(d.data.forms); renderNewsletters(d.data.newsletters); renderQuickLinks(d.data.quickLinks); renderLiveEvent(d.data.liveEvent); }
+            }).catch(console.error);
         }
 
-        function renderForms(forms) {
-            const container = document.getElementById('forms-content');
-            if (!container) return;
-            if (!forms || forms.length === 0) {
-                container.innerHTML = '<p class="text-slate-500">No forms found.</p>';
-                return;
-            }
-            container.innerHTML = `<ul class="space-y-4">` + forms.map(form => `
-                <li class="border-b border-slate-200 pb-3 last:border-b-0">
-                    <a href="${form.link}" target="_blank" class="text-teal-600 hover:underline font-semibold">${form.title}</a>
-                    <p class="text-sm text-slate-600 mt-1">${form.description}</p>
-                </li>
-            `).join('') + `</ul>`;
-        }
-
-        function renderNewsletters(newsletters) {
-            const container = document.getElementById('newsletters-content');
-            if (!container) return;
-
-            let listItems = '';
-            if (!newsletters || newsletters.length === 0) {
-                listItems = '<li><p class="text-slate-500">No newsletters found.</p></li>';
-            } else {
-                listItems = newsletters.map(n => 
-                    `<li class="border-b border-slate-200 pb-2 last:border-b-0"><a href="${n.link}" target="_blank" class="text-teal-600 hover:underline">${n.title}</a></li>`
-                ).join('');
-            }
-            container.innerHTML = `<ul class="space-y-3">${listItems}</ul>`;
-        }
-
-        function renderQuickLinks(links) {
-            const container = document.getElementById('quicklinks-content');
-            if (!container) return;
-
-            let listItems = '';
-            if (!links || links.length === 0) {
-                listItems = '<li><p class="text-slate-500">No links found.</p></li>';
-            } else {
-                listItems = links.map(l => 
-                    `<li class="border-b border-slate-200 pb-2 last:border-b-0"><a href="${l.link}" target="_blank" class="text-teal-600 hover:underline">${l.title}</a></li>`
-                ).join('');
-            }
-            container.innerHTML = `<ul class="space-y-3">${listItems}</ul>`;
-        }
-
-        function renderLiveEvent(liveEventData) {
-            const container = document.getElementById('live-event');
-            if (!container) return;
-            if (liveEventData && liveEventData.length > 0) {
-                const eventsHtml = liveEventData.map(liveEvent => {
-                    if (!liveEvent.link) return ''; 
-                    let embedUrl = '';
-                    if (liveEvent.link.includes('vimeo.com/event/') && liveEvent.link.includes('/embed')) {
-                        try {
-                            const url = new URL(liveEvent.link);
-                            url.searchParams.set('autoplay', '1');
-                            url.searchParams.set('title', '0');
-                            url.searchParams.set('byline', '0');
-                            url.searchParams.set('portrait', '0');
-                            embedUrl = url.toString();
-                        } catch (e) { embedUrl = liveEvent.link; }
-                    }
-                    if (embedUrl) {
-                        return `
-                            <div class="mb-8 -mx-4 sm:mx-0">
-                                <div class="bg-white sm:rounded-lg shadow-sm overflow-hidden">
-                                    <div style="padding:56.25% 0 0 0;position:relative;">
-                                        <iframe src="${embedUrl}" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="position:absolute;top:0;left:0;width:100%;height:100%;" class="sm:rounded-t-lg"></iframe>
-                                    </div>
-                                    <div class="p-4 sm:p-6">
-                                         <h2 class="text-2xl sm:text-3xl font-bold text-slate-800">${liveEvent.title || 'Live School Event'}</h2>
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    }
-                    return '';
-                }).join('');
-                container.innerHTML = eventsHtml || `<h2 class="text-3xl font-bold text-slate-900 mb-6">Live Events</h2><div class="bg-white p-8 rounded-xl shadow-sm border text-center"><p class="text-red-500">No valid live event links available. Please check again later.</p></div>`;
-            } else {
-                container.innerHTML = `
-                    <h2 class="text-3xl font-bold text-slate-900 mb-6">Live Event</h2>
-                    <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center">
-                        <i class="ph-video-camera-slash text-6xl text-slate-400"></i>
-                        <p class="mt-4 text-slate-600">There are no live events currently scheduled.</p>
-                    </div>
-                `;
-            }
-        }
-        
+        // --- RENDERERS ---
         function renderDashboard(students) {
-            const contentContainer = document.getElementById('student-content-container');
-            contentContainer.innerHTML = ''; 
-            if (!students || students.length === 0) {
-                contentContainer.innerHTML = '<div class="bg-white p-6 rounded-lg shadow-sm"><p class="text-center text-slate-600">No students found for this parent account.</p></div>';
-                return;
-            }
-            students.forEach(student => {
-                if (!student || !student.studentName) {
-                    contentContainer.innerHTML += `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg" role="alert"><p class="font-bold">Data Issue</p><p>An incomplete student record was found. Please check your 'Students' Google Sheet for any blank rows and delete them.</p></div>`;
-                    return;
-                }
-                const studentCard = document.createElement('div');
-                let teachersHtml = '';
-                if (student.teachers && student.teachers.length > 0) {
-                    const visibleTeachers = student.teachers.slice(0, 3);
-                    const hiddenTeachers = student.teachers.slice(3);
-                    teachersHtml = visibleTeachers.map(t => `<li class="flex items-center justify-between py-3 border-b border-slate-100 last:border-b-0"><div class="flex items-center"><img class="h-10 w-10 rounded-full mr-4" src="${t.photoUrl}" alt="${t.teacherName}"><div><p class="font-semibold text-slate-800">${t.teacherName}</p><p class="text-sm text-slate-500">${t.role}</p></div></div><a href="mailto:${t.email}" class="text-teal-600 hover:underline text-sm font-medium">${t.email}</a></li>`).join('');
-                    if (hiddenTeachers.length > 0) {
-                        teachersHtml += `<div id="more-teachers-${student.uniqueStudentId}" class="hidden space-y-0">`;
-                        teachersHtml += hiddenTeachers.map(t => `<li class="flex items-center justify-between py-3 border-b border-slate-100 last:border-b-0"><div class="flex items-center"><img class="h-10 w-10 rounded-full mr-4" src="${t.photoUrl}" alt="${t.teacherName}"><div><p class="font-semibold text-slate-800">${t.teacherName}</p><p class="text-sm text-slate-500">${t.role}</p></div></div><a href="mailto:${t.email}" class="text-teal-600 hover:underline text-sm font-medium">${t.email}</a></li>`).join('');
-                        teachersHtml += `</div>`;
-                        teachersHtml += `<div class="pt-3"><button data-student-id="${student.uniqueStudentId}" class="show-more-teachers-btn text-teal-600 font-semibold w-full text-center hover:underline text-sm p-2">Show More</button></div>`;
-                    }
-                } else {
-                    teachersHtml = '<li><p class="text-slate-500 py-3">No teachers listed for this student.</p></li>';
-                }
-
-                let eventsHtml = '';
-                if (student.events && student.events.length > 0) {
-                    const today = new Date(); today.setHours(0, 0, 0, 0);
-                    const upcomingEvents = student.events.filter(event => new Date(event.date) >= today);
-                    const visibleEvents = upcomingEvents.slice(0, 4);
-                    const hiddenEvents = upcomingEvents.slice(4);
-                    eventsHtml = visibleEvents.map((event, index) => renderEventItem(event, student, index)).join('');
-                    if (hiddenEvents.length > 0) {
-                        eventsHtml += `<div id="more-events-${student.uniqueStudentId}" class="hidden space-y-4">` + hiddenEvents.map((event, index) => renderEventItem(event, student, index + 4)).join('') + `</div>`;
-                        eventsHtml += `<div class="border-t border-slate-100 pt-3 mt-3"><button data-student-id="${student.uniqueStudentId}" class="show-more-events-btn text-teal-600 font-semibold w-full text-center hover:underline text-sm p-2">Show More</button></div>`;
-                    }
-                } else {
-                    eventsHtml = '<li><p class="text-slate-500 py-3">No upcoming events for this student.</p></li>';
-                }
-
-                const studentInitials = student.studentName.split(" ").map(n=>n[0]).join("");
-                studentCard.innerHTML = `
-                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
-                    <div class="p-6 bg-slate-50 border-b border-slate-200">
-                        <div class="flex items-center">
-                            <img class="h-16 w-16 rounded-full" src="https://placehold.co/100x100/E2E8F0/4A5568?text=${studentInitials}" alt="Student Photo">
-                            <div class="ml-4">
-                                <h3 class="text-2xl font-bold text-slate-900">${student.studentName}</h3>
-                                <p class="text-slate-600">${decodeGrade(student.grade)} - Classroom ${student.classroom}</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="grid grid-cols-1 lg:grid-cols-3">
-                        <div class="lg:col-span-2 p-6">
-                            <div class="mb-8">
-                                <h4 class="font-semibold text-lg text-slate-700 mb-3">Quick Actions</h4>
-                                <div class="flex flex-wrap gap-3">
-                                    <button data-student-id="${student.uniqueStudentId}" class="report-absence-nav-btn inline-flex items-center bg-teal-100 text-teal-800 font-semibold py-2 px-4 rounded-lg hover:bg-teal-200 transition-colors">Report Absence/Tardy</button>
-                                    <button onclick="switchToTabAndSubTab('faq-forms', 'quicklinks-content');" class="inline-flex items-center bg-slate-100 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors">View Student Handbook</button>
-                                </div>
-                            </div>
-                            <div>
-                                <h4 class="font-semibold text-lg text-slate-700 mb-2">Teachers</h4>
-                                <ul class="space-y-0">${teachersHtml}</ul>
-                            </div>
-                        </div>
-                        <div class="bg-slate-50 p-6 lg:border-l border-slate-200">
-                            <h4 class="font-semibold text-lg text-slate-700 mb-2">Upcoming Events</h4>
-                            <ul class="space-y-4">${eventsHtml}</ul>
-                        </div>
-                    </div>
-                </div>`;
-                contentContainer.appendChild(studentCard);
+            const c = document.getElementById('student-content-container'); c.innerHTML = '';
+            students.forEach(s => {
+                const card = document.createElement('div');
+                card.innerHTML = `<div class="bg-white rounded-xl shadow-md p-6 border border-slate-200"><h3 class="text-2xl font-bold text-slate-900 mb-1">${s.studentName}</h3><p class="text-slate-600">${decodeGrade(s.grade)} - Room ${s.classroom}</p></div>`;
+                c.appendChild(card);
             });
-        }
-
-        function renderEventItem(event, student, index) {
-            const volunteerStatusColor = event.totalSignedUp >= event.totalNeeded ? 'text-green-600' : 'text-orange-600';
-            const volunteerText = (event.totalNeeded > 0) ? `<p class="text-xs font-semibold ${volunteerStatusColor}">Volunteers: ${event.totalSignedUp} of ${event.totalNeeded}</p>` : '';
-            const volunteerButtonHtml = (event.totalNeeded > event.totalSignedUp) ? `<button type="button" class="volunteer-for-event-btn w-full text-sm bg-teal-100 text-teal-800 font-semibold py-1 px-3 rounded-lg hover:bg-teal-200 transition-colors" data-event-id="${event.id}">Volunteer</button>` : '';
-            return `<li class="flex justify-between items-start">
-                <div class="flex-1 pr-2">
-                    <p class="font-semibold text-slate-800">${event.name}</p>
-                    <p class="text-sm text-slate-500">${formatDate(event.date)}</p>
-                    ${volunteerText}
-                </div>
-                <div class="flex flex-col space-y-2 items-end w-24">
-                    ${volunteerButtonHtml}
-                    <div class="relative inline-block text-left w-full">
-                        <button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-md border border-slate-300 shadow-sm px-3 py-1 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${event.name}" data-event-date="${event.date}"><i class="ph-plus-circle mr-1"></i> Add</button>
-                        <div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10">
-                            <div class="py-1">
-                                <a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">Google Calendar</a>
-                                <a href="#" class="ical-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">iCal/Outlook</a>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </li>`;
         }
         
-        function renderMobileMenu() {
-            const desktopNav = document.getElementById('main-nav');
-            const mobileNavContainer = document.getElementById('main-nav-mobile');
-            mobileNavContainer.innerHTML = "";
-            desktopNav.querySelectorAll('.tab-btn').forEach(button => {
-                const newBtn = button.cloneNode(true);
-                newBtn.classList.remove('py-4', 'px-5', 'text-sm');
-                newBtn.classList.add('block', 'px-3', 'py-2', 'rounded-md', 'text-base', 'font-medium');
-                mobileNavContainer.appendChild(newBtn);
-            });
-        }
-
         function renderActionsTab(students) {
             const container = document.getElementById('actions-content-container');
-            if (!students || students.length === 0) {
-                container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><p>No students found.</p></div>`;
-                return;
-            }
+            const reEnrollHtml = `
+            <div class="bg-gradient-to-r from-teal-500 to-teal-700 rounded-xl shadow-lg p-6 text-white mb-8">
+                <div class="flex flex-col md:flex-row justify-between items-center">
+                    <div>
+                        <h2 class="text-2xl font-bold mb-2">2026-2027 Re-enrollment</h2>
+                        <p class="text-teal-100 mb-4 md:mb-0">Priority window is now open. Secure your spot by Feb 16, 2026.</p>
+                    </div>
+                    <button onclick="startEnrollment()" class="bg-white text-teal-700 font-bold py-3 px-6 rounded-lg shadow-md hover:bg-teal-50 transition transform hover:scale-105">
+                        Begin Re-enrollment
+                    </button>
+                </div>
+            </div>`;
+            
             const studentOptions = students.map(s => `<option value="${s.uniqueStudentId}">${s.studentName}</option>`).join('');
-            const absenceFormHtml = `<form id="absence-form"><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl mx-auto"><h3 class="font-semibold text-lg text-slate-800 mb-4">Report Absence or Tardy</h3><div class="space-y-5"><div class="mb-4"><label class="block text-sm font-medium text-slate-700">Student</label><select id="student-select" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500">${studentOptions}</select></div><div><fieldset><legend class="text-sm font-medium text-slate-700">Report Type</legend><div class="mt-2 flex space-x-4"><label class="inline-flex items-center"><input type="radio" class="form-radio text-teal-600 focus:ring-teal-500" name="report-type" value="absent" checked> <span class="ml-2">Absence</span></label><label class="inline-flex items-center"><input type="radio" class="form-radio text-teal-600 focus:ring-teal-500" name="report-type" value="tardy"> <span class="ml-2">Tardy</span></label></div></fieldset></div><div id="absence-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="absence-start" class="block text-sm font-medium text-slate-700">Absence Start Date</label><input type="date" id="absence-start" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="absence-end" class="block text-sm font-medium text-slate-700">Absence End Date</label><input type="date" id="absence-end" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div></div><div id="tardy-fields" class="hidden grid-cols-1 md:grid-cols-2 gap-4"><div><label for="tardy-start-time" class="block text-sm font-medium text-slate-700">Expected Arrival</label><input type="time" id="tardy-start-time" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="tardy-end-time" class="block text-sm font-medium text-slate-700"> Date</label><input type="date" id="tardy-end-time" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div></div><div><label for="absence-reason" class="block text-sm font-medium text-slate-700">Reason</label><select id="absence-reason" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"><option>Sick</option><option>Travel</option><option>Appointment</option><option>Other</option></select></div><div id="other-reason-container" class="hidden"><label for="other-reason-text" class="block text-sm font-medium text-slate-700">Please specify:</label><textarea id="other-reason-text" rows="2" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></textarea></div><div><label for="absence-comments" class="block text-sm font-medium text-slate-700">Optional Comments</label><textarea id="absence-comments" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></textarea></div><div class="border-t border-slate-200 pt-5"><button id="send-notification-btn" type="submit" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Send Notification</button></div></div></div></form>`;
-            const eligibleStudents = students.filter(s => ['K', '0', '1', '2', '3', '4', '5', '6', '7', '8'].includes(String(s.grade)));
-            let pickupFormHtml = '';
-            if (eligibleStudents.length > 0) {
-                const studentCheckboxes = eligibleStudents.map(s => `<label class="inline-flex items-center"><input type="checkbox" class="form-checkbox h-5 w-5 rounded border-slate-300 text-teal-600 focus:ring-teal-500 pickup-student-checkbox" value="${s.uniqueStudentId}"><span class="ml-2 text-slate-700">${s.studentName} (${decodeGrade(s.grade)})</span></label>`).join('');
-                pickupFormHtml = `<form id="pickup-form"><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl mx-auto"><h3 class="font-semibold text-lg text-slate-800 mb-2">One-Time Authorized Pickup</h3><p class="text-sm text-slate-500 mb-4">For students in KG to 8th Grade only. Please notify the office for any permanent changes.</p><div class="space-y-5"><div><label class="block text-sm font-medium text-slate-700">Select Student(s)</label><div class="mt-2 space-y-2">${studentCheckboxes}</div></div><div><label for="pickup-name" class="block text-sm font-medium text-slate-700">Authorized Person's Full Name (must match ID)</label><input type="text" id="pickup-name" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="pickup-relationship" class="block text-sm font-medium text-slate-700">Relationship to Student(s)</label><input type="text" id="pickup-relationship" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="pickup-email" class="block text-sm font-medium text-slate-700">Authorized Person's Email (Optional)</label><input type="email" id="pickup-email" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="pickup-date" class="block text-sm font-medium text-slate-700">Pickup Date</label><input type="date" id="pickup-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="pickup-reason" class="block text-sm font-medium text-slate-700">Reason / Comment (Optional)</label><textarea id="pickup-reason" rows="2" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></textarea></div><div class="border-t border-slate-200 pt-5"><button id="send-pickup-btn" type="submit" class="w-full sm:w-auto inline-flex justify-center items-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Send Pickup Notification</button></div></div></div></form>`;
-            }
-            container.innerHTML = absenceFormHtml + pickupFormHtml;
+            const standardActions = `<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-semibold text-lg text-slate-800 mb-4">Report Absence</h3>
+                    <form id="absence-form" class="space-y-4">
+                        <select id="student-select" class="block w-full rounded-md border-slate-300 shadow-sm">${studentOptions}</select>
+                        <button type="submit" class="w-full bg-slate-100 text-slate-700 font-semibold py-2 rounded-lg hover:bg-slate-200">Send Notification</button>
+                    </form>
+                </div>
+                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
+                    <h3 class="font-semibold text-lg text-slate-800 mb-4">Authorized Pickup</h3>
+                    <form id="pickup-form" class="space-y-4">
+                        <input type="text" placeholder="Pickup Name" class="block w-full rounded-md border-slate-300 shadow-sm">
+                        <button type="submit" class="w-full bg-slate-100 text-slate-700 font-semibold py-2 rounded-lg hover:bg-slate-200">Send Request</button>
+                    </form>
+                </div>
+            </div>`;
+            
+            container.innerHTML = reEnrollHtml + standardActions;
         }
 
         function renderVolunteering(opportunities) {
@@ -785,532 +609,210 @@
             }, {});
             Object.keys(groupedByEvent).forEach((eventName, index) => {
                 const opportunitiesInEvent = groupedByEvent[eventName];
-                const groupedByTitle = opportunitiesInEvent.reduce((acc, opp) => {
-                    const key = opp.title;
-                    if (!acc[key]) { acc[key] = { ...opp, timeSlots: [] }; }
-                    acc[key].timeSlots.push(opp);
-                    return acc;
-                }, {});
-                const eventContentHtml = Object.values(groupedByTitle).map(group => {
-                    const timeSlotsHtml = group.timeSlots.map(slot => `<div class="flex justify-between items-center border-t border-slate-100 py-3"><div class="pr-4"><p class="font-semibold text-slate-800">${slot.time}</p><p class="text-sm text-slate-500">${slot.signedUp} of ${slot.needed} spots filled</p></div><button data-id="${slot.id}" class="signup-btn inline-flex items-center justify-center bg-teal-100 text-teal-800 font-bold py-2 px-4 rounded-lg hover:bg-teal-200 transition duration-300 text-sm flex-shrink-0 disabled:opacity-50" ${slot.signedUp >= slot.needed ? 'disabled' : ''}>${slot.signedUp >= slot.needed ? 'Full' : 'Sign Up'}</button></div>`).join('');
-                    return `<div class="px-6 py-4 border-t border-slate-200"><h4 class="text-lg font-bold text-slate-800">${group.title}</h4><p class="mt-1 text-sm text-slate-600">${group.description}</p><div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500"><span class="flex items-center"><i class="ph-calendar-blank mr-1"></i> ${formatDate(group.date)}</span><span class="flex items-center"><i class="ph-map-pin mr-1"></i> ${group.location}</span><span class="flex items-center"><i class="ph-star mr-1"></i> Semester: ${group.semester}</span></div><div class="mt-3"><h5 class="font-semibold text-slate-700 mb-1 text-sm">Available Time Slots:</h5><div class="space-y-1">${timeSlotsHtml}</div></div></div>`;
-                }).join('');
                 const card = document.createElement('div');
-                card.className = 'bg-white rounded-xl shadow-sm border border-slate-200';
-                card.innerHTML = `<div class="p-4 cursor-pointer flex justify-between items-center volunteer-card-header" data-target="event-group-${index}"><h3 class="text-xl font-bold text-slate-900">${eventName}</h3><i class="ph-caret-down text-2xl transition-transform"></i></div><div id="event-group-${index}" class="hidden">${eventContentHtml}</div>`;
+                card.className = 'bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4';
+                card.innerHTML = `<h3 class="text-xl font-bold text-slate-900 mb-2">${eventName}</h3>` + 
+                    opportunitiesInEvent.map(opp => `
+                        <div class="border-t pt-3 mt-3 first:border-0 first:pt-0 first:mt-0">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <h4 class="font-semibold text-slate-800">${opp.title}</h4>
+                                    <p class="text-sm text-slate-500">${formatDate(opp.date)} - ${opp.time}</p>
+                                </div>
+                                <button class="signup-btn bg-teal-100 text-teal-800 px-3 py-1 rounded text-sm font-bold" data-id="${opp.id}">Sign Up</button>
+                            </div>
+                        </div>
+                    `).join('');
                 list.appendChild(card);
             });
-        }
-        
-        function applyAndRenderFilters() {
-            if (!portalData.volunteering || !document.getElementById('filter-time')) {
-                if(portalData.volunteering) renderVolunteering(portalData.volunteering);
-                return;
-            }
-            const signedUpOppIds = portalData.mySignups.filter(signup => signup.status !== 'Withdrawn').map(signup => signup.opportunityId);
-            let filteredOpportunities = [...portalData.volunteering];
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            filteredOpportunities = filteredOpportunities.filter(opp => new Date(opp.date) >= today);
-            const eventFilterValue = document.getElementById('filter-event').value;
-            const semesterFilter = document.getElementById('filter-semester').value;
-            const timeFilter = document.getElementById('filter-time').value;
-            const hoursFilter = parseInt(document.getElementById('filter-hours').value, 10);
-            const locationFilter = document.getElementById('filter-location').value;
-            const sortFilter = document.getElementById('filter-sort').value;
-            if (eventFilterValue !== 'all') filteredOpportunities = filteredOpportunities.filter(opp => opp.eventid === eventFilterValue);
-            if (semesterFilter !== 'all') filteredOpportunities = filteredOpportunities.filter(opp => String(opp.semester) === semesterFilter);
-            if (timeFilter !== 'All') filteredOpportunities = filteredOpportunities.filter(opp => opp.timeOfDay === timeFilter);
-            if (hoursFilter !== 99) filteredOpportunities = filteredOpportunities.filter(opp => opp.hours <= hoursFilter);
-            if (locationFilter !== 'All') filteredOpportunities = filteredOpportunities.filter(opp => opp.locationType === locationFilter);
-            filteredOpportunities = filteredOpportunities.filter(opp => !signedUpOppIds.includes(opp.id));
-            if (sortFilter === 'recent') filteredOpportunities.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-            renderVolunteering(filteredOpportunities);
-        }
-
-        function populateEventFilter(events) {
-            const eventFilter = document.getElementById('filter-event');
-            if (!eventFilter || !events) return;
-            const uniqueEvents = new Map();
-            events.forEach(event => { if (event.id && !uniqueEvents.has(event.id)) uniqueEvents.set(event.id, event.name); });
-            while (eventFilter.options.length > 1) eventFilter.remove(1);
-            uniqueEvents.forEach((name, id) => {
-                const option = document.createElement('option');
-                option.value = id;
-                option.textContent = name;
-                eventFilter.appendChild(option);
-            });
-        }
-        
-        // --- MATCHING INFO LOGIC (UPDATED) ---
-        function getMatchingInfoHtml(signups) {
-            if (!signups) return '';
-            
-            // Calculate date for 2 months ago
-            const twoMonthsAgo = new Date();
-            twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-            twoMonthsAgo.setHours(0,0,0,0);
-            
-            // Filter signups: Completed AND within last 2 months
-            const validSignups = signups.filter(s => {
-                const d = new Date(s.date);
-                // Note: s.status check depends on exact casing in your sheet ('Completed')
-                return s.status === 'Completed' && d >= twoMonthsAgo && d <= new Date();
-            }).sort((a,b) => new Date(b.date) - new Date(a.date));
-
-            // Generate table rows
-            const rows = validSignups.length > 0 ? validSignups.map(s => `
-                <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
-                    <td class="px-4 py-3 whitespace-nowrap text-slate-700">${formatDate(s.date)}</td>
-                    <td class="px-4 py-3 text-slate-700 font-medium">${s.title}</td>
-                    <td class="px-4 py-3 font-bold text-teal-600">${s.hours || '-'} hrs</td> 
-                </tr>
-            `).join('') : `<tr><td colspan="3" class="px-4 py-4 text-center text-slate-500 italic">No completed volunteer hours found in the last 2 months.</td></tr>`;
-
-            // Return the full card HTML
-            return `
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mt-8">
-                <div class="flex flex-col md:flex-row items-start gap-6">
-                    <div class="p-4 bg-teal-100 rounded-full text-teal-600 flex-shrink-0">
-                         <i class="ph-currency-dollar text-3xl"></i>
-                    </div>
-                    <div class="flex-grow w-full">
-                        <h3 class="text-xl font-bold text-slate-900 mb-2">Double Your Impact with Corporate Matching!</h3>
-                        <p class="text-slate-600 mb-4 leading-relaxed">
-                            Did you know many employers match volunteer hours with monetary donations? You could generate up to <strong>$25 per hour</strong> for SVA just by logging the hours you've already volunteered! Your contribution goes a long way in supporting our school's programs and facilities. JazakAllahu Khairan!
-                        </p>
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6 text-sm text-slate-700">
-                            <p class="font-semibold mb-1">Instructions:</p>
-                            <ul class="list-disc list-inside space-y-1 ml-1">
-                                <li>Submit your hours to your employer's portal using the table below as a reference.</li>
-                                <li>For the verifying person, please use: <span class="font-semibold">Rubeka Alam (<a href="mailto:pto@svamail.com" class="text-teal-600 hover:underline">pto@svamail.com</a>)</span></li>
-                            </ul>
-                        </div>
-
-                        <h4 class="font-semibold text-slate-800 mb-3 border-b border-slate-200 pb-2">Your Completed Hours (Last 2 Months)</h4>
-                        <div class="overflow-x-auto rounded-lg border border-slate-200">
-                            <table class="min-w-full text-left text-sm">
-                                <thead class="bg-slate-50 text-xs uppercase font-semibold text-slate-500">
-                                    <tr>
-                                        <th class="px-4 py-3">Date</th>
-                                        <th class="px-4 py-3">Activity</th>
-                                        <th class="px-4 py-3">Hours</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100 bg-white">
-                                    ${rows}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
         }
 
         function renderMySignups(progress) {
             const container = document.getElementById('my-signups-content');
-            const selfReportFormHtml = `<form id="self-report-form"><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8"><h3 class="text-xl font-semibold text-slate-800 mb-2">Self-Report Off-Portal Hours</h3><p class="text-sm text-slate-600 mb-4">Did you volunteer for a task not listed in the portal (e.g., driving for a field trip, at-home prep)? Please submit the details below for approval.</p><div class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="report-date" class="block text-sm font-medium text-slate-700">Date of Activity</label><input type="date" id="report-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></div><div><label for="report-duration" class="block text-sm font-medium text-slate-700">Duration</label><select id="report-duration" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required><option value="CUST-30M">30 Minutes</option><option value="CUST-1H">1 Hour</option><option value="CUST-2H">2 Hours</option><option value="CUST-3H">3 Hours</option><option value="CUST-4H">4 Hours</option><option value="CUST-5H">5 Hours</option><option value="CUST-6H">6 Hours</option><option value="CUST-7H">7 Hours</option><option value="CUST-8H">8 Hours</option></select></div></div><div><label for="report-description" class="block text-sm font-medium text-slate-700">Brief Description of Activity and Who Can Verify It</label><textarea id="report-description" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></textarea></div><button type="submit" id="self-report-btn" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Submit for Approval</button></div></div></form>`;
-            const progressBarsHtml = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8"><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h3 class="text-lg font-semibold text-slate-800">Semester 1 Progress</h3><div class="mt-4"><div class="flex justify-between mb-1"><span class="text-base font-medium text-teal-700">Completed Hours</span><span class="text-sm font-medium text-teal-700" id="progress-text-s1"></span></div><div class="w-full bg-slate-200 rounded-full h-5 relative overflow-hidden"><div id="progress-bar-s1-inprogress" class="bg-orange-400 h-5 rounded-full" style="width: 0%"></div><div id="progress-bar-s1-completed" class="bg-teal-600 h-5 rounded-full absolute top-0 left-0" style="width: 0%"></div></div><div class="flex justify-between text-xs text-slate-500 mt-2"><span id="in-progress-text-s1"></span><span id="penalty-text-s1" class="text-red-600 font-semibold"></span></div></div></div><div><h3 class="text-lg font-semibold text-slate-800">Semester 2 Progress</h3><div class="mt-4"><div class="flex justify-between mb-1"><span class="text-base font-medium text-teal-700">Completed Hours</span><span class="text-sm font-medium text-teal-700" id="progress-text-s2"></span></div><div class="w-full bg-slate-200 rounded-full h-5 relative overflow-hidden"><div id="progress-bar-s2-inprogress" class="bg-orange-400 h-5 rounded-full" style="width: 0%"></div><div id="progress-bar-s2-completed" class="bg-teal-600 h-5 rounded-full absolute top-0 left-0" style="width: 0%"></div></div><div class="flex justify-between text-xs text-slate-500 mt-2"><span id="in-progress-text-s2"></span><span id="penalty-text-s2" class="text-red-600 font-semibold"></span></div></div></div></div></div>`;
-            const signupListsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h3 class="text-xl font-semibold text-slate-700 mb-2">Upcoming Signups</h3><p class="text-sm text-slate-600 mb-4">You may withdraw up to 3 weeks (21 days) before the event.</p><div id="upcoming-signups-list" class="space-y-4"></div></div><div><h3 class="text-xl font-semibold text-slate-700 mb-4">Completed & Past Signups</h3><div id="completed-signups-list" class="space-y-4"></div></div></div>`;
+            // Progress Bars
+            const s1 = progress?.semester1 || {completed:0, baseRequired:10, inProgress:0};
+            const s2 = progress?.semester2 || {completed:0, baseRequired:10, inProgress:0};
             
-            // Generate the new Matching Info HTML
-            const matchingInfoHtml = getMatchingInfoHtml(portalData.mySignups);
-
-            // Append it to the end of the container
-            container.innerHTML = selfReportFormHtml + progressBarsHtml + signupListsHtml + matchingInfoHtml;
-
-            if (progress) {
-                const s1 = progress.semester1;
-                const s1_req = s1.totalRequired || 1;
-                const s1_completed_p = s1_req > 0 ? (s1.completed / s1_req) * 100 : 0;
-                const s1_inprogress_p = s1_req > 0 ? (s1.inProgress / s1_req) * 100 : 0;
-                document.getElementById('progress-bar-s1-completed').style.width = `${Math.min(s1_completed_p, 100)}%`;
-                document.getElementById('progress-bar-s1-inprogress').style.width = `${Math.min(s1_completed_p + s1_inprogress_p, 100)}%`;
-                document.getElementById('progress-text-s1').textContent = `${s1.completed} of ${s1.baseRequired} hours`;
-                document.getElementById('in-progress-text-s1').textContent = `${s1.inProgress || 0} hours in progress`;
-                document.getElementById('penalty-text-s1').textContent = s1.penalty > 0 ? `+ ${s1.penalty} penalty hours` : '';
-                const s2 = progress.semester2;
-                const s2_req = s2.totalRequired || 1;
-                const s2_completed_p = s2_req > 0 ? (s2.completed / s2_req) * 100 : 0;
-                const s2_inprogress_p = s2_req > 0 ? (s2.inProgress / s2_req) * 100 : 0;
-                document.getElementById('progress-bar-s2-completed').style.width = `${Math.min(s2_completed_p, 100)}%`;
-                document.getElementById('progress-bar-s2-inprogress').style.width = `${Math.min(s2_completed_p + s2_inprogress_p, 100)}%`;
-                document.getElementById('progress-text-s2').textContent = `${s2.completed} of ${s2.baseRequired} hours`;
-                document.getElementById('in-progress-text-s2').textContent = `${s2.inProgress || 0} hours in progress`;
-                document.getElementById('penalty-text-s2').textContent = s2.penalty > 0 ? `+ ${s2.penalty} penalty hours` : '';
-            }
+            const progressHtml = `
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="font-semibold text-slate-800">Semester 1 Progress</h3>
+                        <div class="w-full bg-slate-200 rounded-full h-4 mt-2">
+                            <div class="bg-teal-600 h-4 rounded-full" style="width: ${(s1.completed/s1.baseRequired)*100}%"></div>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">${s1.completed} / ${s1.baseRequired} hours completed</p>
+                    </div>
+                    <div>
+                        <h3 class="font-semibold text-slate-800">Semester 2 Progress</h3>
+                        <div class="w-full bg-slate-200 rounded-full h-4 mt-2">
+                            <div class="bg-teal-600 h-4 rounded-full" style="width: ${(s2.completed/s2.baseRequired)*100}%"></div>
+                        </div>
+                        <p class="text-xs text-slate-500 mt-1">${s2.completed} / ${s2.baseRequired} hours completed</p>
+                    </div>
+                </div>
+            </div>`;
+            
+            // Signups Lists
+            const listsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div><h3 class="font-semibold mb-2">Upcoming Signups</h3><div id="upcoming-signups-list" class="space-y-3"></div></div>
+                <div><h3 class="font-semibold mb-2">Completed & Past</h3><div id="completed-signups-list" class="space-y-3"></div></div>
+            </div>`;
+            
+            // Matching Info
+            const matchingHtml = getMatchingInfoHtml(portalData.mySignups);
+            
+            container.innerHTML = progressHtml + listsHtml + matchingHtml;
         }
-        
+
         function renderMySignupsList(signups) {
-            const upcomingList = document.getElementById('upcoming-signups-list');
-            const completedList = document.getElementById('completed-signups-list');
-            upcomingList.innerHTML = '';
-            completedList.innerHTML = '';
-            const upcomingSignups = signups.filter(s => s.status === 'In Progress' || s.status === 'Pending Approval');
-            const pastSignups = signups.filter(s => s.status === 'Completed' || s.status === 'Penalty' || s.status === 'Withdrawn');
-
-            if (upcomingSignups.length === 0) upcomingList.innerHTML = '<div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 text-slate-500">No upcoming volunteer signups.</div>';
-            else {
-                upcomingSignups.forEach((signup, index) => {
-                    const item = document.createElement('div');
-                    item.className = 'bg-white p-5 rounded-lg shadow-sm border border-slate-200';
-                    const eventDate = new Date(signup.date);
-                    const daysUntilEvent = (eventDate - new Date()) / (1000 * 60 * 60 * 24);
-                    const today = new Date();
-                    today.setHours(0,0,0,0);
-                    
-                    let actionButtonsHtml = '';
-                    if (signup.status === 'Pending Approval') {
-                        actionButtonsHtml = `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">Pending Approval</span>`;
-                    } else {
-                        const withdrawButtonHtml = daysUntilEvent > 21 ? `<button data-signup-id="${signup.signupId}" class="withdraw-btn w-full text-sm bg-red-100 text-red-800 font-semibold py-2 px-4 rounded-lg hover:bg-red-200 transition">Withdraw</button>` : `<button class="w-full text-sm bg-slate-200 text-slate-500 font-semibold py-2 px-4 rounded-lg cursor-not-allowed" disabled>Withdrawal ended</button>`;
-                        let qrButtonHtml = '';
-                        if (eventDate <= today) {
-                            qrButtonHtml = `<button data-signup-id="${signup.signupId}" class="show-qr-btn w-full text-sm bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition">Show Check-in Code</button>`;
-                        } else {
-                            qrButtonHtml = `<button class="w-full text-sm bg-slate-200 text-slate-500 font-semibold py-2 px-4 rounded-lg cursor-not-allowed" disabled>Code not yet available</button>`;
-                        }
-                        const calendarButtonHtml = `<div class="relative"><button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-md border border-slate-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${signup.title}" data-event-date="${signup.date}"><i class="ph-plus-circle mr-2"></i> Add to Calendar</button><div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10"><div class="py-1"><a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">Google Calendar</a><a href="#" class="ical-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">iCal/Outlook</a></div></div></div>`;
-                        actionButtonsHtml = `<div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0 flex flex-col space-y-2 w-full sm:w-48">${qrButtonHtml}${calendarButtonHtml}${withdrawButtonHtml}</div>`;
-                    }
-                    
-                    item.innerHTML = `<div class="flex flex-col sm:flex-row justify-between"><div class="flex-grow"><h4 class="text-lg font-bold text-slate-900">${signup.title}</h4><div class="mt-2 space-y-1"><div class="flex items-center text-sm text-slate-500"><i class="ph-info mr-2"></i><p>${signup.description || 'No description provided.'}</p></div><div class="flex items-center text-sm text-slate-500"><i class="ph-calendar-blank mr-2"></i><p>${formatDate(signup.date)} at ${signup.time}</p></div><div class="flex items-center text-sm text-slate-500"><i class="ph-map-pin mr-2"></i><p>${signup.location}</p></div></div></div>${actionButtonsHtml}</div>`;
-                    upcomingList.appendChild(item);
-                });
-            }
-
-            if (pastSignups.length === 0) completedList.innerHTML = '<div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 text-slate-500">No completed or past signups.</div>';
-            else {
-                pastSignups.forEach(signup => {
-                    const item = document.createElement('div');
-                    item.className = 'bg-white p-4 rounded-lg shadow-sm border border-slate-200';
-                    const statusColor = signup.status === 'Completed' ? 'text-green-700 bg-green-100' : signup.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
-                    item.innerHTML = `<div class="flex flex-col sm:flex-row justify-between"><div><h4 class="text-md font-bold text-slate-900">${signup.title}</h4><p class="mt-1 text-sm text-slate-600">${signup.description || ''}</p><div class="mt-2 text-sm text-slate-500"><p><i class="ph-calendar-blank mr-1"></i> ${formatDate(signup.date)} at ${signup.time}</p></div></div><div class="mt-3 sm:mt-0 sm:ml-6 flex-shrink-0 text-left sm:text-right"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">${signup.status}</span></div></div>`;
-                    completedList.appendChild(item);
-                });
-            }
+            const upcoming = document.getElementById('upcoming-signups-list');
+            const completed = document.getElementById('completed-signups-list');
+            if (!signups) return;
+            
+            const up = signups.filter(s => ['In Progress','Pending Approval'].includes(s.status));
+            const past = signups.filter(s => !['In Progress','Pending Approval'].includes(s.status));
+            
+            upcoming.innerHTML = up.length ? up.map(s => `<div class="bg-white p-4 rounded border border-slate-200 shadow-sm"><h4 class="font-bold">${s.title}</h4><p class="text-sm text-slate-500">${formatDate(s.date)}</p><button class="withdraw-btn text-red-600 text-xs mt-2 hover:underline" data-signup-id="${s.signupId}">Withdraw</button></div>`).join('') : '<p class="text-slate-500 text-sm">No upcoming signups.</p>';
+            
+            completed.innerHTML = past.length ? past.map(s => `<div class="bg-white p-4 rounded border border-slate-200 shadow-sm"><h4 class="font-bold">${s.title}</h4><p class="text-sm text-slate-500">${formatDate(s.date)}</p><span class="text-xs font-bold px-2 py-1 rounded bg-slate-100 text-slate-700">${s.status}</span></div>`).join('') : '<p class="text-slate-500 text-sm">No past signups.</p>';
         }
 
-        // --- EVENT LISTENERS ---
-       function addEventListeners() {
-            // Note: Login form listeners are now in window.onload
-            document.body.addEventListener('click', function(event) {
-                const target = event.target;
-                const button = target.closest('button');
-                const sidebarLink = target.closest('.sidebar-link');
-                
-                // --- Card expand/collapse (Check this first!) ---
-                const header = target.closest('.volunteer-card-header');
-                if (header) {
-                    const content = document.getElementById(header.dataset.target);
-                    const icon = header.querySelector('i');
-                    if (content) {
-                        content.classList.toggle('hidden');
-                        icon.classList.toggle('rotate-180');
-                    }
-                    return; // Action handled, exit
-                }
+        function getMatchingInfoHtml(signups) {
+            if (!signups) return '';
+            const twoMonthsAgo = new Date(); twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+            const valid = signups.filter(s => s.status === 'Completed' && new Date(s.date) >= twoMonthsAgo);
+            const rows = valid.map(s => `<tr><td class="p-2 border-b">${formatDate(s.date)}</td><td class="p-2 border-b">${s.title}</td><td class="p-2 border-b font-bold">${s.hours}</td></tr>`).join('');
+            return `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mt-8"><h3 class="font-bold text-lg mb-4">Corporate Matching</h3><p class="text-sm text-slate-600 mb-4">Submit these hours to your employer:</p><table class="w-full text-sm text-left"><thead><tr><th class="p-2 border-b">Date</th><th class="p-2 border-b">Activity</th><th class="p-2 border-b">Hours</th></tr></thead><tbody>${rows || '<tr><td colspan="3" class="p-2 text-center text-slate-500">No recent completed hours.</td></tr>'}</tbody></table></div>`;
+        }
 
-                // --- Sidebar Navigation ---
-                if (sidebarLink) {
-                    event.preventDefault();
-                    document.querySelectorAll('.tab-btn, .sidebar-link').forEach(l => l.classList.remove('tab-active', 'active'));
-                    
-                    const tabId = sidebarLink.dataset.tab;
-                    document.querySelectorAll(`.sidebar-link[data-tab="${tabId}"]`).forEach(l => l.classList.add('active'));
-                    document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`).forEach(l => l.classList.add('tab-active'));
+        function populateEventFilter(events) {
+            const select = document.getElementById('filter-event');
+            if(!select || !events) return;
+            const unique = [...new Set(events.map(e => JSON.stringify({id:e.id, name:e.name})))].map(s => JSON.parse(s));
+            unique.forEach(e => {
+                const opt = document.createElement('option');
+                opt.value = e.id;
+                opt.textContent = e.name;
+                select.appendChild(opt);
+            });
+        }
 
-                    document.getElementById('page-title').textContent = sidebarLink.textContent.trim();
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('tab-content-active'));
-                    document.getElementById(tabId).classList.add('tab-content-active');
+        function applyAndRenderFilters() {
+            // Simplified filter logic for demo
+            if (portalData.volunteering) renderVolunteering(portalData.volunteering);
+        }
 
-                    // Close mobile sidebar if open
-                    document.getElementById('mobile-menu').style.display = 'none';
-                    document.getElementById('menu-icon-open').classList.remove('hidden');
-                    document.getElementById('menu-icon-close').classList.add('hidden');
-                    return; // Action handled, exit
+        // --- WIZARD EVENTS ---
+        function addEventListeners() {
+            // Wizard Nav
+            document.getElementById('wizard-next-btn').addEventListener('click', () => {
+                if (enrollmentState.step === 1) {
+                    const checkboxes = document.querySelectorAll('.enroll-student-check:checked');
+                    if (checkboxes.length === 0) { alert("Please select at least one student."); return; }
+                    enrollmentState.selectedStudents = Array.from(checkboxes).map(c => c.value);
                 }
-
-                // --- Button Checks ---
-                if (!button) {
-                    // Close modal ONLY if clicking the modal backdrop itself
-                    if (event.target.classList.contains('modal')) {
-                        closeModal(event.target.id);
-                    }
-                    return; // Not a button, sidebar link, or backdrop click, exit
+                if (enrollmentState.step === 3) {
+                    if (!document.getElementById('volunteer-agree-check').checked) { alert("You must agree to the volunteer requirements."); return; }
                 }
-
-                if (button && button.matches('.withdraw-btn')) {
-                    if (!confirm('Are you sure you want to withdraw from this event?')) return;
-                    const signupId = button.dataset.signupId;
-                    button.textContent = 'Withdrawing...';
-                    button.disabled = true;
-                    fetch(WEB_APP_URL, {
-                        method: 'POST', mode: 'no-cors',
-                        body: JSON.stringify({ action: 'withdraw', signupId: signupId, token: ID_TOKEN }),
-                        headers: {'Content-Type': 'application/json'}
-                    }).then(() => {
-                        alert('Withdrawal successful! The portal will now refresh.');
-                        fetchData(ID_TOKEN); 
-                    }).catch(error => {
-                        console.error('Withdrawal Error:', error);
-                        alert(`An error occurred during withdrawal: Load failed`);
-                        button.textContent = 'Withdraw';
-                        button.disabled = false;
-                    });
+                if (enrollmentState.step === 5) {
+                    if (!document.getElementById('tuition-agree-check').checked) { alert("You must agree to the tuition policy."); return; }
                 }
-
-                if (button && button.matches('.add-to-calendar-btn')) {
-                    event.stopPropagation();
-                    const dropdown = button.closest('.relative').querySelector('.event-dropdown');
-                    if (dropdown) {
-                        document.querySelectorAll('.event-dropdown').forEach(d => { if (d !== dropdown) d.classList.add('hidden'); });
-                        const eventData = { name: button.dataset.eventName, date: button.dataset.eventDate };
-                        const googleLink = dropdown.querySelector('.google-cal-link');
-                        const iCalLink = dropdown.querySelector('.ical-link');
-                        googleLink.href = generateGoogleCalendarLink(eventData); googleLink.target = "_blank";
-                        iCalLink.href = generateICalLink(eventData); iCalLink.download = `${eventData.name}.ics`;
-                        dropdown.classList.toggle('hidden');
-                    }
-                } else if (!target.closest('.event-dropdown')) {
-                    document.querySelectorAll('.event-dropdown').forEach(dropdown => dropdown.classList.add('hidden'));
-                }
-
-                if (button && button.matches('.report-absence-nav-btn')) {
-                    const studentId = button.dataset.studentId;
-                    switchToTab('actions');
-                    document.getElementById('student-select').value = studentId;
-                }
-
-                if (button && button.matches('.signup-btn')) {
-                    const opportunityId = button.dataset.id;
-                    button.textContent = 'Signing up...';
-                    button.disabled = true;
-                    fetch(WEB_APP_URL, {
-                        method: 'POST', mode: 'no-cors',
-                        body: JSON.stringify({ action: 'signup', opportunityId: opportunityId, token: ID_TOKEN }),
-                        headers: {'Content-Type': 'application/json'}
-                    }).then(() => {
-                       alert('Signup successful! The portal will now refresh.');
-                       fetchData(ID_TOKEN); 
-                    }).catch(error => {
-                        console.error('Signup Error:', error);
-                        alert(`An error occurred during signup: Load failed`);
-                        button.textContent = 'Sign Up';
-                        button.disabled = false;
-                    });
-                }
-
-                if (button && button.matches('.show-qr-btn')) {
-                    const signupId = button.dataset.signupId;
-                    const qrCodeContainer = document.getElementById('qrcode');
-                    qrCodeContainer.innerHTML = '';
-                    const checkinUrl = `https://approve.svaportal.com/?signupId=${signupId}`;
-                    const qr = qrcode(0, 'M'); qr.addData(checkinUrl); qr.make();
-                    qrCodeContainer.innerHTML = qr.createImgTag(6);
-                    document.getElementById('qr-code-modal').classList.remove('hidden');
-                }
-
-                if (button && (button.matches('#close-modal-btn') || button.parentElement.parentElement.parentElement === document.getElementById('qr-code-modal'))) {
-                    document.getElementById('qr-code-modal').classList.add('hidden');
-                }
-
-                if (button && button.matches('.tab-btn')) { switchToTab(button.dataset.tab); }
-                
-                if (button && button.matches('.faq-forms-tab-btn')) {
-                    const tabName = button.dataset.tab;
-                    document.querySelectorAll('.faq-forms-tab-btn').forEach(btn => {
-                        btn.classList.remove('tab-active'); btn.classList.add('text-slate-500');
-                    });
-                    button.classList.add('tab-active'); button.classList.remove('text-slate-500');
-                    document.querySelectorAll('.faq-forms-tab-content').forEach(content => content.classList.add('hidden'));
-                    document.getElementById(tabName).classList.remove('hidden');
-                }
-
-                if (target.closest('#mobile-menu-button')) {
-                    const mobileMenu = document.getElementById('mobile-menu');
-                    const isOpen = mobileMenu.style.display === 'block';
-                    mobileMenu.style.display = isOpen ? 'none' : 'block';
-                    document.getElementById('menu-icon-open').classList.toggle('hidden', isOpen);
-                    document.getElementById('menu-icon-close').classList.toggle('hidden', !isOpen);
-                }
-
-                if (button && button.matches('.volunteer-for-event-btn')) {
-                    const eventId = button.dataset.eventId;
-                    switchToTab('volunteering');
-                    document.getElementById('filter-event').value = eventId;
-                    applyAndRenderFilters();
-                }
-
-                if(target.matches('input[name="report-type"]')) {
-                    const isTardy = target.value === 'tardy';
-                    document.getElementById('tardy-fields').style.display = isTardy ? 'grid' : 'none';
-                    document.getElementById('absence-fields').style.display = isTardy ? 'none' : 'grid';
-                }
-               
-                if (button && button.matches('.show-more-events-btn, .show-more-teachers-btn')) {
-                    const studentId = button.dataset.studentId;
-                    const type = button.matches('.show-more-events-btn') ? 'events' : 'teachers';
-                    const moreDiv = document.getElementById(`more-${type}-${studentId}`);
-                    if (moreDiv) {
-                        const isHidden = moreDiv.classList.contains('hidden');
-                        moreDiv.classList.toggle('hidden');
-                        button.textContent = isHidden ? 'Show Less' : 'Show More';
-                    }
-                }
+                enrollmentState.step++;
+                updateWizardStep(enrollmentState.step);
             });
             
-            document.body.addEventListener('submit', function(event) {
-                if (event.target.id === 'self-report-form') {
-                    event.preventDefault();
-                    const button = document.getElementById('self-report-btn');
-                    const payload = {
-                        action: 'selfReportHours', token: ID_TOKEN,
-                        opportunityId: document.getElementById('report-duration').value,
-                        date: document.getElementById('report-date').value,
-                        description: document.getElementById('report-description').value
-                    };
-                    if (!payload.date || !payload.description) { alert("Please fill out the date and description for your activity."); return; }
-                    button.textContent = 'Submitting...'; button.disabled = true;
-                    fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
-                    .then(() => {
-                        alert('Your hours have been submitted for approval! The portal will now refresh to show the pending item.');
-                        fetchData(ID_TOKEN);
-                        document.getElementById('self-report-form').reset();
-                    })
-                    .catch(error => console.error('Self-report Error:', error))
-                    .finally(() => { button.textContent = 'Submit for Approval'; button.disabled = false; });
-                } else if (event.target.id === 'absence-form') {
-                    event.preventDefault();
-                    const button = document.getElementById('send-notification-btn');
-                    button.textContent = 'Sending...'; button.disabled = true;
-                    const studentId = document.getElementById('student-select').value;
-                    const student = portalData.students.find(s => s.uniqueStudentId == studentId);
-                    const reportType = document.querySelector('input[name="report-type"]:checked').value;
-                    const startDate = document.getElementById('absence-start').value, endDate = document.getElementById('absence-end').value;
-                    const tardyStartTime = document.getElementById('tardy-start-time').value, tardyEndTime = document.getElementById('tardy-end-time').value;
-                    let reason = document.getElementById('absence-reason').value;
-                    if (reason === 'Other') reason = document.getElementById('other-reason-text').value;
-                    let comments = document.getElementById('absence-comments').value;
-                    fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ action: 'sendAbsenceEmail', student: student, reportType, startDate, endDate, tardyStartTime, tardyEndTime, reason, comments, token: ID_TOKEN })
-                    })
-                    .then(() => alert('Absence/Tardy notification sent successfully!'))
-                    .catch(error => { console.error('Email Send Error:', error); alert(`An error occurred while sending the email: Load failed`); })
-                    .finally(() => { button.textContent = 'Send Notification'; button.disabled = false; });
-                } else if (event.target.id === 'pickup-form') {
-                     event.preventDefault();
-                     const button = document.getElementById('send-pickup-btn');
-                     const selectedStudentIds = Array.from(document.querySelectorAll('.pickup-student-checkbox:checked')).map(cb => cb.value);
-                     if (selectedStudentIds.length === 0) { alert("Please select at least one student."); return; }
-                     const selectedStudents = portalData.students.filter(s => selectedStudentIds.includes(String(s.uniqueStudentId)));
-                     const payload = {
-                        action: 'sendPickupEmail', token: ID_TOKEN,
-                        students: selectedStudents,
-                        pickupName: document.getElementById('pickup-name').value,
-                        relationship: document.getElementById('pickup-relationship').value,
-                        pickupEmail: document.getElementById('pickup-email').value,
-                        reason: document.getElementById('pickup-reason').value,
-                        date: document.getElementById('pickup-date').value
-                    };
-                    if (!payload.pickupName || !payload.relationship || !payload.date) { alert("Please fill out the Authorized Person's Name, Relationship, and the Pickup Date."); return; }
-                    button.textContent = 'Sending...'; button.disabled = true;
-                    fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
-                    .then(() => {
-                        alert('Pickup notification sent successfully!');
-                        event.target.reset();
-                    })
-                    .catch(error => { console.error('Pickup Send Error:', error); alert('An error occurred. Please try again.'); })
-                    .finally(() => { button.textContent = 'Send Pickup Notification'; button.disabled = false; });
+            document.getElementById('wizard-prev-btn').addEventListener('click', () => {
+                if (enrollmentState.step > 1) { enrollmentState.step--; updateWizardStep(enrollmentState.step); }
+            });
+
+            // Agreement Scroll
+            document.getElementById('agreement-scroll-box').addEventListener('scroll', function() {
+                if (this.scrollTop + this.clientHeight >= this.scrollHeight - 10) {
+                    const cb = document.getElementById('tuition-agree-check');
+                    cb.disabled = false;
+                    document.getElementById('agreement-checkbox-label').classList.remove('opacity-50', 'cursor-not-allowed');
                 }
             });
 
-            document.body.addEventListener('change', function(event) {
-                 if (event.target.matches('#absence-reason')) {
-                    document.getElementById('other-reason-container').style.display = (event.target.value === 'Other') ? 'block' : 'none';
-                 } else if (event.target.matches('.filter-control')) {
-                    applyAndRenderFilters();
-                 }
+            // PayPal Mock
+            document.getElementById('paypal-btn').addEventListener('click', () => {
+                alert("Redirecting to PayPal for secure payment...");
+                // Simulate Payment Success
+                setTimeout(() => {
+                    enrollmentState.isPaymentComplete = true;
+                    document.getElementById('payment-status-text').innerHTML = '<span class="text-green-600"><i class="ph-check-circle"></i> Payment Verified</span>';
+                    document.getElementById('wizard-submit-btn').disabled = false;
+                    document.getElementById('paypal-btn').classList.add('opacity-50', 'cursor-not-allowed');
+                    document.getElementById('paypal-btn').disabled = true;
+                }, 1500);
+            });
+
+            // Final Submit
+            document.getElementById('wizard-submit-btn').addEventListener('click', () => {
+                const initials = document.getElementById('final-initials').value;
+                if (!initials || initials.length < 2) { alert("Please enter your initials."); return; }
+                
+                // Collect Data
+                const payload = {
+                    action: 'submitEnrollment',
+                    token: ID_TOKEN,
+                    students: enrollmentState.selectedStudents,
+                    contactStatus: document.querySelector('input[name="contact-verify"]:checked').value,
+                    volunteerOptOut: {
+                        s1: document.getElementById('opt-out-s1').checked,
+                        s2: document.getElementById('opt-out-s2').checked
+                    },
+                    paymentPlan: document.querySelector('input[name="payment-plan"]:checked').value,
+                    paymentId: 'PAY-' + Date.now()
+                };
+
+                const btn = document.getElementById('wizard-submit-btn');
+                btn.textContent = 'Submitting...'; btn.disabled = true;
+
+                fetch(WEB_APP_URL, {
+                    method: 'POST', mode: 'no-cors',
+                    body: JSON.stringify(payload)
+                }).then(() => {
+                    alert("Enrollment Submitted Successfully!");
+                    closeModal('enrollment-modal');
+                    // Refresh data or update UI to show completion
+                }).catch(e => { console.error(e); alert("Submission error."); });
+            });
+
+            // Generic Tab Logic
+            document.body.addEventListener('click', e => {
+                const t = e.target;
+                if (t.matches('.tab-btn')) switchToTab(t.dataset.tab);
+                if (t.matches('.faq-forms-tab-btn')) switchToTabAndSubTab('faq-forms', t.dataset.tab);
+                if (t.closest('#mobile-menu-button')) document.getElementById('mobile-menu').style.display = 'block';
+                
+                // --- Resource Rendering Helper Calls ---
+                if (t.matches('.filter-control')) applyAndRenderFilters();
+            });
+            
+            // Standard Forms
+            const absForm = document.getElementById('absence-form');
+            if(absForm) absForm.addEventListener('submit', e => {
+               e.preventDefault(); alert("Notification sent (Demo)");
             });
         }
 
-        // --- INITIALIZATION ---
-         window.onload = function() {
-            const hashToken = window.location.hash.startsWith('#token=') ? window.location.hash.substring(7) : null;
-            const storedToken = localStorage.getItem('sva_id_token'); // <-- CHECK FOR STORED TOKEN
-
-            if (hashToken) {
-                // 1. User just clicked a magic link. Save the new token.
-                window.history.replaceState({}, document.title, window.location.pathname); // Clean the URL
-                handleLoginSuccess(hashToken);
-            } else if (storedToken) {
-                // 2. User is returning. Log them in with the stored token.
-                handleLoginSuccess(storedToken);
-            } else {
-                // 3. User is new or logged out, show the login screen.
-                try {
-                    google.accounts.id.initialize({
-                      client_id: CLIENT_ID,
-                      callback: handleCredentialResponse
-                      // 'auto_select: true' and 'prompt()' have been removed
-                    });
-                    google.accounts.id.renderButton(
-                      document.getElementById('google-signin-button-container'),
-                      { theme: "outline", size: "large", width: "300" } 
-                    );
-                    // Add login form listeners here
-                    document.getElementById('passkey-request-form').addEventListener('submit', handleRequestPasskey);
-                    // document.getElementById('passkey-verify-form').addEventListener('submit', handleVerifyPasskey); // This form is gone
-                    document.getElementById('go-back-btn').addEventListener('click', () => showLoginScreen('login-screen'));
-                } catch (error) {
-                    console.error("Google Sign-In initialization failed:", error);
-                    document.getElementById('login-screen').innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-lg text-red-600"><p>Could not initialize Google Sign-In.".</p></div>`;
-                }
+        window.onload = () => {
+            const t = localStorage.getItem('sva_id_token');
+            if (t) handleLoginSuccess(t);
+            else { 
+                try { google.accounts.id.initialize({ client_id: CLIENT_ID, callback: handleCredentialResponse }); google.accounts.id.renderButton(document.getElementById('google-signin-button-container'), { theme: "outline", size: "large", width: "300" }); }
+                catch(e){ console.error(e); }
             }
+            
+            // Render specific components for tabs
+            renderFAQ = (items) => { document.getElementById('faq-content').innerHTML = items.map(i=>`<div class="mb-4"><h4 class="font-bold">${i.question}</h4><p>${i.answer}</p></div>`).join(''); };
+            renderForms = (items) => { document.getElementById('forms-content').innerHTML = items.map(i=>`<div class="mb-2"><a href="${i.link}" class="text-teal-600 font-bold">${i.title}</a><p>${i.description}</p></div>`).join(''); };
+            renderNewsletters = (items) => { document.getElementById('newsletters-content').innerHTML = items.map(i=>`<li><a href="${i.link}" class="text-blue-600 underline">${i.title}</a></li>`).join(''); };
+            renderQuickLinks = (items) => { document.getElementById('quicklinks-content').innerHTML = items.map(i=>`<li><a href="${i.link}" class="text-blue-600 underline">${i.title}</a></li>`).join(''); };
+            renderLiveEvent = (events) => { if(events && events.length) document.getElementById('live-event').innerHTML = events.map(e=>`<h2 class="text-2xl font-bold">${e.title}</h2><iframe src="${e.link}" class="w-full h-96 mt-4"></iframe>`).join(''); };
         };
-
-        // --- NEW: Passkey Login Functions ---
-        /**
-         * Handles Step 1 of passkey login: Requesting the code.
-         */
-        function handleRequestPasskey(e) {
-            e.preventDefault();
-            const emailInput = document.getElementById('email-input');
-            const email = emailInput.value;
-            const button = document.getElementById('request-passkey-btn');
-            
-            button.disabled = true;
-            button.textContent = 'Sending...';
-
-            fetch(WEB_APP_URL, {
-                method: 'POST',
-                mode: 'no-cors', // Use no-cors
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Use text/plain
-                body: JSON.stringify({ action: 'requestLoginPasskey', email: email })
-            })
-            .then(() => {
-                // FIX: Don't read the response. Just show the next screen.
-                document.getElementById('passkey-email-display').textContent = email;
-                showLoginScreen('passkey-verify-screen');
-            })
-            .catch(err => {
-                console.error("Passkey Request Error:", err);
-                alert(`A network error occurred. Please try again.`);
-            })
-            .finally(() => {
-                button.disabled = false;
-                button.textContent = 'Send Login Link';
-            });
-        }
-        
-        /**
-         * This function is no longer used for verification, as the magic link
-         * is handled by the doGet in the backend and the window.onload function here.
-         */
-        function handleVerifyPasskey(e) {
-            e.preventDefault();
-             alert("Please check your email for the login link.");
-        }
     </script>
 </body>
 </html>
