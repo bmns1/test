@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+   <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -973,8 +973,107 @@
     }
 }
         
-        // ... (Include renderDashboard, renderActionsTab, etc. from previous files) ...
-        function renderDashboard(students) { const c=document.getElementById('student-content-container'); c.innerHTML=''; students.forEach(s=>{ const card=document.createElement('div'); card.innerHTML=`<div class="bg-white rounded-xl shadow-md p-6 mb-4"><h3 class="text-2xl font-bold">${s.studentName}</h3><p class="text-slate-600">${decodeGrade(s.grade)}</p></div>`; c.appendChild(card); }); }
+        function renderDashboard(students) {
+            const contentContainer = document.getElementById('student-content-container');
+            contentContainer.innerHTML = ''; 
+            if (!students || students.length === 0) {
+                contentContainer.innerHTML = '<div class="bg-white p-6 rounded-lg shadow-sm"><p class="text-center text-slate-600">No students found for this parent account.</p></div>'; 
+                return; 
+            }
+            
+            students.forEach(student => {
+                if (!student || !student.studentName) return;
+                const studentCard = document.createElement('div');
+                
+                // Teachers List
+                let teachersHtml = '';
+                if (student.teachers && student.teachers.length > 0) {
+                    const visibleTeachers = student.teachers.slice(0, 3);
+                    teachersHtml = visibleTeachers.map(t => `
+                        <li class="flex items-center justify-between py-3 border-b border-slate-100 last:border-b-0">
+                            <div class="flex items-center">
+                                <img class="h-10 w-10 rounded-full mr-4" src="${t.photoUrl}" alt="${t.teacherName}">
+                                <div>
+                                    <p class="font-semibold text-slate-800">${t.teacherName}</p>
+                                    <p class="text-sm text-slate-500">${t.role}</p>
+                                </div>
+                            </div>
+                            <a href="mailto:${t.email}" class="text-teal-600 hover:underline text-sm font-medium">${t.email}</a>
+                        </li>
+                    `).join('');
+                } else { 
+                    teachersHtml = '<li><p class="text-slate-500 py-3">No teachers listed for this student.</p></li>'; 
+                }
+
+                // Events List
+                let eventsHtml = '';
+                if (student.events && student.events.length > 0) {
+                    const today = new Date(); 
+                    today.setHours(0, 0, 0, 0);
+                    const upcomingEvents = student.events.filter(event => new Date(event.date) >= today);
+                    const visibleEvents = upcomingEvents.slice(0, 4);
+                    
+                    if (visibleEvents.length > 0) {
+                        eventsHtml = visibleEvents.map((event) => `
+                            <li class="flex justify-between items-start py-2 border-b border-slate-100 last:border-b-0">
+                                <div class="flex-1 pr-2">
+                                    <p class="font-semibold text-slate-800">${event.name}</p>
+                                    <p class="text-sm text-slate-500">${formatDate(event.date)}</p>
+                                </div>
+                            </li>
+                        `).join('');
+                    } else {
+                        eventsHtml = '<li><p class="text-slate-500 py-3">No upcoming events for this student.</p></li>';
+                    }
+                } else { 
+                    eventsHtml = '<li><p class="text-slate-500 py-3">No upcoming events for this student.</p></li>'; 
+                }
+
+                const studentInitials = student.studentName.split(" ").map(n=>n[0]).join("");
+                
+                studentCard.innerHTML = `
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
+                        <div class="p-6 bg-slate-50 border-b border-slate-200">
+                            <div class="flex items-center">
+                                <img class="h-16 w-16 rounded-full" src="https://placehold.co/100x100/E2E8F0/4A5568?text=${studentInitials}" alt="Student Photo">
+                                <div class="ml-4">
+                                    <h3 class="text-2xl font-bold text-slate-900">${student.studentName}</h3>
+                                    <p class="text-slate-600">${decodeGrade(student.grade)} - Classroom ${student.classroom || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 lg:grid-cols-3">
+                            <div class="lg:col-span-2 p-6">
+                                <div class="mb-8">
+                                    <h4 class="font-semibold text-lg text-slate-700 mb-3">Quick Actions</h4>
+                                    <div class="flex flex-wrap gap-3">
+                                        <button data-student-id="${student.uniqueStudentId}" class="report-absence-nav-btn inline-flex items-center bg-teal-100 text-teal-800 font-semibold py-2 px-4 rounded-lg hover:bg-teal-200 transition-colors">
+                                            Report Absence/Tardy
+                                        </button>
+                                        <button onclick="switchToTabAndSubTab('faq-forms', 'quicklinks-content');" class="inline-flex items-center bg-slate-100 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors">
+                                            View Student Handbook
+                                        </button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-lg text-slate-700 mb-2">Teachers</h4>
+                                    <ul class="space-y-0 divide-y divide-slate-100">
+                                        ${teachersHtml}
+                                    </ul>
+                                </div>
+                            </div>
+                            <div class="bg-slate-50 p-6 lg:border-l border-slate-200">
+                                <h4 class="font-semibold text-lg text-slate-700 mb-2">Upcoming Events</h4>
+                                <ul class="space-y-4">
+                                    ${eventsHtml}
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                contentContainer.appendChild(studentCard);
+            });
+        }
         
         function renderActionsTab(students) { 
             const container = document.getElementById('actions-content-container');
