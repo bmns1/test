@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+ <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -975,17 +975,7 @@
         
         // ... (Include renderDashboard, renderActionsTab, etc. from previous files) ...
         function renderDashboard(students) { const c=document.getElementById('student-content-container'); c.innerHTML=''; students.forEach(s=>{ const card=document.createElement('div'); card.innerHTML=`<div class="bg-white rounded-xl shadow-md p-6 mb-4"><h3 class="text-2xl font-bold">${s.studentName}</h3><p class="text-slate-600">${decodeGrade(s.grade)}</p></div>`; c.appendChild(card); }); }
-        function renderMobileMenu() {
-            const desktopNav = document.getElementById('main-nav');
-            const mobileNavContainer = document.getElementById('main-nav-mobile');
-            mobileNavContainer.innerHTML = "";
-            desktopNav.querySelectorAll('.tab-btn').forEach(button => {
-                const newBtn = button.cloneNode(true);
-                newBtn.classList.remove('py-4', 'px-5', 'text-sm');
-                newBtn.classList.add('block', 'px-3', 'py-2', 'rounded-md', 'text-base', 'font-medium');
-                mobileNavContainer.appendChild(newBtn);
-            });
-        }
+        
         function renderActionsTab(students) { 
             const container = document.getElementById('actions-content-container');
             if (!students || students.length === 0) { container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><p>No students found.</p></div>`; return; }
@@ -1225,6 +1215,18 @@
             }
         }
 
+        function renderMobileMenu() {
+            const desktopNav = document.getElementById('main-nav');
+            const mobileNavContainer = document.getElementById('main-nav-mobile');
+            mobileNavContainer.innerHTML = "";
+            desktopNav.querySelectorAll('.tab-btn').forEach(button => {
+                const newBtn = button.cloneNode(true);
+                newBtn.classList.remove('py-4', 'px-5', 'text-sm');
+                newBtn.classList.add('block', 'px-3', 'py-2', 'rounded-md', 'text-base', 'font-medium');
+                mobileNavContainer.appendChild(newBtn);
+            });
+        }
+
         // --- EVENT LISTENERS ---
        function addEventListeners() {
             document.body.addEventListener('click', function(event) {
@@ -1368,7 +1370,7 @@
                 }
 
                 if(target.matches('input[name="report-type"]')) {
-                    const isTardy = target.value === 'tardy';
+                    const isTardy = event.target.value === 'tardy';
                     document.getElementById('tardy-fields').style.display = isTardy ? 'grid' : 'none';
                     document.getElementById('absence-fields').style.display = isTardy ? 'none' : 'grid';
                 }
