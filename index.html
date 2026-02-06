@@ -706,25 +706,130 @@
         function renderDashboard(students) {
             const contentContainer = document.getElementById('student-content-container');
             contentContainer.innerHTML = ''; 
-            if (!students || students.length === 0) { contentContainer.innerHTML = '<div class="bg-white p-6 rounded-lg shadow-sm"><p class="text-center text-slate-600">No students found.</p></div>'; return; }
-            
+            if (!students || students.length === 0) {
+                contentContainer.innerHTML = '<div class="bg-white p-6 rounded-lg shadow-sm"><p class="text-center text-slate-600">No students found for this parent account.</p></div>';
+                return;
+            }
             students.forEach(student => {
-                if (!student || !student.studentName) return;
+                if (!student || !student.studentName) {
+                    contentContainer.innerHTML += `<div class="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded-lg" role="alert"><p class="font-bold">Data Issue</p><p>An incomplete student record was found. Please check your 'Students' Google Sheet for any blank rows and delete them.</p></div>`;
+                    return;
+                }
                 const studentCard = document.createElement('div');
-                let teachersHtml = (student.teachers && student.teachers.length > 0) ? student.teachers.slice(0,3).map(t => `<li class="flex items-center justify-between py-3 border-b border-slate-100 last:border-b-0"><div class="flex items-center"><img class="h-10 w-10 rounded-full mr-4" src="${t.photoUrl}" alt="${t.teacherName}"><div><p class="font-semibold text-slate-800">${t.teacherName}</p><p class="text-sm text-slate-500">${t.role}</p></div></div><a href="mailto:${t.email}" class="text-teal-600 hover:underline text-sm font-medium">${t.email}</a></li>`).join('') : '<li><p class="text-slate-500 py-3">No teachers listed.</p></li>';
-                
+                let teachersHtml = '';
+                if (student.teachers && student.teachers.length > 0) {
+                    const visibleTeachers = student.teachers.slice(0, 3);
+                    const hiddenTeachers = student.teachers.slice(3);
+                    
+                    const renderTeacher = (t) => {
+                        // Replaced placeholder image for teachers with initials div
+                        const initials = t.teacherName ? t.teacherName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'T';
+                        return `
+                        <li class="flex items-center justify-between py-3 border-b border-slate-100 last:border-b-0">
+                            <div class="flex items-center">
+                                <div class="h-10 w-10 rounded-full mr-4 bg-slate-200 text-slate-500 flex items-center justify-center font-bold text-xs border border-slate-300">
+                                    ${t.photoUrl && !t.photoUrl.includes('placehold') ? `<img src="${t.photoUrl}" class="h-full w-full rounded-full object-cover">` : initials}
+                                </div>
+                                <div>
+                                    <p class="font-semibold text-slate-800">${t.teacherName}</p>
+                                    <p class="text-sm text-slate-500">${t.role}</p>
+                                </div>
+                            </div>
+                            <a href="mailto:${t.email}" class="text-teal-600 hover:underline text-sm font-medium">${t.email}</a>
+                        </li>`;
+                    };
+
+                    teachersHtml = visibleTeachers.map(renderTeacher).join('');
+                    if (hiddenTeachers.length > 0) {
+                        teachersHtml += `<div id="more-teachers-${student.uniqueStudentId}" class="hidden space-y-0">`;
+                        teachersHtml += hiddenTeachers.map(renderTeacher).join('');
+                        teachersHtml += `</div>`;
+                        teachersHtml += `<div class="pt-3"><button data-student-id="${student.uniqueStudentId}" class="show-more-teachers-btn text-teal-600 font-semibold w-full text-center hover:underline text-sm p-2">Show More</button></div>`;
+                    }
+                } else {
+                    teachersHtml = '<li><p class="text-slate-500 py-3">No teachers listed for this student.</p></li>';
+                }
+
                 let eventsHtml = '';
                 if (student.events && student.events.length > 0) {
-                     const upcoming = student.events.filter(e => new Date(e.date) >= new Date().setHours(0,0,0,0)).slice(0, 4);
-                     eventsHtml = upcoming.length > 0 ? upcoming.map(e => `<li class="flex justify-between items-start py-2 border-b border-slate-100 last:border-b-0"><div class="flex-1 pr-2"><p class="font-semibold text-slate-800">${e.name}</p><p class="text-sm text-slate-500">${formatDate(e.date)}</p></div></li>`).join('') : '<li><p class="text-slate-500 py-3">No upcoming events.</p></li>';
-                } else { eventsHtml = '<li><p class="text-slate-500 py-3">No upcoming events.</p></li>'; }
+                    const today = new Date(); today.setHours(0, 0, 0, 0);
+                    const upcomingEvents = student.events.filter(event => new Date(event.date) >= today);
+                    const visibleEvents = upcomingEvents.slice(0, 4);
+                    const hiddenEvents = upcomingEvents.slice(4);
+                    eventsHtml = visibleEvents.map((event, index) => renderEventItem(event, student, index)).join('');
+                    if (hiddenEvents.length > 0) {
+                        eventsHtml += `<div id="more-events-${student.uniqueStudentId}" class="hidden space-y-4">` + hiddenEvents.map((event, index) => renderEventItem(event, student, index + 4)).join('') + `</div>`;
+                        eventsHtml += `<div class="border-t border-slate-100 pt-3 mt-3"><button data-student-id="${student.uniqueStudentId}" class="show-more-events-btn text-teal-600 font-semibold w-full text-center hover:underline text-sm p-2">Show More</button></div>`;
+                    }
+                } else {
+                    eventsHtml = '<li><p class="text-slate-500 py-3">No upcoming events for this student.</p></li>';
+                }
 
-                studentCard.innerHTML = `<div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-200"><div class="p-6 bg-slate-50 border-b border-slate-200"><div class="flex items-center"><img class="h-16 w-16 rounded-full" src="https://placehold.co/100x100/E2E8F0/4A5568?text=${student.studentName[0]}" alt="Student Photo"><div class="ml-4"><h3 class="text-2xl font-bold text-slate-900">${student.studentName}</h3><p class="text-slate-600">${decodeGrade(student.grade)} - Classroom ${student.classroom || 'N/A'}</p></div></div></div><div class="grid grid-cols-1 lg:grid-cols-3"><div class="lg:col-span-2 p-6"><div class="mb-8"><h4 class="font-semibold text-lg text-slate-700 mb-3">Quick Actions</h4><div class="flex flex-wrap gap-3"><button data-student-id="${student.uniqueStudentId}" class="report-absence-nav-btn inline-flex items-center bg-teal-100 text-teal-800 font-semibold py-2 px-4 rounded-lg hover:bg-teal-200 transition-colors">Report Absence/Tardy</button><button onclick="switchToTabAndSubTab('faq-forms', 'quicklinks-content');" class="inline-flex items-center bg-slate-100 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors">View Student Handbook</button></div></div><div><h4 class="font-semibold text-lg text-slate-700 mb-2">Teachers</h4><ul class="space-y-0 divide-y divide-slate-100">${teachersHtml}</ul></div></div><div class="bg-slate-50 p-6 lg:border-l border-slate-200"><h4 class="font-semibold text-lg text-slate-700 mb-2">Upcoming Events</h4><ul class="space-y-4">${eventsHtml}</ul></div></div></div>`;
+                // Generate initials for student avatar
+                const studentInitials = student.studentName ? student.studentName.split(" ").map(n=>n[0]).join("").substring(0,2).toUpperCase() : "ST";
+                
+                studentCard.innerHTML = `
+                <div class="bg-white rounded-xl shadow-md overflow-hidden border border-slate-200">
+                    <div class="p-6 bg-slate-50 border-b border-slate-200">
+                        <div class="flex items-center">
+                            <div class="h-16 w-16 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-2xl border border-indigo-200 shadow-inner">
+                                ${studentInitials}
+                            </div>
+                            <div class="ml-4">
+                                <h3 class="text-2xl font-bold text-slate-900">${student.studentName}</h3>
+                                <p class="text-slate-600">${decodeGrade(student.grade)} - Classroom ${student.classroom || 'N/A'}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-3">
+                        <div class="lg:col-span-2 p-6">
+                            <div class="mb-8">
+                                <h4 class="font-semibold text-lg text-slate-700 mb-3">Quick Actions</h4>
+                                <div class="flex flex-wrap gap-3">
+                                    <button data-student-id="${student.uniqueStudentId}" class="report-absence-nav-btn inline-flex items-center bg-teal-100 text-teal-800 font-semibold py-2 px-4 rounded-lg hover:bg-teal-200 transition-colors">Report Absence/Tardy</button>
+                                    <button onclick="switchToTabAndSubTab('faq-forms', 'quicklinks-content');" class="inline-flex items-center bg-slate-100 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors">View Student Handbook</button>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-semibold text-lg text-slate-700 mb-2">Teachers</h4>
+                                <ul class="space-y-0 divide-y divide-slate-100">${teachersHtml}</ul>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 p-6 lg:border-l border-slate-200">
+                            <h4 class="font-semibold text-lg text-slate-700 mb-2">Upcoming Events</h4>
+                            <ul class="space-y-4">${eventsHtml}</ul>
+                        </div>
+                    </div>
+                </div>`;
                 contentContainer.appendChild(studentCard);
             });
         }
 
-        // --- HELPER RENDERS ---
+        function renderEventItem(event, student, index) {
+            const volunteerStatusColor = event.totalSignedUp >= event.totalNeeded ? 'text-green-600' : 'text-orange-600';
+            const volunteerText = (event.totalNeeded > 0) ? `<p class="text-xs font-semibold ${volunteerStatusColor}">Volunteers: ${event.totalSignedUp} of ${event.totalNeeded}</p>` : '';
+            const volunteerButtonHtml = (event.totalNeeded > event.totalSignedUp) ? `<button type="button" class="volunteer-for-event-btn w-full text-sm bg-teal-100 text-teal-800 font-semibold py-1 px-3 rounded-lg hover:bg-teal-200 transition-colors" data-event-id="${event.id}">Volunteer</button>` : '';
+            return `<li class="flex justify-between items-start">
+                <div class="flex-1 pr-2">
+                    <p class="font-semibold text-slate-800">${event.name}</p>
+                    <p class="text-sm text-slate-500">${formatDate(event.date)}</p>
+                    ${volunteerText}
+                </div>
+                <div class="flex flex-col space-y-2 items-end w-24">
+                    ${volunteerButtonHtml}
+                    <div class="relative inline-block text-left w-full">
+                        <button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-md border border-slate-300 shadow-sm px-3 py-1 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${event.name}" data-event-date="${event.date}"><i class="ph-plus-circle mr-1"></i> Add</button>
+                        <div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10">
+                            <div class="py-1">
+                                <a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">Google Calendar</a>
+                                <a href="#" class="ical-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">iCal/Outlook</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </li>`;
+        }
+        
         function renderActionsTab(students) {
              // Basic Actions Tab Content - Enrollment card removed from here as it's now a tab
              document.getElementById('actions-content-container').innerHTML = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><h3 class="text-lg font-bold text-slate-800 mb-2">Absence Reporting</h3><p class="text-slate-600 mb-4">Quickly report an absence or tardy for your child.</p><button onclick="document.querySelector('.report-absence-nav-btn').click()" class="bg-teal-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-teal-700">Report Now</button></div>`;
@@ -744,7 +849,31 @@
         }
         
         function handleTokenExpired(message) { localStorage.removeItem('sva_id_token'); ID_TOKEN = null; document.getElementById('loading-overlay').classList.add('hidden'); document.getElementById('portal-container').classList.add('hidden'); document.getElementById('login-container').classList.remove('hidden'); document.getElementById('login-error-text').textContent = message; document.getElementById('login-error-msg').classList.remove('hidden'); }
-        function handleLoginSuccess(idToken) { ID_TOKEN = idToken; localStorage.setItem('sva_id_token', idToken); document.getElementById('login-container').classList.add('hidden'); document.getElementById('loading-overlay').classList.remove('hidden'); const profile = JSON.parse(atob(ID_TOKEN.split('.')[1])); const userInfoHtml = `<div class="flex items-center"><img class="h-8 w-8 rounded-full" src="${profile.picture}" alt=""><div class="ml-3"><div class="text-base font-medium text-slate-800">${profile.name}</div><div class="text-sm font-medium text-slate-500">${profile.email}</div></div></div>`; document.getElementById('user-info-desktop').innerHTML = userInfoHtml; document.getElementById('user-info-mobile').innerHTML = userInfoHtml; fetchData(ID_TOKEN); fetchAndRenderResources(); addEventListeners(); }
+        function handleLoginSuccess(idToken) { 
+            ID_TOKEN = idToken; 
+            localStorage.setItem('sva_id_token', idToken); 
+            document.getElementById('login-container').classList.add('hidden'); 
+            document.getElementById('loading-overlay').classList.remove('hidden'); 
+            const profile = JSON.parse(atob(ID_TOKEN.split('.')[1])); 
+            
+            // Replaced external placeholder with a simple UI element
+            let profileImageHtml;
+            if (profile.picture) {
+                profileImageHtml = `<img class="h-8 w-8 rounded-full" src="${profile.picture}" alt="">`;
+            } else {
+                const initial = profile.email ? profile.email[0].toUpperCase() : '?';
+                profileImageHtml = `<div class="h-8 w-8 rounded-full bg-teal-100 text-teal-600 flex items-center justify-center font-bold text-sm border border-teal-200">${initial}</div>`;
+            }
+
+            const name = profile.name || profile.email;
+            const userInfoHtml = `<div class="flex items-center">${profileImageHtml}<div class="ml-3"><div class="text-base font-medium text-slate-800">${name}</div><div class="text-sm font-medium text-slate-500">${profile.email}</div></div></div>`;
+            document.getElementById('user-info-desktop').innerHTML = userInfoHtml; 
+            document.getElementById('user-info-mobile').innerHTML = userInfoHtml; 
+            
+            fetchData(ID_TOKEN); 
+            fetchAndRenderResources(); 
+            addEventListeners(); 
+        }
         function signOut() { google.accounts.id.disableAutoSelect(); localStorage.removeItem('sva_id_token'); window.location.href = window.location.pathname; }
         
         function handleCredentialResponse(response) { handleLoginSuccess(response.credential); }
@@ -776,42 +905,48 @@
                 const button = target.closest('button');
                 if (button && button.matches('.tab-btn')) { switchToTab(button.dataset.tab); }
                 if (target.closest('#mobile-menu-button')) { const m = document.getElementById('mobile-menu'); m.style.display = m.style.display === 'block' ? 'none' : 'block'; }
-                // Other existing listeners...
+                
+                // Show More Logic
+                if (button && (button.matches('.show-more-events-btn') || button.matches('.show-more-teachers-btn'))) {
+                    const studentId = button.dataset.studentId;
+                    const type = button.matches('.show-more-events-btn') ? 'events' : 'teachers';
+                    const moreDiv = document.getElementById(`more-${type}-${studentId}`);
+                    if (moreDiv) {
+                        const isHidden = moreDiv.classList.contains('hidden');
+                        moreDiv.classList.toggle('hidden');
+                        button.textContent = isHidden ? 'Show Less' : 'Show More';
+                    }
+                }
+                
+                if (button && button.matches('.volunteer-for-event-btn')) {
+                    const eventId = button.dataset.eventId;
+                    switchToTab('volunteering');
+                    const eventFilter = document.getElementById('filter-event');
+                    if(eventFilter) {
+                        eventFilter.value = eventId;
+                        applyAndRenderFilters();
+                    }
+                }
+            });
+            
+             document.body.addEventListener('change', function(event) {
+                if (event.target.matches('.filter-control')) {
+                    applyAndRenderFilters();
+                }
             });
         }
 
-        // Placeholder functions for other tabs (required for fetch to work without errors)
-        function applyAndRenderFilters() {
-            if (!portalData.volunteering || !document.getElementById('filter-time')) {
-                if(portalData.volunteering) renderVolunteering(portalData.volunteering);
-                return;
-            }
-            const signedUpOppIds = portalData.mySignups.filter(signup => signup.status !== 'Withdrawn').map(signup => signup.opportunityId);
-            let filteredOpportunities = [...portalData.volunteering];
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            filteredOpportunities = filteredOpportunities.filter(opp => new Date(opp.date) >= today);
-            const eventFilterValue = document.getElementById('filter-event').value;
-            const semesterFilter = document.getElementById('filter-semester').value;
-            const timeFilter = document.getElementById('filter-time').value;
-            const hoursFilter = parseInt(document.getElementById('filter-hours').value, 10);
-            const locationFilter = document.getElementById('filter-location').value;
-            const sortFilter = document.getElementById('filter-sort').value;
-            if (eventFilterValue !== 'all') filteredOpportunities = filteredOpportunities.filter(opp => opp.eventid === eventFilterValue);
-            if (semesterFilter !== 'all') filteredOpportunities = filteredOpportunities.filter(opp => String(opp.semester) === semesterFilter);
-            if (timeFilter !== 'All') filteredOpportunities = filteredOpportunities.filter(opp => opp.timeOfDay === timeFilter);
-            if (hoursFilter !== 99) filteredOpportunities = filteredOpportunities.filter(opp => opp.hours <= hoursFilter);
-            if (locationFilter !== 'All') filteredOpportunities = filteredOpportunities.filter(opp => opp.locationType === locationFilter);
-            filteredOpportunities = filteredOpportunities.filter(opp => !signedUpOppIds.includes(opp.id));
-            if (sortFilter === 'recent') filteredOpportunities.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
-            renderVolunteering(filteredOpportunities);
-        }
+        // --- VOLUNTEERING FUNCTIONS ---
+        
         function populateEventFilter(events) {
             const eventFilter = document.getElementById('filter-event');
             if (!eventFilter || !events) return;
             const uniqueEvents = new Map();
             events.forEach(event => { if (event.id && !uniqueEvents.has(event.id)) uniqueEvents.set(event.id, event.name); });
+            
+            // Clear existing options except 'All'
             while (eventFilter.options.length > 1) eventFilter.remove(1);
+            
             uniqueEvents.forEach((name, id) => {
                 const option = document.createElement('option');
                 option.value = id;
@@ -819,32 +954,231 @@
                 eventFilter.appendChild(option);
             });
         }
+
+        function applyAndRenderFilters() {
+            if (!portalData.volunteering || !document.getElementById('filter-time')) {
+                if(portalData.volunteering) renderVolunteering(portalData.volunteering);
+                return;
+            }
+            
+            const signedUpOppIds = portalData.mySignups ? portalData.mySignups.filter(signup => signup.status !== 'Withdrawn').map(signup => signup.opportunityId) : [];
+            let filteredOpportunities = [...portalData.volunteering];
+            
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            filteredOpportunities = filteredOpportunities.filter(opp => new Date(opp.date) >= today);
+            
+            const eventFilterValue = document.getElementById('filter-event').value;
+            const semesterFilter = document.getElementById('filter-semester').value;
+            const timeFilter = document.getElementById('filter-time').value;
+            const hoursFilter = parseInt(document.getElementById('filter-hours').value, 10);
+            const locationFilter = document.getElementById('filter-location').value;
+            const sortFilter = document.getElementById('filter-sort').value;
+            
+            if (eventFilterValue !== 'all') filteredOpportunities = filteredOpportunities.filter(opp => opp.eventid === eventFilterValue);
+            if (semesterFilter !== 'all') filteredOpportunities = filteredOpportunities.filter(opp => String(opp.semester) === semesterFilter);
+            if (timeFilter !== 'All') filteredOpportunities = filteredOpportunities.filter(opp => opp.timeOfDay === timeFilter);
+            if (hoursFilter !== 99) filteredOpportunities = filteredOpportunities.filter(opp => opp.hours <= hoursFilter);
+            if (locationFilter !== 'All') filteredOpportunities = filteredOpportunities.filter(opp => opp.locationType === locationFilter);
+            
+            // Filter out signed up opportunities
+            filteredOpportunities = filteredOpportunities.filter(opp => !signedUpOppIds.includes(opp.id));
+            
+            if (sortFilter === 'recent') {
+                filteredOpportunities.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+            } else {
+                // Default sort by date
+                filteredOpportunities.sort((a, b) => new Date(a.date) - new Date(b.date));
+            }
+            
+            renderVolunteering(filteredOpportunities);
+        }
+        
+        function renderVolunteering(opportunities) {
+            const list = document.getElementById('volunteering-list');
+            if(!list) return;
+            list.innerHTML = '';
+            
+            if (!opportunities || opportunities.length === 0) {
+                list.innerHTML = '<div class="text-center text-slate-500 bg-white p-6 rounded-lg shadow-sm border border-slate-200">No volunteering opportunities match your current filters.</div>';
+                return;
+            }
+            
+            const groupedByEvent = opportunities.reduce((acc, opp) => {
+                const eventName = portalData.allEvents.find(e => e.id === opp.eventid)?.name || 'General Opportunities';
+                if (!acc[eventName]) { acc[eventName] = []; }
+                acc[eventName].push(opp);
+                return acc;
+            }, {});
+            
+            Object.keys(groupedByEvent).forEach((eventName, index) => {
+                const opportunitiesInEvent = groupedByEvent[eventName];
+                const groupedByTitle = opportunitiesInEvent.reduce((acc, opp) => {
+                    const key = opp.title;
+                    if (!acc[key]) { acc[key] = { ...opp, timeSlots: [] }; }
+                    acc[key].timeSlots.push(opp);
+                    return acc;
+                }, {});
+                
+                const eventContentHtml = Object.values(groupedByTitle).map(group => {
+                    const timeSlotsHtml = group.timeSlots.map(slot => `
+                        <div class="flex justify-between items-center border-t border-slate-100 py-3">
+                            <div class="pr-4">
+                                <p class="font-semibold text-slate-800">${slot.time}</p>
+                                <p class="text-sm text-slate-500">${slot.signedUp} of ${slot.needed} spots filled</p>
+                            </div>
+                            <button data-id="${slot.id}" class="signup-btn inline-flex items-center justify-center bg-teal-100 text-teal-800 font-bold py-2 px-4 rounded-lg hover:bg-teal-200 transition duration-300 text-sm flex-shrink-0 disabled:opacity-50" ${slot.signedUp >= slot.needed ? 'disabled' : ''}>
+                                ${slot.signedUp >= slot.needed ? 'Full' : 'Sign Up'}
+                            </button>
+                        </div>
+                    `).join('');
+                    
+                    return `
+                        <div class="px-6 py-4 border-t border-slate-200 first:border-t-0">
+                            <h4 class="text-lg font-bold text-slate-800">${group.title}</h4>
+                            <p class="mt-1 text-sm text-slate-600">${group.description}</p>
+                            <div class="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-slate-500">
+                                <span class="flex items-center"><i class="ph-calendar-blank mr-1"></i> ${formatDate(group.date)}</span>
+                                <span class="flex items-center"><i class="ph-map-pin mr-1"></i> ${group.location}</span>
+                                <span class="flex items-center"><i class="ph-star mr-1"></i> Semester: ${group.semester}</span>
+                                <span class="flex items-center"><i class="ph-clock mr-1"></i> ${group.hours} hrs</span>
+                            </div>
+                            <div class="mt-3">
+                                <h5 class="font-semibold text-slate-700 mb-1 text-sm">Available Time Slots:</h5>
+                                <div class="space-y-1">${timeSlotsHtml}</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden';
+                card.innerHTML = `
+                    <div class="p-4 cursor-pointer flex justify-between items-center volunteer-card-header bg-slate-50 hover:bg-slate-100 transition-colors" data-target="event-group-${index}">
+                        <h3 class="text-xl font-bold text-slate-900">${eventName}</h3>
+                        <i class="ph-caret-down text-2xl transition-transform text-slate-400"></i>
+                    </div>
+                    <div id="event-group-${index}" class="hidden">
+                        ${eventContentHtml}
+                    </div>
+                `;
+                list.appendChild(card);
+            });
+        }
+        
         function renderMySignups(progress) {
             const container = document.getElementById('my-signups-content');
-            const selfReportFormHtml = `<form id="self-report-form"><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8"><h3 class="text-xl font-semibold text-slate-800 mb-2">Self-Report Off-Portal Hours</h3><p class="text-sm text-slate-600 mb-4">Did you volunteer for a task not listed in the portal (e.g., driving for a field trip, at-home prep)? Please submit the details below for approval.</p><div class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="report-date" class="block text-sm font-medium text-slate-700">Date of Activity</label><input type="date" id="report-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></div><div><label for="report-duration" class="block text-sm font-medium text-slate-700">Duration</label><select id="report-duration" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required><option value="CUST-30M">30 Minutes</option><option value="CUST-1H">1 Hour</option><option value="CUST-2H">2 Hours</option><option value="CUST-3H">3 Hours</option><option value="CUST-4H">4 Hours</option><option value="CUST-5H">5 Hours</option><option value="CUST-6H">6 Hours</option><option value="CUST-7H">7 Hours</option><option value="CUST-8H">8 Hours</option></select></div></div><div><label for="report-description" class="block text-sm font-medium text-slate-700">Brief Description of Activity and Who Can Verify It</label><textarea id="report-description" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></textarea></div><button type="submit" id="self-report-btn" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Submit for Approval</button></div></div></form>`;
-            const progressBarsHtml = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8"><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h3 class="text-lg font-semibold text-slate-800">Semester 1 Progress</h3><div class="mt-4"><div class="flex justify-between mb-1"><span class="text-base font-medium text-teal-700">Completed Hours</span><span class="text-sm font-medium text-teal-700" id="progress-text-s1"></span></div><div class="w-full bg-slate-200 rounded-full h-5 relative overflow-hidden"><div id="progress-bar-s1-inprogress" class="bg-orange-400 h-5 rounded-full" style="width: 0%"></div><div id="progress-bar-s1-completed" class="bg-teal-600 h-5 rounded-full absolute top-0 left-0" style="width: 0%"></div></div><div class="flex justify-between text-xs text-slate-500 mt-2"><span id="in-progress-text-s1"></span><span id="penalty-text-s1" class="text-red-600 font-semibold"></span></div></div></div><div><h3 class="text-lg font-semibold text-slate-800">Semester 2 Progress</h3><div class="mt-4"><div class="flex justify-between mb-1"><span class="text-base font-medium text-teal-700">Completed Hours</span><span class="text-sm font-medium text-teal-700" id="progress-text-s2"></span></div><div class="w-full bg-slate-200 rounded-full h-5 relative overflow-hidden"><div id="progress-bar-s2-inprogress" class="bg-orange-400 h-5 rounded-full" style="width: 0%"></div><div id="progress-bar-s2-completed" class="bg-teal-600 h-5 rounded-full absolute top-0 left-0" style="width: 0%"></div></div><div class="flex justify-between text-xs text-slate-500 mt-2"><span id="in-progress-text-s2"></span><span id="penalty-text-s2" class="text-red-600 font-semibold"></span></div></div></div></div></div>`;
-            const signupListsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h3 class="text-xl font-semibold text-slate-700 mb-2">Upcoming Signups</h3><p class="text-sm text-slate-600 mb-4">You may withdraw up to 3 weeks (21 days) before the event.</p><div id="upcoming-signups-list" class="space-y-4"></div></div><div><h3 class="text-xl font-semibold text-slate-700 mb-4">Completed & Past Signups</h3><div id="completed-signups-list" class="space-y-4"></div></div></div>`;
+            if(!container) return;
             
-            // Generate the new Matching Info HTML
+            const selfReportFormHtml = `
+            <form id="self-report-form">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+                    <h3 class="text-xl font-semibold text-slate-800 mb-2">Self-Report Off-Portal Hours</h3>
+                    <p class="text-sm text-slate-600 mb-4">Did you volunteer for a task not listed in the portal? Please submit for approval.</p>
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label for="report-date" class="block text-sm font-medium text-slate-700">Date of Activity</label>
+                                <input type="date" id="report-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
+                            </div>
+                            <div>
+                                <label for="report-duration" class="block text-sm font-medium text-slate-700">Duration</label>
+                                <select id="report-duration" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
+                                    <option value="CUST-30M">30 Minutes</option>
+                                    <option value="CUST-1H">1 Hour</option>
+                                    <option value="CUST-2H">2 Hours</option>
+                                    <option value="CUST-3H">3 Hours</option>
+                                    <option value="CUST-4H">4 Hours</option>
+                                    <option value="CUST-5H">5 Hours</option>
+                                    <option value="CUST-6H">6 Hours</option>
+                                    <option value="CUST-7H">7 Hours</option>
+                                    <option value="CUST-8H">8 Hours</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div>
+                            <label for="report-description" class="block text-sm font-medium text-slate-700">Brief Description & Verifier</label>
+                            <textarea id="report-description" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></textarea>
+                        </div>
+                        <button type="submit" id="self-report-btn" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Submit for Approval</button>
+                    </div>
+                </div>
+            </form>`;
+            
+            const progressBarsHtml = `
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-800">Semester 1 Progress</h3>
+                        <div class="mt-4">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-base font-medium text-teal-700">Completed Hours</span>
+                                <span class="text-sm font-medium text-teal-700" id="progress-text-s1">Loading...</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-5 relative overflow-hidden">
+                                <div id="progress-bar-s1-inprogress" class="bg-orange-400 h-5 rounded-full" style="width: 0%"></div>
+                                <div id="progress-bar-s1-completed" class="bg-teal-600 h-5 rounded-full absolute top-0 left-0" style="width: 0%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs text-slate-500 mt-2">
+                                <span id="in-progress-text-s1"></span>
+                                <span id="penalty-text-s1" class="text-red-600 font-semibold"></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 class="text-lg font-semibold text-slate-800">Semester 2 Progress</h3>
+                        <div class="mt-4">
+                            <div class="flex justify-between mb-1">
+                                <span class="text-base font-medium text-teal-700">Completed Hours</span>
+                                <span class="text-sm font-medium text-teal-700" id="progress-text-s2">Loading...</span>
+                            </div>
+                            <div class="w-full bg-slate-200 rounded-full h-5 relative overflow-hidden">
+                                <div id="progress-bar-s2-inprogress" class="bg-orange-400 h-5 rounded-full" style="width: 0%"></div>
+                                <div id="progress-bar-s2-completed" class="bg-teal-600 h-5 rounded-full absolute top-0 left-0" style="width: 0%"></div>
+                            </div>
+                            <div class="flex justify-between text-xs text-slate-500 mt-2">
+                                <span id="in-progress-text-s2"></span>
+                                <span id="penalty-text-s2" class="text-red-600 font-semibold"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
+            
+            const signupListsHtml = `
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold text-slate-700 mb-2">Upcoming Signups</h3>
+                    <p class="text-sm text-slate-600 mb-4">You may withdraw up to 3 weeks (21 days) before the event.</p>
+                    <div id="upcoming-signups-list" class="space-y-4"></div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold text-slate-700 mb-4">Completed & Past Signups</h3>
+                    <div id="completed-signups-list" class="space-y-4"></div>
+                </div>
+            </div>`;
+            
             const matchingInfoHtml = getMatchingInfoHtml(portalData.mySignups);
-
-            // Append it to the end of the container
+            
             container.innerHTML = selfReportFormHtml + progressBarsHtml + signupListsHtml + matchingInfoHtml;
-
+            
             if (progress) {
                 const s1 = progress.semester1;
                 const s1_req = s1.totalRequired || 1;
                 const s1_completed_p = s1_req > 0 ? (s1.completed / s1_req) * 100 : 0;
                 const s1_inprogress_p = s1_req > 0 ? (s1.inProgress / s1_req) * 100 : 0;
+                
                 document.getElementById('progress-bar-s1-completed').style.width = `${Math.min(s1_completed_p, 100)}%`;
                 document.getElementById('progress-bar-s1-inprogress').style.width = `${Math.min(s1_completed_p + s1_inprogress_p, 100)}%`;
                 document.getElementById('progress-text-s1').textContent = `${s1.completed} of ${s1.baseRequired} hours`;
                 document.getElementById('in-progress-text-s1').textContent = `${s1.inProgress || 0} hours in progress`;
                 document.getElementById('penalty-text-s1').textContent = s1.penalty > 0 ? `+ ${s1.penalty} penalty hours` : '';
+                
                 const s2 = progress.semester2;
                 const s2_req = s2.totalRequired || 1;
                 const s2_completed_p = s2_req > 0 ? (s2.completed / s2_req) * 100 : 0;
                 const s2_inprogress_p = s2_req > 0 ? (s2.inProgress / s2_req) * 100 : 0;
+                
                 document.getElementById('progress-bar-s2-completed').style.width = `${Math.min(s2_completed_p, 100)}%`;
                 document.getElementById('progress-bar-s2-inprogress').style.width = `${Math.min(s2_completed_p + s2_inprogress_p, 100)}%`;
                 document.getElementById('progress-text-s2').textContent = `${s2.completed} of ${s2.baseRequired} hours`;
@@ -852,85 +1186,24 @@
                 document.getElementById('penalty-text-s2').textContent = s2.penalty > 0 ? `+ ${s2.penalty} penalty hours` : '';
             }
         }
-        // --- MATCHING INFO LOGIC (UPDATED) ---
-        function getMatchingInfoHtml(signups) {
-            if (!signups) return '';
-            
-            // Calculate date for 2 months ago
-            const twoMonthsAgo = new Date();
-            twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-            twoMonthsAgo.setHours(0,0,0,0);
-            
-            // Filter signups: Completed AND within last 2 months
-            const validSignups = signups.filter(s => {
-                const d = new Date(s.date);
-                // Note: s.status check depends on exact casing in your sheet ('Completed')
-                return s.status === 'Completed' && d >= twoMonthsAgo && d <= new Date();
-            }).sort((a,b) => new Date(b.date) - new Date(a.date));
-
-            // Generate table rows
-            const rows = validSignups.length > 0 ? validSignups.map(s => `
-                <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
-                    <td class="px-4 py-3 whitespace-nowrap text-slate-700">${formatDate(s.date)}</td>
-                    <td class="px-4 py-3 text-slate-700 font-medium">${s.title}</td>
-                    <td class="px-4 py-3 font-bold text-teal-600">${s.hours || '-'} hrs</td> 
-                </tr>
-            `).join('') : `<tr><td colspan="3" class="px-4 py-4 text-center text-slate-500 italic">No completed volunteer hours found in the last 2 months.</td></tr>`;
-
-            // Return the full card HTML
-            return `
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mt-8">
-                <div class="flex flex-col md:flex-row items-start gap-6">
-                    <div class="p-4 bg-teal-100 rounded-full text-teal-600 flex-shrink-0">
-                         <i class="ph-currency-dollar text-3xl"></i>
-                    </div>
-                    <div class="flex-grow w-full">
-                        <h3 class="text-xl font-bold text-slate-900 mb-2">Double Your Impact with Corporate Matching!</h3>
-                        <p class="text-slate-600 mb-4 leading-relaxed">
-                            Did you know many employers match volunteer hours with monetary donations? You could generate up to <strong>$25 per hour</strong> for SVA just by logging the hours you've already volunteered! Your contribution goes a long way in supporting our school's programs and facilities. JazakAllahu Khairan!
-                        </p>
-                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6 text-sm text-slate-700">
-                            <p class="font-semibold mb-1">Instructions:</p>
-                            <ul class="list-disc list-inside space-y-1 ml-1">
-                                <li>Submit your hours to your employer's portal using the table below as a reference.</li>
-                                <li>For the verifying person, please use: <span class="font-semibold">Rubeka Alam (<a href="mailto:pto@svamail.com" class="text-teal-600 hover:underline">pto@svamail.com</a>)</span></li>
-                            </ul>
-                        </div>
-
-                        <h4 class="font-semibold text-slate-800 mb-3 border-b border-slate-200 pb-2">Your Completed Hours (Last 2 Months)</h4>
-                        <div class="overflow-x-auto rounded-lg border border-slate-200">
-                            <table class="min-w-full text-left text-sm">
-                                <thead class="bg-slate-50 text-xs uppercase font-semibold text-slate-500">
-                                    <tr>
-                                        <th class="px-4 py-3">Date</th>
-                                        <th class="px-4 py-3">Activity</th>
-                                        <th class="px-4 py-3">Hours</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="divide-y divide-slate-100 bg-white">
-                                    ${rows}
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>`;
-        }
-
-
-
-
+        
         function renderMySignupsList(signups) {
             const upcomingList = document.getElementById('upcoming-signups-list');
             const completedList = document.getElementById('completed-signups-list');
+            if(!upcomingList || !completedList) return;
+            
             upcomingList.innerHTML = '';
             completedList.innerHTML = '';
+            
+            if(!signups) return;
+
             const upcomingSignups = signups.filter(s => s.status === 'In Progress' || s.status === 'Pending Approval');
             const pastSignups = signups.filter(s => s.status === 'Completed' || s.status === 'Penalty' || s.status === 'Withdrawn');
 
-            if (upcomingSignups.length === 0) upcomingList.innerHTML = '<div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 text-slate-500">No upcoming volunteer signups.</div>';
-            else {
-                upcomingSignups.forEach((signup, index) => {
+            if (upcomingSignups.length === 0) {
+                upcomingList.innerHTML = '<div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 text-slate-500">No upcoming volunteer signups.</div>';
+            } else {
+                upcomingSignups.forEach((signup) => {
                     const item = document.createElement('div');
                     item.className = 'bg-white p-5 rounded-lg shadow-sm border border-slate-200';
                     const eventDate = new Date(signup.date);
@@ -942,34 +1215,71 @@
                     if (signup.status === 'Pending Approval') {
                         actionButtonsHtml = `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">Pending Approval</span>`;
                     } else {
-                        const withdrawButtonHtml = daysUntilEvent > 21 ? `<button data-signup-id="${signup.signupId}" class="withdraw-btn w-full text-sm bg-red-100 text-red-800 font-semibold py-2 px-4 rounded-lg hover:bg-red-200 transition">Withdraw</button>` : `<button class="w-full text-sm bg-slate-200 text-slate-500 font-semibold py-2 px-4 rounded-lg cursor-not-allowed" disabled>Withdrawal ended</button>`;
+                        const withdrawButtonHtml = daysUntilEvent > 21 ? 
+                            `<button data-signup-id="${signup.signupId}" class="withdraw-btn w-full text-sm bg-red-100 text-red-800 font-semibold py-2 px-4 rounded-lg hover:bg-red-200 transition">Withdraw</button>` : 
+                            `<button class="w-full text-sm bg-slate-200 text-slate-500 font-semibold py-2 px-4 rounded-lg cursor-not-allowed" disabled>Withdrawal ended</button>`;
+                        
                         let qrButtonHtml = '';
                         if (eventDate <= today) {
                             qrButtonHtml = `<button data-signup-id="${signup.signupId}" class="show-qr-btn w-full text-sm bg-slate-800 text-white font-semibold py-2 px-4 rounded-lg hover:bg-slate-700 transition">Show Check-in Code</button>`;
                         } else {
                             qrButtonHtml = `<button class="w-full text-sm bg-slate-200 text-slate-500 font-semibold py-2 px-4 rounded-lg cursor-not-allowed" disabled>Code not yet available</button>`;
                         }
-                        const calendarButtonHtml = `<div class="relative"><button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-md border border-slate-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${signup.title}" data-event-date="${signup.date}"><i class="ph-plus-circle mr-2"></i> Add to Calendar</button><div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10"><div class="py-1"><a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">Google Calendar</a><a href="#" class="ical-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">iCal/Outlook</a></div></div></div>`;
+                        
+                        const calendarButtonHtml = `
+                            <div class="relative">
+                                <button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-md border border-slate-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${signup.title}" data-event-date="${signup.date}"><i class="ph-plus-circle mr-2"></i> Add to Calendar</button>
+                                <div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10">
+                                    <div class="py-1">
+                                        <a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">Google Calendar</a>
+                                        <a href="#" class="ical-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">iCal/Outlook</a>
+                                    </div>
+                                </div>
+                            </div>`;
+                            
                         actionButtonsHtml = `<div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0 flex flex-col space-y-2 w-full sm:w-48">${qrButtonHtml}${calendarButtonHtml}${withdrawButtonHtml}</div>`;
                     }
                     
-                    item.innerHTML = `<div class="flex flex-col sm:flex-row justify-between"><div class="flex-grow"><h4 class="text-lg font-bold text-slate-900">${signup.title}</h4><div class="mt-2 space-y-1"><div class="flex items-center text-sm text-slate-500"><i class="ph-info mr-2"></i><p>${signup.description || 'No description provided.'}</p></div><div class="flex items-center text-sm text-slate-500"><i class="ph-calendar-blank mr-2"></i><p>${formatDate(signup.date)} at ${signup.time}</p></div><div class="flex items-center text-sm text-slate-500"><i class="ph-map-pin mr-2"></i><p>${signup.location}</p></div></div></div>${actionButtonsHtml}</div>`;
+                    item.innerHTML = `
+                        <div class="flex flex-col sm:flex-row justify-between">
+                            <div class="flex-grow">
+                                <h4 class="text-lg font-bold text-slate-900">${signup.title}</h4>
+                                <div class="mt-2 space-y-1">
+                                    <div class="flex items-center text-sm text-slate-500"><i class="ph-info mr-2"></i><p>${signup.description || 'No description provided.'}</p></div>
+                                    <div class="flex items-center text-sm text-slate-500"><i class="ph-calendar-blank mr-2"></i><p>${formatDate(signup.date)} at ${signup.time}</p></div>
+                                    <div class="flex items-center text-sm text-slate-500"><i class="ph-map-pin mr-2"></i><p>${signup.location}</p></div>
+                                </div>
+                            </div>
+                            ${actionButtonsHtml}
+                        </div>`;
                     upcomingList.appendChild(item);
                 });
             }
 
-            if (pastSignups.length === 0) completedList.innerHTML = '<div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 text-slate-500">No completed or past signups.</div>';
-            else {
+            if (pastSignups.length === 0) {
+                completedList.innerHTML = '<div class="bg-white p-4 rounded-lg shadow-sm border border-slate-200 text-slate-500">No completed or past signups.</div>';
+            } else {
                 pastSignups.forEach(signup => {
                     const item = document.createElement('div');
                     item.className = 'bg-white p-4 rounded-lg shadow-sm border border-slate-200';
                     const statusColor = signup.status === 'Completed' ? 'text-green-700 bg-green-100' : signup.status === 'Penalty' ? 'text-red-700 bg-red-100' : 'text-slate-700 bg-slate-100';
-                    item.innerHTML = `<div class="flex flex-col sm:flex-row justify-between"><div><h4 class="text-md font-bold text-slate-900">${signup.title}</h4><p class="mt-1 text-sm text-slate-600">${signup.description || ''}</p><div class="mt-2 text-sm text-slate-500"><p><i class="ph-calendar-blank mr-1"></i> ${formatDate(signup.date)} at ${signup.time}</p></div></div><div class="mt-3 sm:mt-0 sm:ml-6 flex-shrink-0 text-left sm:text-right"><span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">${signup.status}</span></div></div>`;
+                    item.innerHTML = `
+                        <div class="flex flex-col sm:flex-row justify-between">
+                            <div>
+                                <h4 class="text-md font-bold text-slate-900">${signup.title}</h4>
+                                <p class="mt-1 text-sm text-slate-600">${signup.description || ''}</p>
+                                <div class="mt-2 text-sm text-slate-500">
+                                    <p><i class="ph-calendar-blank mr-1"></i> ${formatDate(signup.date)} at ${signup.time}</p>
+                                </div>
+                            </div>
+                            <div class="mt-3 sm:mt-0 sm:ml-6 flex-shrink-0 text-left sm:text-right">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${statusColor}">${signup.status}</span>
+                            </div>
+                        </div>`;
                     completedList.appendChild(item);
                 });
             }
         }
-
     </script>
 </body>
 </html>
