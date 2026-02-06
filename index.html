@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+  <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -943,16 +943,67 @@
             if (!eventFilter || !events) return;
             const uniqueEvents = new Map();
             events.forEach(event => { if (event.id && !uniqueEvents.has(event.id)) uniqueEvents.set(event.id, event.name); });
-            
-            // Clear existing options except 'All'
             while (eventFilter.options.length > 1) eventFilter.remove(1);
-            
             uniqueEvents.forEach((name, id) => {
                 const option = document.createElement('option');
                 option.value = id;
                 option.textContent = name;
                 eventFilter.appendChild(option);
             });
+        }
+        
+        function getMatchingInfoHtml(signups) {
+            if (!signups) return '';
+            const twoMonthsAgo = new Date();
+            twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+            twoMonthsAgo.setHours(0,0,0,0);
+            const validSignups = signups.filter(s => {
+                const d = new Date(s.date);
+                return s.status === 'Completed' && d >= twoMonthsAgo && d <= new Date();
+            }).sort((a,b) => new Date(b.date) - new Date(a.date));
+            const rows = validSignups.length > 0 ? validSignups.map(s => `
+                <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
+                    <td class="px-4 py-3 whitespace-nowrap text-slate-700">${formatDate(s.date)}</td>
+                    <td class="px-4 py-3 text-slate-700 font-medium">${s.title}</td>
+                    <td class="px-4 py-3 font-bold text-teal-600">${s.hours || '-'} hrs</td> 
+                </tr>
+            `).join('') : `<tr><td colspan="3" class="px-4 py-4 text-center text-slate-500 italic">No completed volunteer hours found in the last 2 months.</td></tr>`;
+            return `
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mt-8">
+                <div class="flex flex-col md:flex-row items-start gap-6">
+                    <div class="p-4 bg-teal-100 rounded-full text-teal-600 flex-shrink-0">
+                         <i class="ph-currency-dollar text-3xl"></i>
+                    </div>
+                    <div class="flex-grow w-full">
+                        <h3 class="text-xl font-bold text-slate-900 mb-2">Double Your Impact with Corporate Matching!</h3>
+                        <p class="text-slate-600 mb-4 leading-relaxed">
+                            Did you know many employers match volunteer hours with monetary donations? You could generate up to <strong>$25 per hour</strong> for SVA just by logging the hours you've already volunteered! Your contribution goes a long way in supporting our school's programs and facilities. JazakAllahu Khairan!
+                        </p>
+                        <div class="bg-slate-50 p-4 rounded-lg border border-slate-200 mb-6 text-sm text-slate-700">
+                            <p class="font-semibold mb-1">Instructions:</p>
+                            <ul class="list-disc list-inside space-y-1 ml-1">
+                                <li>Submit your hours to your employer's portal using the table below as a reference.</li>
+                                <li>For the verifying person, please use: <span class="font-semibold">Rubeka Alam (<a href="mailto:pto@svamail.com" class="text-teal-600 hover:underline">pto@svamail.com</a>)</span></li>
+                            </ul>
+                        </div>
+                        <h4 class="font-semibold text-slate-800 mb-3 border-b border-slate-200 pb-2">Your Completed Hours (Last 2 Months)</h4>
+                        <div class="overflow-x-auto rounded-lg border border-slate-200">
+                            <table class="min-w-full text-left text-sm">
+                                <thead class="bg-slate-50 text-xs uppercase font-semibold text-slate-500">
+                                    <tr>
+                                        <th class="px-4 py-3">Date</th>
+                                        <th class="px-4 py-3">Activity</th>
+                                        <th class="px-4 py-3">Hours</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 bg-white">
+                                    ${rows}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>`;
         }
 
         function applyAndRenderFilters() {
