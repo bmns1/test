@@ -144,7 +144,7 @@
                 <!-- Header -->
                 <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-teal-600 rounded-t-xl">
                     <h3 class="text-xl font-bold text-white">Re-enrollment 2026-2027</h3>
-                    <button onclick="closeEnrollmentWizard()" class="text-teal-100 hover:text-white">
+                    <button onclick="closeEnrollmentWizard(true)" class="text-teal-100 hover:text-white">
                         <i class="ph-x text-2xl"></i>
                     </button>
                 </div>
@@ -171,7 +171,7 @@
                         <p id="enrollment-error" class="text-red-500 hidden mb-2">Please select at least one student.</p>
                         
                         <div class="text-right">
-                            <button onclick="wizardNext('payment')" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700">Continue to Payment &rarr;</button>
+                            <button onclick="wizardNext('payment')" id="btn-goto-payment" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700">Continue to Payment &rarr;</button>
                         </div>
                     </div>
 
@@ -204,7 +204,7 @@
                         </div>
 
                         <div class="flex justify-between items-center mt-8">
-                            <button onclick="wizardPrev('start')" class="text-slate-500 hover:text-slate-800">Back</button>
+                            <button onclick="wizardPrev('start')" id="btn-back-to-start" class="text-slate-500 hover:text-slate-800">Back</button>
                             <!-- Submit button is essentially replaced by PayPal completion, but we keep it for backend sync -->
                             <button onclick="submitEnrollment()" id="btn-submit-enrollment" class="hidden bg-teal-600 text-white px-8 py-3 rounded-lg hover:bg-teal-700 shadow-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed">Finalize</button>
                         </div>
@@ -409,6 +409,14 @@
                  // Removed Contact fields population as requested
             }
         }
+        
+        function closeEnrollmentWizard(force = false) {
+             // If payment was made, just close without warning. 
+             // Otherwise warn.
+             if (force || enrollmentState.paymentID || confirm("Are you sure you want to close? Your progress may not be saved.")) {
+                 closeModal('enrollment-modal');
+             }
+        }
 
         function populateStudentSelection() {
             const container = document.getElementById('enrollment-student-list');
@@ -418,18 +426,31 @@
             // Enabled only if NOT already enrolled (Timestamp is empty)
             portalData.students.forEach(s => {
                 const details = s.enrollmentDetails || {};
-                const isEnrolled = details.timestamp && details.timestamp !== '';
+                // Robust check: ensure timestamp is a non-empty string
+                const isEnrolled = details.timestamp && String(details.timestamp).trim() !== '';
                 
                 const div = document.createElement('div');
                 div.className = `flex items-center p-3 border rounded ${isEnrolled ? 'bg-green-50 border-green-200' : 'hover:bg-slate-50 border-slate-200'} cursor-pointer`;
                 
+                let enrolledBadge = '';
+                if (isEnrolled) {
+                     enrolledBadge = `
+                        <div class="ml-2">
+                             <span class="text-green-700 font-bold text-xs uppercase bg-green-200 px-2 py-1 rounded inline-flex items-center"><i class="ph-check-circle mr-1"></i> Payment Verified</span>
+                             <div class="mt-1">
+                                 <a href="https://secure.gradelink.com/lkg/Gradelink.xml?contenttype=text%2Fhtml&Language=English&v=1.0" target="_blank" class="text-teal-600 text-xs font-semibold hover:underline">Complete on Gradelink &rarr;</a>
+                             </div>
+                        </div>
+                     `;
+                }
+
                 div.innerHTML = `
-                    <label class="flex items-center w-full ${isEnrolled ? 'cursor-not-allowed opacity-75' : 'cursor-pointer'}">
-                        <input type="checkbox" class="enroll-student-check form-checkbox h-5 w-5 text-teal-600" value="${s.uniqueStudentId}" ${isEnrolled ? 'disabled' : 'checked'}>
+                    <label class="flex items-center w-full ${isEnrolled ? 'cursor-default' : 'cursor-pointer'}">
+                        <input type="checkbox" class="enroll-student-check form-checkbox h-5 w-5 text-teal-600" value="${s.uniqueStudentId}" ${isEnrolled ? 'disabled checked' : 'checked'}>
                         <div class="ml-3 flex-1">
                             <span class="font-bold text-slate-800">${s.studentName}</span>
                             <span class="text-slate-500 text-sm ml-2">Next: ${details.nextgradelevel || 'N/A'}</span>
-                            ${isEnrolled ? '<span class="ml-2 text-green-700 font-bold text-xs uppercase bg-green-200 px-2 py-1 rounded">Enrolled</span>' : ''}
+                            ${enrolledBadge}
                         </div>
                     </label>
                 `;
@@ -437,8 +458,16 @@
             });
             
             // If all are enrolled
-            if (portalData.students.every(s => s.enrollmentDetails && s.enrollmentDetails.timestamp)) {
-                container.innerHTML = '<p class="text-green-600 font-bold p-4 bg-green-50 rounded text-center">All eligible students have been re-enrolled!</p>';
+            const allEnrolled = portalData.students.every(s => s.enrollmentDetails && s.enrollmentDetails.timestamp && String(s.enrollmentDetails.timestamp).trim() !== '');
+            if (allEnrolled) {
+                // Keep the list but hide the "Continue" button or show a success message at top
+                 const successMsg = document.createElement('p');
+                 successMsg.className = "text-green-600 font-bold p-4 bg-green-50 rounded text-center mb-4";
+                 successMsg.innerText = "All eligible students have verified payments!";
+                 container.prepend(successMsg);
+                 document.getElementById('btn-goto-payment').style.display = 'none';
+            } else {
+                document.getElementById('btn-goto-payment').style.display = 'inline-block';
             }
         }
         
@@ -449,7 +478,7 @@
         function wizardNext(stepId) {
             // Updated logic for simplified flow
             if (stepId === 'payment') {
-                const selected = document.querySelectorAll('.enroll-student-check:checked');
+                const selected = document.querySelectorAll('.enroll-student-check:checked:not(:disabled)');
                 if (selected.length === 0) {
                     document.getElementById('enrollment-error').classList.remove('hidden');
                     return;
@@ -462,6 +491,9 @@
                 document.getElementById('payment-student-count').textContent = enrollmentState.selectedStudents.length;
                 document.getElementById('payment-amount').textContent = `$${enrollmentState.totalAmount.toFixed(2)}`;
                 renderPayPalButton();
+                
+                // Hide Back button on Payment screen to prevent confusion if they want to change students (reset instead)
+                document.getElementById('btn-back-to-start').classList.remove('hidden');
             }
 
             document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
@@ -471,12 +503,16 @@
         function wizardPrev(stepId) {
             document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
             document.getElementById('step-' + stepId).classList.remove('hidden');
+            // Re-populate to refresh checkboxes
+            if(stepId === 'start') populateStudentSelection();
         }
 
         function renderPayPalButton() {
             const container = document.getElementById('paypal-button-container');
             container.innerHTML = '';
-            if (enrollmentState.paymentID) { container.innerHTML = '<p class="text-green-600 font-bold">Payment already completed.</p>'; return; }
+            // Allow multiple payments if they come back for another child, so clear ID if retrying
+            // But we must check if they are paying for NEW students
+            
             paypal.Buttons({
                 style: {
                     shape: 'rect',
@@ -499,11 +535,14 @@
                 },
                 onApprove: function(data, actions) { return actions.order.capture().then(function(details) {
                     enrollmentState.paymentID = details.id;
+                    
+                    // 1. Show Success Message Immediately
                     document.getElementById('success-payment-id').textContent = details.id;
                     document.getElementById('payment-completed-msg').classList.remove('hidden');
                     document.getElementById('paypal-button-container').classList.add('hidden');
+                    document.getElementById('btn-back-to-start').classList.add('hidden'); // Hide back button
                     
-                    // Automatically trigger backend update
+                    // 2. Trigger Backend Update
                     submitEnrollment();
                 }); }
             }).render('#paypal-button-container');
@@ -527,10 +566,11 @@
                 })
             }).then(() => {
                 console.log('Backend updated with enrollment.');
-                // Refresh data silently to update UI status
+                // 3. Refresh Data Globally
                 fetchData(ID_TOKEN);
             }).catch(err => {
                 console.error("Submission failed:", err);
+                alert("Payment recorded locally, but server update failed. Please contact support with ID: " + enrollmentState.paymentID);
             });
         }
         
