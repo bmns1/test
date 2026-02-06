@@ -951,7 +951,137 @@
                 eventFilter.appendChild(option);
             });
         }
+        function fetchAndRenderResources() {
+            fetch(`${NEWSLETTER_WEB_APP_URL}?token=${ID_TOKEN}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        renderFAQ(data.data.faq);
+                        renderForms(data.data.forms);
+                        renderNewsletters(data.data.newsletters);
+                        renderQuickLinks(data.data.quickLinks);
+                        renderLiveEvent(data.data.liveEvent);
+                    } else { throw new Error(data.error); }
+                })
+                .catch(error => {
+                    console.error('Resources Fetch Error:', error);
+                    if (document.getElementById('newsletters-content')) document.getElementById('newsletters-content').innerHTML = '<p class="text-red-500">Could not load newsletters.</p>';
+                    if (document.getElementById('quicklinks-content')) document.getElementById('quicklinks-content').innerHTML = '<p class="text-red-500">Could not load quick links.</p>';
+                });
+        }
         
+        function renderFAQ(faqItems) {
+            const container = document.getElementById('faq-content');
+            if (!container) return;
+            if (!faqItems || faqItems.length === 0) {
+                container.innerHTML = '<p class="text-slate-500">No FAQ items found.</p>';
+                return;
+            }
+            container.innerHTML = faqItems.map(item => `
+                <div class="mb-4 py-2 border-b border-slate-200 last:border-b-0">
+                    <h4 class="font-bold text-slate-800">Q: ${item.question}</h4>
+                    <p class="text-slate-600 mt-1">A: ${item.answer}</p>
+                </div>
+            `).join('');
+        }
+
+        function renderForms(forms) {
+            const container = document.getElementById('forms-content');
+            if (!container) return;
+            if (!forms || forms.length === 0) {
+                container.innerHTML = '<p class="text-slate-500">No forms found.</p>';
+                return;
+            }
+            container.innerHTML = `<ul class="space-y-4">` + forms.map(form => `
+                <li class="border-b border-slate-200 pb-3 last:border-b-0">
+                    <a href="${form.link}" target="_blank" class="text-teal-600 hover:underline font-semibold">${form.title}</a>
+                    <p class="text-sm text-slate-600 mt-1">${form.description}</p>
+                </li>
+            `).join('') + `</ul>`;
+        }
+
+        function renderNewsletters(newsletters) {
+            const container = document.getElementById('newsletters-content');
+            if (!container) return;
+
+            let listItems = '';
+            if (!newsletters || newsletters.length === 0) {
+                listItems = '<li><p class="text-slate-500">No newsletters found.</p></li>';
+            } else {
+                listItems = newsletters.map(n => 
+                    `<li class="border-b border-slate-200 pb-2 last:border-b-0"><a href="${n.link}" target="_blank" class="text-teal-600 hover:underline">${n.title}</a></li>`
+                ).join('');
+            }
+            container.innerHTML = `<ul class="space-y-3">${listItems}</ul>`;
+        }
+
+        function renderQuickLinks(links) {
+            const container = document.getElementById('quicklinks-content');
+            if (!container) return;
+
+            let listItems = '';
+            if (!links || links.length === 0) {
+                listItems = '<li><p class="text-slate-500">No links found.</p></li>';
+            } else {
+                listItems = links.map(l => 
+                    `<li class="border-b border-slate-200 pb-2 last:border-b-0"><a href="${l.link}" target="_blank" class="text-teal-600 hover:underline">${l.title}</a></li>`
+                ).join('');
+            }
+            container.innerHTML = `<ul class="space-y-3">${listItems}</ul>`;
+        }
+
+        function renderLiveEvent(liveEventData) {
+    const container = document.getElementById('live-event');
+    if (!container) return;
+    if (liveEventData && liveEventData.length > 0) {
+        const eventsHtml = liveEventData.map(liveEvent => {
+            if (!liveEvent.link) return ''; 
+            let embedUrl = '';
+            if (liveEvent.link.includes('vimeo.com/')) {
+                try {
+                    const url = new URL(liveEvent.link);
+                    url.searchParams.set('autoplay', '1');
+                    url.searchParams.set('title', '0');
+                    url.searchParams.set('byline', '0');
+                    url.searchParams.set('portrait', '0');
+                    embedUrl = url.toString();
+                } catch (e) { embedUrl = liveEvent.link; }
+            }
+            if (embedUrl) {
+                return `
+                    <div class="mb-8 -mx-4 sm:mx-0">
+                        <div class="bg-white sm:rounded-lg shadow-sm overflow-hidden">
+                            <div class="relative w-full h-[600px] sm:h-0 sm:pb-[56.25%]">
+                                <iframe 
+                                    src="${embedUrl}" 
+                                    frameborder="0" 
+                                    allow="autoplay; fullscreen; picture-in-picture" 
+                                    allowfullscreen 
+                                    style="position:absolute;top:0;left:0;width:100%;height:100%;" 
+                                    class="sm:rounded-t-lg">
+                                </iframe>
+                            </div>
+                            <div class="p-4 sm:p-6">
+                                 <h2 class="text-2xl sm:text-3xl font-bold text-slate-800">${liveEvent.title || 'Live School Event'}</h2>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            return '';
+        }).join('');
+        container.innerHTML = eventsHtml || `<h2 class="text-3xl font-bold text-slate-900 mb-6">Live Events</h2><div class="bg-white p-8 rounded-xl shadow-sm border text-center"><p class="text-red-500">No valid live event links available. Please check again later.</p></div>`;
+    } else {
+        container.innerHTML = `
+            <h2 class="text-3xl font-bold text-slate-900 mb-6">Live Event</h2>
+            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center">
+                <i class="ph-video-camera-slash text-6xl text-slate-400"></i>
+                <p class="mt-4 text-slate-600">There are no live events currently scheduled.</p>
+            </div>
+        `;
+    }
+}
+
         function getMatchingInfoHtml(signups) {
             if (!signups) return '';
             const twoMonthsAgo = new Date();
