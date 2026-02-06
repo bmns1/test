@@ -9,9 +9,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
     <script src="https://unpkg.com/phosphor-icons"></script>
-    <!-- PayPal SDK - REPLACE 'test' WITH YOUR LIVE CLIENT ID -->
-    <!--<script src="https://www.paypal.com/sdk/js?client-id=AbiIIQaGjjsKptfoxNWoHVZj8emb1OrShMOwN5CxdrirjAZ6Vz8DBRAWHSuQPdgh3RqDMySAsEmGQDH9&currency=USD"></script>-->
+    <!-- PayPal SDK - Updated for Fee Collection & Wallet Support (Apple Pay, Google Pay, Venmo) -->
     <script src="https://www.paypal.com/sdk/js?client-id=AbiIIQaGjjsKptfoxNWoHVZj8emb1OrShMOwN5CxdrirjAZ6Vz8DBRAWHSuQPdgh3RqDMySAsEmGQDH9&currency=USD&enable-funding=venmo,applepay&components=buttons"></script>
+    
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -154,16 +154,16 @@
                     
                     <!-- Step 1: Start -->
                     <div id="step-start" class="wizard-step">
-                        <h4 class="text-2xl font-bold text-slate-800 mb-4">Welcome to Re-enrollment</h4>
+                        <h4 class="text-2xl font-bold text-slate-800 mb-4">Priority Re-enrollment</h4>
                         <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
                             <p class="text-blue-800">
-                                <strong>Priority Window Ends:</strong> <span id="priority-countdown" class="font-mono font-bold text-red-600">Loading...</span>
+                                <strong>Discounted Priority Window Ends:</strong> <span id="priority-countdown" class="font-mono font-bold text-red-600">Loading...</span>
                                 <br><span class="text-sm">Deadline: February 16, 2026 at 8:30am PST</span>
                             </p>
                         </div>
-                        <p class="mb-4 text-slate-700">Thank you for enrolling your student at Silicon Valley Academy for the 2026-2027 school year.</p>
+                        <p class="mb-4 text-slate-700">Thank you for securing your spot at Silicon Valley Academy for the 2026-2027 school year.</p>
                         <p class="mb-4 text-slate-600 text-sm">
-                            Do note that if you require additional time for the Physician's Report (PreK), Health Report (KG), Oral Health Report (KG), or to obtain an updated Immunization Record (PreK, KG, 7th, & New Students), you have until May 1, 2026 to email them to SVA’s registrar. All other documents are required at the time you submit the online application in order for your child’s registration to be processed.
+                            This exclusive window offers priority registration for existing families.
                         </p>
                         
                         <h5 class="font-bold text-lg text-slate-800 mb-3">Select students to re-enroll:</h5>
@@ -171,227 +171,42 @@
                         <p id="enrollment-error" class="text-red-500 hidden mb-2">Please select at least one student.</p>
                         
                         <div class="text-right">
-                            <button onclick="wizardNext('contacts')" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700">Next &rarr;</button>
+                            <button onclick="wizardNext('payment')" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700">Continue to Payment &rarr;</button>
                         </div>
                     </div>
 
-                    <!-- Step 2: Contacts -->
-                    <div id="step-contacts" class="wizard-step hidden">
-                        <h4 class="text-2xl font-bold text-slate-800 mb-4">Review Contact Information</h4>
-                        <p class="mb-4 text-slate-600">Please review the information below. If any information is incorrect, please select "Incorrect" and you will be instructed to update it in GradeLink.</p>
-                        
-                        <div class="bg-slate-50 p-6 rounded-lg border border-slate-200 mb-6 grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                            <div><span class="font-bold text-slate-700">Father:</span> <span id="contact-father">Loading...</span></div>
-                            <div><span class="font-bold text-slate-700">Mother:</span> <span id="contact-mother">Loading...</span></div>
-                            <div><span class="font-bold text-slate-700">Phone 1:</span> <span id="contact-phone1">Loading...</span></div>
-                            <div><span class="font-bold text-slate-700">Phone 2:</span> <span id="contact-phone2">Loading...</span></div>
-                            <div><span class="font-bold text-slate-700">Phone 3:</span> <span id="contact-phone3">Loading...</span></div>
-                            <div><span class="font-bold text-slate-700">Emails:</span> <span id="contact-emails">Loading...</span></div>
-                            <div class="md:col-span-2 border-t border-slate-200 pt-2 mt-2">
-                                <span class="font-bold text-slate-700">Address:</span> <br>
-                                <span id="contact-address">Loading...</span>
-                            </div>
-                        </div>
-
-                        <div class="mb-6">
-                            <label class="font-bold text-slate-800 block mb-2">Is the information above correct and up to date?</label>
-                            <div class="space-x-4">
-                                <label class="inline-flex items-center">
-                                    <input type="radio" name="contact-verify" value="Reviewed" class="form-radio text-teal-600">
-                                    <span class="ml-2">Yes, it is correct.</span>
-                                </label>
-                                <label class="inline-flex items-center">
-                                    <input type="radio" name="contact-verify" value="Needs_Review" class="form-radio text-red-600">
-                                    <span class="ml-2">No, it is incorrect.</span>
-                                </label>
-                            </div>
-                            <div id="contact-update-msg" class="hidden mt-3 p-3 bg-yellow-50 text-yellow-800 border border-yellow-200 rounded text-sm">
-                                Please note: You must log in to your <strong>GradeLink</strong> account to update your contact information immediately after submitting this form.
-                            </div>
-                        </div>
-
-                        <div class="flex justify-between">
-                            <button onclick="wizardPrev('start')" class="text-slate-500 hover:text-slate-800">Back</button>
-                            <button onclick="wizardNext('info')" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700">Next &rarr;</button>
-                        </div>
-                    </div>
-
-                    <!-- Step 3: Information & Volunteer -->
-                    <div id="step-info" class="wizard-step hidden">
-                        <h4 class="text-2xl font-bold text-slate-800 mb-4">Parent Volunteer Agreement</h4>
-                        <div class="prose prose-sm text-slate-600 max-w-none mb-6">
-                            <p>Silicon Valley Academy strongly encourages parents to have a high level of involvement in their child(ren)’s education. Volunteer hours are critical to the success of SVA’s programs. We encourage parents to volunteer each semester. This can include volunteering for PTO activities and events, working for teachers and staff, contributing to school operations, or contributing to other work for the benefit of SVA. Please note, volunteer hours do not carry over between semesters or years nor are they prorated. In addition, parents who do not fulfill their volunteer hours will be required to pay a volunteer fee per semester.</p>
-                            <p class="font-bold text-slate-800 mt-2">2026-2027 Volunteer Hours Requirement:</p>
-                            <ul class="list-disc pl-5">
-                                <li>1 child enrolled: 10 hours per semester</li>
-                                <li>2 or more children enrolled: 20 hours per semester</li>
-                            </ul>
-                            <p class="mt-2">In order to match parents with volunteer opportunities related to their expertise and skill set, please mark an X next to all areas below in which you have experience and/or interest and specify where necessary. We look forward to your contribution to SVA for the benefit of the children.</p>
-                        </div>
-                        
-                        <!-- Volunteer Interests -->
-                        <div class="grid grid-cols-2 gap-2 mb-6 text-sm">
-                            <label><input type="checkbox" class="vol-interest mr-2" value="Classroom Helper"> Classroom Helper</label>
-                            <label><input type="checkbox" class="vol-interest mr-2" value="Event Planning"> Event Planning</label>
-                            <label><input type="checkbox" class="vol-interest mr-2" value="Traffic Duty"> Traffic/Safety</label>
-                            <label><input type="checkbox" class="vol-interest mr-2" value="Fundraising"> Fundraising</label>
-                            <label><input type="checkbox" class="vol-interest mr-2" value="Lunch Duty"> Lunch Duty</label>
-                            <label><input type="checkbox" class="vol-interest mr-2" value="Field Trips"> Field Trips</label>
-                        </div>
-
-                        <div class="bg-slate-100 p-5 rounded-lg border border-slate-200 mb-6">
-                            <h5 class="font-bold text-slate-800 mb-3">Volunteer Opt-Out</h5>
-                            <p class="text-sm text-slate-600 mb-3">Parents may choose to opt out of volunteering for the 2026-2027 academic year. To opt out of volunteering for either semester and pay the volunteer fee up front, please check below.</p>
-                            
-                            <div class="space-y-3">
-                                <label class="flex items-start">
-                                    <input type="checkbox" id="opt-out-s1" class="mt-1 mr-2 text-teal-600 focus:ring-teal-500">
-                                    <span class="text-sm">I intend to not volunteer during the <strong>first semester</strong> of the 2026-2027 academic year and choose to pay up front on Gradelink the volunteer fee of $350 due 7/1/26.</span>
-                                </label>
-                                <label class="flex items-start">
-                                    <input type="checkbox" id="opt-out-s2" class="mt-1 mr-2 text-teal-600 focus:ring-teal-500">
-                                    <span class="text-sm">I intend to not volunteer during the <strong>second semester</strong> of the 2026-2027 academic year and choose to pay up front on Gradelink the volunteer fee of $350 due 1/1/27.</span>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="bg-red-50 p-4 border-l-4 border-red-500 text-sm text-slate-700 mb-6">
-                            <p class="font-bold mb-1">Fee Policy for Unfulfilled Hours:</p>
-                            <p>Parents who choose to volunteer but do not fulfill their required hours each semester will be charged accordingly.</p>
-                            <ul class="list-disc pl-5 mt-1">
-                                <li>If the required volunteer hours from the first semester are not fulfilled by January 14, 2027, a volunteer fee of $450 will be charged to the family's statement in GradeLink.</li>
-                                <li>If the required volunteer hours from the second semester are not fulfilled by June 4, 2027, a volunteer fee of $450 will be charged to the family's statement in GradeLink.</li>
-                            </ul>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="flex items-center">
-                                <input type="checkbox" id="volunteer-agree-check" class="mr-2 text-teal-600 focus:ring-teal-500 h-5 w-5">
-                                <span class="font-bold text-slate-800">I understand the above requirements and agree to fulfill my volunteer obligation as a parent/guardian as described.</span>
-                            </label>
-                        </div>
-
-                        <div class="flex justify-between">
-                            <button onclick="wizardPrev('contacts')" class="text-slate-500 hover:text-slate-800">Back</button>
-                            <button onclick="wizardNext('tuition')" id="btn-info-next" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed">Agree & Continue</button>
-                        </div>
-                    </div>
-
-                    <!-- Step 4: Tuition (Dynamic Calculator) -->
-                    <div id="step-tuition" class="wizard-step hidden">
-                         <h4 class="text-2xl font-bold text-slate-800 mb-4">Tuition & Fees 2026-2027</h4>
-                         <p class="mb-4 text-sm text-slate-600">Student tuition is an annual amount covering the academic year that can be paid in one lump sum or over a 10-month period starting June 1, 2026 to March 1, 2027.</p>
-                         
-                         <!-- Dynamic Calculation Area -->
-                         <div class="bg-white border border-slate-200 rounded-lg p-6 mb-6 shadow-sm">
-                             <h5 class="font-bold text-lg text-slate-800 mb-4 border-b pb-2">Your Tuition Summary</h5>
-                             <div id="tuition-calculation-container" class="space-y-2 mb-4">
-                                 <!-- JS will inject rows here: Student Name | Grade | Cost | Discount? -->
-                                 <p class="text-slate-500 italic">Calculating...</p>
-                             </div>
-                             <div class="flex justify-between items-center pt-3 border-t border-slate-200">
-                                 <span class="font-bold text-slate-700">Total Annual Tuition:</span>
-                                 <span id="tuition-grand-total" class="font-bold text-2xl text-teal-600">$0.00</span>
-                             </div>
-                             <p class="text-xs text-slate-500 mt-2">*Sibling discount (10%) applies to 2nd+ child in KG-8th grade (applied to lower tuition).</p>
-                             <p class="text-xs text-slate-500">**Pre-K / Acc. HS students are not eligible for sibling discounts.</p>
-                         </div>
-
-                         <div class="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                             <h5 class="font-bold text-slate-800 mb-3">Select Payment Plan</h5>
-                             <p class="text-sm text-slate-600 mb-4">Monthly payments for those enrolling after June 1, 2026 will start based on the month enrolled and end on March 1, 2027.</p>
-                             
-                             <div class="space-y-3">
-                                <label class="flex items-center p-3 border border-slate-200 rounded bg-white hover:bg-slate-50 cursor-pointer">
-                                    <input type="radio" name="payment-plan" value="LumpSum" class="h-5 w-5 text-teal-600">
-                                    <span class="ml-3 font-medium">Lump sum payment to be invoiced and due by June 1, 2026</span>
-                                </label>
-                                <label class="flex items-center p-3 border border-slate-200 rounded bg-white hover:bg-slate-50 cursor-pointer">
-                                    <input type="radio" name="payment-plan" value="10Month" class="h-5 w-5 text-teal-600">
-                                    <span class="ml-3 font-medium">10-monthly payments to be invoiced with due dates from June 1, 2026 to March 1, 2027</span>
-                                </label>
-                             </div>
-                         </div>
-
-                         <div class="flex justify-between mt-6">
-                            <button onclick="wizardPrev('info')" class="text-slate-500 hover:text-slate-800">Back</button>
-                            <button onclick="wizardNext('agreement')" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700">Next &rarr;</button>
-                        </div>
-                    </div>
-
-                    <!-- Step 5: Tuition Agreement -->
-                    <div id="step-agreement" class="wizard-step hidden">
-                        <h4 class="text-2xl font-bold text-slate-800 mb-4">Tuition Agreement</h4>
-                        <p class="mb-2 text-sm text-red-600">Please scroll to the bottom of the agreement to sign.</p>
-                        
-                        <div id="agreement-text-box" class="agreement-scroll border border-slate-300 rounded p-4 h-64 overflow-y-scroll bg-slate-50 text-sm text-slate-700 leading-relaxed mb-4">
-                            <p class="font-bold">Silicon Valley Academy’s Tuition Policy requires that:</p>
-                            <p>Tuition payments will be invoiced and paid through GradeLink. Accepted payment forms include ACH/checking account and credit card.</p>
-                            <br>
-                            <p>Once your child has been formally admitted for the 2026-2027 school year, you will be required to set-up an auto payment plan for the 2026-2027 tuition fees within two weeks to keep your child's admission active. Based on the payment option you selected during the enrollment process, you will need to either set up a one-time lump sum payment to be made on 6/1/26 or 10-monthly payments with the first payment starting on 6/1/26 in the parent GradeLink account. If an auto payment plan is not set up within two weeks, your child’s name will be removed from SVA enrollment and moved to the bottom of the waitlist.</p>
-                            <br>
-                            <p>At the time of registration, a $150 non-refundable registration fee is due per child.</p>
-                            <br>
-                            <p class="font-bold underline">Tuition Liability & Early Termination Policy</p>
-                            <p><strong>1. Nature of the Financial Obligation:</strong> Enrollment at Silicon Valley Academy constitutes a binding financial contract for the entire academic year (or the remaining portion thereof for mid-year enrollees). The School’s expenses are fixed annually; therefore, the family’s financial obligation is for the full Total Contract Value, not on a "pay-as-you-go" basis. The School expressly reserves the legal right to demand and collect the full annual tuition balance regardless of the date of withdrawal.</p>
-                            <p><strong>2. Voluntary Withdrawal & Settlement Calculation:</strong> Should the School agree to a settlement based on early termination, liability is determined strictly according to the 10-Month Fiscal Accrual Schedule (June 1 – April 1) as follows:</p>
-                            <ul class="list-disc pl-5">
-                                <li><strong>A. Minimum Earned Tuition (Non-Refundable Deposit):</strong> Immediately upon enrollment, 30% of the Total Contract Value is considered fully earned by the School. This portion represents reasonable liquidated damages for administrative overhead, seat reservation, and the initial billing quarter (June, July, August) and is non-refundable under any circumstances.</li>
-                                <li><strong>B. Accrual of Instructional Tuition:</strong> Commencing on September 1st, tuition is earned by the School in monthly installments of 10%. Mid-Month Withdrawals: For any partial month of attendance, tuition is earned on a pro-rata basis calculated daily from the first day of that month through the date of withdrawal.</li>
-                                <li><strong>C. Liquidated Damages for Early Termination:</strong> In recognition of the difficulty in filling vacancies mid-year, an Early Termination Fee equal to 20% of the remaining unearned contract balance will be assessed. This fee is agreed to be a reasonable estimate of the School’s damages and is not a penalty.</li>
-                            </ul>
-                            <p><strong>3. Contract Maturity (The "April 1st Lock"):</strong> By April 1st, the sum of the Minimum Earned Tuition and Accrued Instructional Tuition equals 100% of the Contract Value. Consequently, any withdrawal occurring on or after April 1st results in full financial liability for the entire annual tuition, with no refunds or adjustments permitted.</p>
-                            <p><strong>4. Hardship & Compassionate Review:</strong> While the financial obligations outlined above are binding to ensure the School's operational stability, Silicon Valley Academy remains deeply committed to supporting our families. We understand that unforeseen life events occur. Appeal Process: In cases of severe, documented financial hardship (e.g., significant loss of income, medical emergency, or relocation due to employment), families may submit a formal written appeal to the Board of Directors regarding the Early Termination Fee. Discretionary Relief: Modifications to the liability policy are rare and granted solely at the Board's discretion on a case-by-case basis. This provision does not guarantee a waiver but ensures every family is heard with compassion.</p>
-                            <br>
-                            <p>We encourage parent(s)/guardian(s) to volunteer each semester. Families with one child enrolled are asked to volunteer 10 hours per semester. Families with two or more children enrolled are asked to volunteer 20 hours per semester. Please note, volunteer hours do not carry over between semesters or years nor are they prorated.</p>
-                            <p>If a family chooses to opt out of volunteering upon enrollment for the first semester, a volunteer fee of $350 will be charged to the family’s Gradelink account and due 7/1/26.</p>
-                            <p>If a family chooses to opt out of volunteering upon enrollment for the second semester, a volunteer fee of $350 will be charged to the family’s Gradelink account and due 1/1/27.</p>
-                            <p>If a family’s required volunteer hours from the first semester are not fulfilled by January 14, 2027, a volunteer fee of $450 will be charged to the family’s February statement in GradeLink.</p>
-                            <p>If a family’s required volunteer hours from the second semester are not fulfilled by June 4, 2027, a volunteer fee of $450 will be charged to the family’s July statement in GradeLink.</p>
-                            <br>
-                            <p>Parent(s)/guardian(s) will be assessed a $35 fee on any charge that is late or does not clear.</p>
-                            <p>Parent(s)/guardian(s) will be assessed a 2.5% convenience fee for credit card payments.</p>
-                        </div>
-                        
-                        <div class="mb-4">
-                             <label class="flex items-center">
-                                <input type="checkbox" id="tuition-agree-check" class="mr-2 text-teal-600 focus:ring-teal-500 h-5 w-5" disabled>
-                                <span class="font-bold text-slate-800">I agree to the Tuition Policy and Liability terms above.</span>
-                            </label>
-                        </div>
-
-                        <div class="flex justify-between">
-                            <button onclick="wizardPrev('tuition')" class="text-slate-500 hover:text-slate-800">Back</button>
-                            <button onclick="wizardNext('payment')" id="btn-agreement-next" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700 opacity-50 cursor-not-allowed" disabled>Agree & Continue</button>
-                        </div>
-                    </div>
-
-                    <!-- Step 6: Payment -->
+                    <!-- Step 2: Payment (Simplified) -->
                     <div id="step-payment" class="wizard-step hidden">
-                        <h4 class="text-2xl font-bold text-slate-800 mb-4">Finalize & Submit</h4>
+                        <h4 class="text-2xl font-bold text-slate-800 mb-4">Registration Payment</h4>
                         
-                        <div class="bg-yellow-50 p-4 rounded border border-yellow-200 mb-6">
-                            <p class="text-sm text-yellow-800">Please download, read, and review <a href="#" class="underline font-bold">SVA's Parent Handbook</a> found at the parent portal with SVA's policies and procedures.</p>
+                        <div class="bg-teal-50 p-4 rounded border border-teal-200 mb-6">
+                            <p class="text-sm text-teal-800 font-semibold">
+                                Please complete the payment below to secure your spot. Once payment is successful, you will receive a link to finalize the enrollment process on Gradelink.
+                            </p>
                         </div>
 
                         <div class="mb-6">
-                             <h5 class="font-bold text-slate-800 mb-2">Payment Required: <span id="payment-amount" class="text-teal-600">$0.00</span></h5>
-                             <p class="text-sm text-slate-600 mb-4">Total for <span id="payment-student-count">0</span> student(s). This is a token verification payment ($1 per student).</p>
+                             <h5 class="font-bold text-slate-800 mb-2">Total Due: <span id="payment-amount" class="text-teal-600">$0.00</span></h5>
+                             <p class="text-sm text-slate-600 mb-4">Registration fee for <span id="payment-student-count">0</span> student(s). ($1.00 verification fee per student)</p>
+                             
                              <div id="paypal-button-container"></div>
-                             <div id="payment-completed-msg" class="hidden bg-green-100 text-green-800 p-3 rounded font-bold text-center">Payment Verified!</div>
+                             
+                             <div id="payment-completed-msg" class="hidden bg-green-100 text-green-800 p-4 rounded-lg shadow-sm border border-green-200 text-center space-y-3">
+                                 <div class="font-bold text-lg"><i class="ph-check-circle text-2xl align-middle mr-1"></i> Payment Successful!</div>
+                                 <p class="text-sm">Your Payment ID: <strong id="success-payment-id" class="font-mono bg-white px-2 py-1 rounded border border-green-300 select-all"></strong></p>
+                                 <p class="text-sm">Please save this ID for your records.</p>
+                                 <div class="pt-2">
+                                     <a href="https://secure.gradelink.com/lkg/Gradelink.xml?contenttype=text%2Fhtml&Language=English&v=1.0" target="_blank" class="inline-block bg-teal-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-teal-700 transition shadow-md">
+                                         Complete Enrollment on Gradelink &rarr;
+                                     </a>
+                                 </div>
+                             </div>
                         </div>
 
-                        <div class="mb-6">
-                            <label class="block mb-2 font-bold text-slate-800">Initials:</label>
-                            <input type="text" id="final-initials" class="border border-slate-300 rounded p-2 w-32 uppercase" placeholder="XX" maxlength="4">
-                            <p class="text-xs text-slate-500 mt-1">By initialing here and pressing submit, I hereby agree to all Silicon Valley Academy policies and procedures, including but not limited to the tuition policy, parent-volunteer policy, parent honor code, and student disciplinary code.</p>
-                        </div>
-
-                        <p class="text-xs text-slate-500 mb-4">You will not be able to re-enter your student's registration once you press "submit." If you are unable to complete all parts of the registration, your information will be automatically saved and you can log in at a later time to complete the process.</p>
-
-                        <div class="flex justify-between items-center">
-                            <button onclick="wizardPrev('agreement')" class="text-slate-500 hover:text-slate-800">Back</button>
-                            <button onclick="submitEnrollment()" id="btn-submit-enrollment" class="bg-teal-600 text-white px-8 py-3 rounded-lg hover:bg-teal-700 shadow-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed" disabled>Submit Re-enrollment</button>
+                        <div class="flex justify-between items-center mt-8">
+                            <button onclick="wizardPrev('start')" class="text-slate-500 hover:text-slate-800">Back</button>
+                            <!-- Submit button is essentially replaced by PayPal completion, but we keep it for backend sync -->
+                            <button onclick="submitEnrollment()" id="btn-submit-enrollment" class="hidden bg-teal-600 text-white px-8 py-3 rounded-lg hover:bg-teal-700 shadow-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed">Finalize</button>
                         </div>
                     </div>
                 </div>
@@ -573,7 +388,7 @@
     
     <script>
         // --- CONFIGURATION ---
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwQWDkjjXqT7V2x4N3ea9IvqBbvI7QJ2qaMLVyXbpg2pBJxsVl_5r00kaLZXJNDw_mw/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNo5dyu7Rg_78PwCaZdtbg3LJEwMlU5sxoyiGgM3E2xITjDtwLzshFdDCMQSAX8w2T/exec';
         const NEWSLETTER_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdZkNNppgbr_FdH2FOAztYpujc9A4URAsQIlWnADSypDlb5_KnCiVP3EImRK96jWK3Yg/exec';
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         let ID_TOKEN = null;
@@ -591,14 +406,7 @@
             // Note: Data now comes primarily from Enrollment sheet records in `students` array
             const student = portalData.students.find(s => s.enrollmentDetails);
             if(student && student.enrollmentDetails) {
-                 const d = student.enrollmentDetails;
-                 document.getElementById('contact-father').textContent = d.father || 'Not listed';
-                 document.getElementById('contact-mother').textContent = d.mother || 'Not listed';
-                 document.getElementById('contact-phone1').textContent = d.phone1 || 'Not listed';
-                 document.getElementById('contact-phone2').textContent = d.phone2 || 'Not listed';
-                 document.getElementById('contact-phone3').textContent = d.phone3 || 'Not listed';
-                 document.getElementById('contact-emails').textContent = d.emails || 'Not listed';
-                 document.getElementById('contact-address').innerHTML = `${d.street || ''}<br>${d.city || ''}, ${d.state || ''} ${d.zip || ''}`;
+                 // Removed Contact fields population as requested
             }
         }
 
@@ -635,97 +443,32 @@
         }
         
         function calculateTuition(selectedIds) {
-            const students = portalData.students.filter(s => selectedIds.includes(String(s.uniqueStudentId)));
-            const container = document.getElementById('tuition-calculation-container');
-            container.innerHTML = '';
-            
-            let items = [];
-            
-            // 1. Identify Rates & Categories
-            students.forEach(s => {
-                const grade = String(s.enrollmentDetails?.nextgradelevel || '').toUpperCase();
-                let rate = 0;
-                let category = 'OTHER'; // KG-8, PREK, HS
-                
-                // Rate Logic
-                if (['K', 'KG', '0', '1', '2', '3', '4', '5'].includes(grade)) { rate = 12800; category = 'KG-8'; }
-                else if (['6', '7', '8'].includes(grade)) { rate = 14200; category = 'KG-8'; }
-                else if (grade.includes('PK') || grade.includes('PRE')) { rate = 17700; category = 'PREK'; } // Default to School-Day
-                else { rate = 10500; category = 'HS'; }
-                
-                items.push({ name: s.studentName, grade: grade, baseRate: rate, category: category, finalRate: rate, discount: 0 });
-            });
-
-            // 2. Apply Discount (KG-8 Only, applied to lower tuitions)
-            // Sort KG-8 students by Base Rate Descending
-            const kg8Students = items.filter(i => i.category === 'KG-8');
-            kg8Students.sort((a, b) => b.baseRate - a.baseRate);
-            
-            // First one pays full, rest get 10%
-            kg8Students.forEach((item, index) => {
-                if (index > 0) {
-                    item.discount = item.baseRate * 0.10;
-                    item.finalRate = item.baseRate - item.discount;
-                }
-            });
-            
-            // 3. Render
-            let grandTotal = 0;
-            items.forEach(item => {
-                grandTotal += item.finalRate;
-                const discountBadge = item.discount > 0 ? `<span class="text-green-600 text-xs font-bold ml-2">(-$${item.discount.toLocaleString()})</span>` : '';
-                const row = document.createElement('div');
-                row.className = "flex justify-between items-center text-sm border-b border-slate-100 py-2 last:border-0";
-                row.innerHTML = `
-                    <div><span class="font-semibold text-slate-700">${item.name}</span> <span class="text-slate-400 text-xs">(${item.grade})</span></div>
-                    <div><span class="font-medium text-slate-800">$${item.finalRate.toLocaleString()}</span> ${discountBadge}</div>
-                `;
-                container.appendChild(row);
-            });
-            
-            document.getElementById('tuition-grand-total').textContent = `$${grandTotal.toLocaleString()}`;
+            // Not used in this version but kept for future ref
         }
 
         function wizardNext(stepId) {
-            if (stepId === 'contacts') {
+            // Updated logic for simplified flow
+            if (stepId === 'payment') {
                 const selected = document.querySelectorAll('.enroll-student-check:checked');
-                if (selected.length === 0) { document.getElementById('enrollment-error').classList.remove('hidden'); return; }
+                if (selected.length === 0) {
+                    document.getElementById('enrollment-error').classList.remove('hidden');
+                    return;
+                }
                 enrollmentState.selectedStudents = Array.from(selected).map(cb => cb.value);
                 document.getElementById('enrollment-error').classList.add('hidden');
-            }
-            if (stepId === 'info') {
-                 const verify = document.querySelector('input[name="contact-verify"]:checked');
-                 if (!verify) { alert("Please indicate if the contact information is correct."); return; }
-                 enrollmentState.contactStatus = verify.value;
-            }
-            if (stepId === 'tuition') {
-                const agreed = document.getElementById('volunteer-agree-check').checked;
-                if (!agreed) { alert("Please agree to the volunteer obligation."); return; }
-                enrollmentState.volunteerOptOutS1 = document.getElementById('opt-out-s1').checked;
-                enrollmentState.volunteerOptOutS2 = document.getElementById('opt-out-s2').checked;
-                
-                // Calculate Total for display
-                calculateTuition(enrollmentState.selectedStudents);
-            }
-            if (stepId === 'agreement') {
-                const plan = document.querySelector('input[name="payment-plan"]:checked');
-                if (!plan) { alert("Please select a payment plan."); return; }
-                enrollmentState.paymentPlan = plan.value;
-                 setTimeout(() => {
-                    const box = document.getElementById('agreement-text-box');
-                    const check = document.getElementById('tuition-agree-check');
-                    const btn = document.getElementById('btn-agreement-next');
-                    box.onscroll = function() { if (box.scrollTop + box.offsetHeight >= box.scrollHeight - 20) { check.disabled = false; } };
-                    check.onchange = function() { btn.disabled = !check.checked; btn.classList.toggle('opacity-50', !check.checked); btn.classList.toggle('cursor-not-allowed', !check.checked); }
-                }, 100);
-            }
-            if (stepId === 'payment') {
+
+                // Calculate total immediately
                 enrollmentState.totalAmount = enrollmentState.selectedStudents.length * 1.00;
                 document.getElementById('payment-student-count').textContent = enrollmentState.selectedStudents.length;
                 document.getElementById('payment-amount').textContent = `$${enrollmentState.totalAmount.toFixed(2)}`;
                 renderPayPalButton();
             }
 
+            document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
+            document.getElementById('step-' + stepId).classList.remove('hidden');
+        }
+        
+        function wizardPrev(stepId) {
             document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
             document.getElementById('step-' + stepId).classList.remove('hidden');
         }
@@ -756,20 +499,17 @@
                 },
                 onApprove: function(data, actions) { return actions.order.capture().then(function(details) {
                     enrollmentState.paymentID = details.id;
+                    document.getElementById('success-payment-id').textContent = details.id;
                     document.getElementById('payment-completed-msg').classList.remove('hidden');
-                    document.getElementById('btn-submit-enrollment').disabled = false;
                     document.getElementById('paypal-button-container').classList.add('hidden');
+                    
+                    // Automatically trigger backend update
+                    submitEnrollment();
                 }); }
             }).render('#paypal-button-container');
         }
 
         function submitEnrollment() {
-            const initials = document.getElementById('final-initials').value.trim();
-            if (initials.length < 2) { alert("Please provide your initials."); return; }
-            if (!enrollmentState.paymentID) { alert("Please complete the payment."); return; }
-            const btn = document.getElementById('btn-submit-enrollment');
-            btn.textContent = 'Submitting...'; btn.disabled = true;
-
             const selectedStudentObjs = portalData.students.filter(s => enrollmentState.selectedStudents.includes(String(s.uniqueStudentId)));
 
             fetch(WEB_APP_URL, {
@@ -778,21 +518,19 @@
                 body: JSON.stringify({
                     action: 'enrollmentSubmit', token: ID_TOKEN,
                     students: selectedStudentObjs,
-                    contactStatus: enrollmentState.contactStatus,
-                    volunteerS1: enrollmentState.volunteerOptOutS1,
-                    volunteerS2: enrollmentState.volunteerOptOutS2,
-                    paymentPlan: enrollmentState.paymentPlan,
+                    contactStatus: 'Skipped', // Placeholder since step removed
+                    volunteerS1: false, // Default
+                    volunteerS2: false, // Default
+                    paymentPlan: 'NotSelected', // Placeholder
                     paymentID: enrollmentState.paymentID,
-                    initials: initials
+                    initials: 'N/A' // Placeholder
                 })
             }).then(() => {
-                alert('Re-enrollment submitted successfully! A confirmation email has been sent.');
-                closeModal('enrollment-modal');
+                console.log('Backend updated with enrollment.');
+                // Refresh data silently to update UI status
                 fetchData(ID_TOKEN);
             }).catch(err => {
-                console.error(err);
-                alert("Submission failed. Please contact support.");
-                btn.disabled = false; btn.textContent = 'Submit Re-enrollment';
+                console.error("Submission failed:", err);
             });
         }
         
@@ -803,7 +541,6 @@
         function formatDate(dateString) { if (!dateString) return 'N/A'; const date = new Date(dateString); return !isNaN(date.getTime()) ? date.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }) : dateString; }
         function decodeGrade(grade) { const gradeStr = String(grade).toUpperCase(); if (gradeStr === 'P') return 'Pre-K'; if (gradeStr === '0' || gradeStr === 'K' ) return 'KG'; return `Grade ${gradeStr}`; }
         function switchToTab(tabName) { document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('tab-active')); document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('tab-content-active')); document.querySelectorAll(`.tab-btn[data-tab="${tabName}"]`).forEach(b => b.classList.add('tab-active')); document.getElementById(tabName).classList.add('tab-content-active'); }
-        function wizardPrev(stepId) { document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden')); document.getElementById('step-' + stepId).classList.remove('hidden'); }
         function startCountdown() { const dest = new Date("Feb 16, 2026 08:30:00").getTime(); setInterval(function() { const now = new Date().getTime(); const diff = dest - now; if (diff < 0) { document.getElementById("priority-countdown").innerHTML = "Priority Window Closed"; } else { const days = Math.floor(diff / (1000 * 60 * 60 * 24)); document.getElementById("priority-countdown").innerHTML = days + "d " + Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)) + "h " + Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)) + "m"; } }, 1000); }
         function handleCredentialResponse(response) { handleLoginSuccess(response.credential); }
         function handleLoginSuccess(idToken) { ID_TOKEN = idToken; localStorage.setItem('sva_id_token', idToken); document.getElementById('login-container').classList.add('hidden'); document.getElementById('loading-overlay').classList.remove('hidden'); const profile = JSON.parse(atob(ID_TOKEN.split('.')[1])); const userInfoHtml = `<div class="flex items-center"><img class="h-8 w-8 rounded-full" src="${profile.picture}" alt=""><div class="ml-3"><div class="text-base font-medium text-slate-800">${profile.name}</div><div class="text-sm font-medium text-slate-500">${profile.email}</div></div></div>`; document.getElementById('user-info-desktop').innerHTML = userInfoHtml; document.getElementById('user-info-mobile').innerHTML = userInfoHtml; fetchData(ID_TOKEN); fetchAndRenderResources(); addEventListeners(); }
