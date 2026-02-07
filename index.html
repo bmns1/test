@@ -969,7 +969,7 @@
                             <div class="mb-8">
                                 <h4 class="font-semibold text-lg text-slate-700 mb-3">Quick Actions</h4>
                                 <div class="flex flex-wrap gap-3">
-                                    <button data-student-id="${student.uniqueStudentId}" class="report-absence-nav-btn inline-flex items-center bg-teal-100 text-teal-800 font-semibold py-2 px-4 rounded-lg hover:bg-teal-200 transition-colors">Priority Enrollment 2026/2027</button>
+                                    <button data-student-id="${student.uniqueStudentId}" class="report-absence-nav-btn inline-flex items-center bg-amber-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-amber-200 transition-colors">Priority Enrollment 2026/2027</button>
                                     <button data-student-id="${student.uniqueStudentId}" class="report-absence-nav-btn inline-flex items-center bg-teal-100 text-teal-800 font-semibold py-2 px-4 rounded-lg hover:bg-teal-200 transition-colors">Report Absence/Tardy</button>
                                     <button onclick="switchToTabAndSubTab('faq-forms', 'quicklinks-content');" class="inline-flex items-center bg-slate-100 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors">View Student Handbook</button>
                                 </div>
@@ -1050,7 +1050,7 @@
             </div>`;
 
 */
-            const unlockDate = new Date('2026-02-09T08:30:00'); // Set your date here
+            const unlockDate = new Date('2026-02-01T08:30:00'); // Set your date here
             const now = new Date();
             const isDisabled = now < unlockDate;
 
