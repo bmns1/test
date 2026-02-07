@@ -131,7 +131,7 @@
                 <div class="flex-1 overflow-y-auto p-6" id="enrollment-wizard-content">
                     
                     <div id="step-start" class="wizard-step">
-                        <h4 class="text-2xl font-bold text-slate-800 mb-4">Priority Re-enrollment Discounted Fee ($150/student)</h4>
+                        <h4 class="text-2xl font-bold text-slate-800 mb-4">Priority Re-enrollment Discounted Fee ($150/student + 2.5% platform fees)</h4>
                         <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
                             <p class="text-blue-800">
                                 <strong>Discounted Priority Window Ends:</strong> <span id="priority-countdown" class="font-mono font-bold text-red-600">Loading...</span>
@@ -557,7 +557,7 @@
                 enrollmentState.selectedStudents = Array.from(selected).map(cb => cb.value);
                 document.getElementById('enrollment-error').classList.add('hidden');
 
-                enrollmentState.totalAmount = enrollmentState.selectedStudents.length * 1.00;
+                enrollmentState.totalAmount = enrollmentState.selectedStudents.length * 153.75;
                 document.getElementById('payment-student-count').textContent = enrollmentState.selectedStudents.length;
                 document.getElementById('payment-amount').textContent = `$${enrollmentState.totalAmount.toFixed(2)}`;
                 renderPayPalButton();
