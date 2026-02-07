@@ -422,13 +422,12 @@
         // --- ENROLLMENT STATE (Added) ---
         let enrollmentState = { selectedStudents: [], contactStatus: '', volunteerOptOutS1: false, volunteerOptOutS2: false, paymentPlan: null, paymentID: null, totalAmount: 0, initials: '' };
         // --- GLOBAL HELPER FUNCTIONS ---
+         // --- GLOBAL HELPER FUNCTIONS ---
         function closeModal(modalId) {
-            // Close modal ONLY if clicking the modal backdrop itself
-                    if (event.target.classList.contains('modal')) {
-                        closeModal(event.target.id);
-                    }
-                    return; // Not a button, sidebar link, or backdrop click, exit
-                }
+            // Updated to handle safety check for enrollment modal
+            if(modalId === 'enrollment-modal' && !enrollmentState.paymentID) {
+                if (!confirm("Are you sure you want to close? Your progress may not be saved.")) return;
+            }
             document.getElementById(modalId).classList.add('hidden');
         }
         function openModal(modalId) {
