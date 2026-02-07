@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
     <script src="https://unpkg.com/phosphor-icons"></script>
-    
+
     <script src="https://www.paypal.com/sdk/js?client-id=AbiIIQaGjjsKptfoxNWoHVZj8emb1OrShMOwN5CxdrirjAZ6Vz8DBRAWHSuQPdgh3RqDMySAsEmGQDH9&currency=USD&enable-funding=venmo,applepay&components=buttons"></script>
     
     <style>
@@ -61,25 +61,30 @@
 <body class="antialiased text-slate-800">
 
     <div id="login-container" class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
+        <!-- Screen 1: Main Login Choice -->
         <div id="login-screen" class="text-center p-8 bg-white rounded-xl shadow-lg max-w-md w-full">
             <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
             <h1 class="text-3xl font-bold text-slate-900 mt-4">Silicon Valley Academy</h1>
             <p class="text-lg text-slate-600 mb-6">Parent Portal (beta)</p>
             <p class="text-sm text-slate-500 mb-8">Please log in with your SVA-associated student email. For assistance or password issues, please contact: <a href="mailto:parent.portal@svaschool.org" class="font-medium text-teal-600 hover:underline">parent.portal@svaschool.org</a></p>
             
+            <!-- Error Message Area -->
             <div id="login-error-msg" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 text-left" role="alert">
                 <strong class="font-bold">Login Failed:</strong>
                 <span class="block sm:inline" id="login-error-text"></span>
             </div>
 
+            <!-- Google Sign-In Button -->
             <div id="google-signin-button-container" class="flex justify-center"></div>
             
+            <!-- Divider -->
             <div class="my-6 flex items-center justify-center">
                 <span class="border-b border-slate-300 w-full"></span>
                 <span class="mx-4 text-sm font-medium text-slate-500">OR</span>
                 <span class="border-b border-slate-300 w-full"></span>
             </div>
             
+            <!-- Passkey Login Form -->
             <form id="passkey-request-form" class="space-y-4">
                 <div>
                     <label for="email-input" class="sr-only">Student Email</label>
@@ -91,6 +96,7 @@
             </form>
         </div>
 
+        <!-- Screen 2: "Check Email" Screen (Hidden by default) -->
         <div id="passkey-verify-screen" class="hidden text-center p-8 bg-white rounded-xl shadow-lg max-w-md w-full">
             <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
             <h2 class="text-2xl font-bold text-slate-900">Check Your Email</h2>
@@ -113,7 +119,6 @@
     </div>
     
     <div id="portal-container" class="hidden">
-        
         <div id="enrollment-modal" class="fixed inset-0 bg-gray-800 bg-opacity-90 overflow-y-auto h-full w-full hidden z-[60] flex items-center justify-center">
              <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col my-6 mx-4">
                 <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-teal-600 rounded-t-xl">
@@ -126,19 +131,19 @@
                 <div class="flex-1 overflow-y-auto p-6" id="enrollment-wizard-content">
                     
                     <div id="step-start" class="wizard-step">
-                        <h4 class="text-2xl font-bold text-slate-800 mb-4">Priority Re-enrollment</h4>
+                        <h4 class="text-2xl font-bold text-slate-800 mb-4">Priority Re-enrollment Discounted Fee ($150/student)</h4>
                         <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
                             <p class="text-blue-800">
                                 <strong>Discounted Priority Window Ends:</strong> <span id="priority-countdown" class="font-mono font-bold text-red-600">Loading...</span>
                                 <br><span class="text-sm">Deadline: February 16, 2026 at 8:30am PST</span>
                             </p>
                         </div>
-                        <p class="mb-4 text-slate-700">Thank you for securing your spot at Silicon Valley Academy for the 2026-2027 school year.</p>
+                        <p class="mb-4 text-slate-700">Start securing your spot at Silicon Valley Academy for the 2026-2027 school year.</p>
                         <p class="mb-4 text-slate-600 text-sm">
-                            This exclusive window offers priority registration for existing families.
+                            This exclusive window offers discounted priority registration fee for existing families. Note, after payment, you will receive a link to finalize the enrollment process on Gradelink!
                         </p>
                         
-                        <h5 class="font-bold text-lg text-slate-800 mb-3">Select students to re-enroll:</h5>
+                        <h5 class="font-bold text-lg text-slate-800 mb-3">Select students you plan to re-enroll:</h5>
                         <div id="enrollment-student-list" class="space-y-3 mb-6"></div>
                         <p id="enrollment-error" class="text-red-500 hidden mb-2">Please select at least one student.</p>
                         
@@ -152,13 +157,13 @@
                         
                         <div class="bg-teal-50 p-4 rounded border border-teal-200 mb-6">
                             <p class="text-sm text-teal-800 font-semibold">
-                                Please complete the payment below to secure your spot. Once payment is successful, you will receive a link to finalize the enrollment process on Gradelink.
+                                Please complete the payment below to as part of the enrollment process. Once payment is successful, you will receive a link to finalize the enrollment process on Gradelink.
                             </p>
                         </div>
 
                         <div class="mb-6">
                              <h5 class="font-bold text-slate-800 mb-2">Total Due: <span id="payment-amount" class="text-teal-600">$0.00</span></h5>
-                             <p class="text-sm text-slate-600 mb-4">Registration fee for <span id="payment-student-count">0</span> student(s). ($1.00 verification fee per student)</p>
+                             <p class="text-sm text-slate-600 mb-4">Registration fee for <span id="payment-student-count">0</span> student(s). ($150.00 discounted enrollment fee per student)</p>
                              
                              <div id="paypal-button-container"></div>
                              
@@ -183,6 +188,11 @@
              </div>
         </div>
 
+
+
+
+
+        
         <div id="qr-code-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center">
             <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                 <div class="mt-3 text-center">
@@ -408,16 +418,17 @@
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         let ID_TOKEN = null;
         let portalData = {};
-        
+        //let tempRequestToken = null; // No longer needed for magic link
         // --- ENROLLMENT STATE (Added) ---
         let enrollmentState = { selectedStudents: [], contactStatus: '', volunteerOptOutS1: false, volunteerOptOutS2: false, paymentPlan: null, paymentID: null, totalAmount: 0, initials: '' };
-
         // --- GLOBAL HELPER FUNCTIONS ---
         function closeModal(modalId) {
-            // Updated to handle safety check for enrollment modal
-            if(modalId === 'enrollment-modal' && !enrollmentState.paymentID) {
-                if (!confirm("Are you sure you want to close? Your progress may not be saved.")) return;
-            }
+            // Close modal ONLY if clicking the modal backdrop itself
+                    if (event.target.classList.contains('modal')) {
+                        closeModal(event.target.id);
+                    }
+                    return; // Not a button, sidebar link, or backdrop click, exit
+                }
             document.getElementById(modalId).classList.add('hidden');
         }
         function openModal(modalId) {
@@ -470,6 +481,7 @@
             if (subTabContent) subTabContent.classList.remove('hidden');
         }
         // --- END GLOBAL HELPERS ---
+
 
         // --- ENROLLMENT WIZARD LOGIC (Added) ---
         function startEnrollment() {
@@ -1018,7 +1030,7 @@
                 container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><p>No students found.</p></div>`;
                 return;
             }
-            
+
             // --- ENROLLMENT CARD (Added) ---
             const enrollmentCardHtml = `
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
@@ -1035,7 +1047,10 @@
                 </div>
             </div>`;
 
-            // Absence Form
+
+
+
+            
             const studentOptions = students.map(s => `<option value="${s.uniqueStudentId}">${s.studentName}</option>`).join('');
             const absenceFormHtml = `<form id="absence-form"><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl mx-auto"><h3 class="font-semibold text-lg text-slate-800 mb-4">Report Absence or Tardy</h3><div class="space-y-5"><div class="mb-4"><label class="block text-sm font-medium text-slate-700">Student</label><select id="student-select" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500">${studentOptions}</select></div><div><fieldset><legend class="text-sm font-medium text-slate-700">Report Type</legend><div class="mt-2 flex space-x-4"><label class="inline-flex items-center"><input type="radio" class="form-radio text-teal-600 focus:ring-teal-500" name="report-type" value="absent" checked> <span class="ml-2">Absence</span></label><label class="inline-flex items-center"><input type="radio" class="form-radio text-teal-600 focus:ring-teal-500" name="report-type" value="tardy"> <span class="ml-2">Tardy</span></label></div></fieldset></div><div id="absence-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="absence-start" class="block text-sm font-medium text-slate-700">Absence Start Date</label><input type="date" id="absence-start" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="absence-end" class="block text-sm font-medium text-slate-700">Absence End Date</label><input type="date" id="absence-end" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div></div><div id="tardy-fields" class="hidden grid-cols-1 md:grid-cols-2 gap-4"><div><label for="tardy-start-time" class="block text-sm font-medium text-slate-700">Expected Arrival</label><input type="time" id="tardy-start-time" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="tardy-end-time" class="block text-sm font-medium text-slate-700"> Date</label><input type="date" id="tardy-end-time" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div></div><div><label for="absence-reason" class="block text-sm font-medium text-slate-700">Reason</label><select id="absence-reason" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"><option>Sick</option><option>Travel</option><option>Appointment</option><option>Other</option></select></div><div id="other-reason-container" class="hidden"><label for="other-reason-text" class="block text-sm font-medium text-slate-700">Please specify:</label><textarea id="other-reason-text" rows="2" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></textarea></div><div><label for="absence-comments" class="block text-sm font-medium text-slate-700">Optional Comments</label><textarea id="absence-comments" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></textarea></div><div class="border-t border-slate-200 pt-5"><button id="send-notification-btn" type="submit" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Send Notification</button></div></div></div></form>`;
             const eligibleStudents = students.filter(s => ['K', '0', '1', '2', '3', '4', '5', '6', '7', '8'].includes(String(s.grade)));
@@ -1044,9 +1059,7 @@
                 const studentCheckboxes = eligibleStudents.map(s => `<label class="inline-flex items-center"><input type="checkbox" class="form-checkbox h-5 w-5 rounded border-slate-300 text-teal-600 focus:ring-teal-500 pickup-student-checkbox" value="${s.uniqueStudentId}"><span class="ml-2 text-slate-700">${s.studentName} (${decodeGrade(s.grade)})</span></label>`).join('');
                 pickupFormHtml = `<form id="pickup-form"><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl mx-auto"><h3 class="font-semibold text-lg text-slate-800 mb-2">One-Time Authorized Pickup</h3><p class="text-sm text-slate-500 mb-4">For students in KG to 8th Grade only. Please notify the office for any permanent changes.</p><div class="space-y-5"><div><label class="block text-sm font-medium text-slate-700">Select Student(s)</label><div class="mt-2 space-y-2">${studentCheckboxes}</div></div><div><label for="pickup-name" class="block text-sm font-medium text-slate-700">Authorized Person's Full Name (must match ID)</label><input type="text" id="pickup-name" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="pickup-relationship" class="block text-sm font-medium text-slate-700">Relationship to Student(s)</label><input type="text" id="pickup-relationship" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="pickup-email" class="block text-sm font-medium text-slate-700">Authorized Person's Email (Optional)</label><input type="email" id="pickup-email" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="pickup-date" class="block text-sm font-medium text-slate-700">Pickup Date</label><input type="date" id="pickup-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div><div><label for="pickup-reason" class="block text-sm font-medium text-slate-700">Reason / Comment (Optional)</label><textarea id="pickup-reason" rows="2" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></textarea></div><div class="border-t border-slate-200 pt-5"><button id="send-pickup-btn" type="submit" class="w-full sm:w-auto inline-flex justify-center items-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Send Pickup Notification</button></div></div></div></form>`;
             }
-            
-            // Render everything (Enrollment Card + Absence Form + Pickup Form)
-            container.innerHTML = enrollmentCardHtml + absenceFormHtml + pickupFormHtml;
+            container.innerHTML =  enrollmentCardHtml + absenceFormHtml + pickupFormHtml;
         }
 
         function renderVolunteering(opportunities) {
