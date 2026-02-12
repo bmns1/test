@@ -1536,7 +1536,64 @@ function submitSiblingEnrollment() {
 
         function renderMySignups(progress) {
             const container = document.getElementById('my-signups-content');
-            const selfReportFormHtml = `<form id="self-report-form"><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8"><h3 class="text-xl font-semibold text-slate-800 mb-2">Self-Report Off-Portal Hours</h3><p class="text-sm text-slate-600 mb-4">Did you volunteer for a task not listed in the portal (e.g., driving for a field trip, at-home prep)? Please submit the details below for approval.</p><div class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="report-date" class="block text-sm font-medium text-slate-700">Date of Activity</label><input type="date" id="report-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></div><div><label for="report-duration" class="block text-sm font-medium text-slate-700">Duration</label><select id="report-duration" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required><option value="CUST-30M">30 Minutes</option><option value="CUST-1H">1 Hour</option><option value="CUST-2H">2 Hours</option><option value="CUST-3H">3 Hours</option><option value="CUST-4H">4 Hours</option><option value="CUST-5H">5 Hours</option><option value="CUST-6H">6 Hours</option><option value="CUST-7H">7 Hours</option><option value="CUST-8H">8 Hours</option></select></div></div><div><label for="report-description" class="block text-sm font-medium text-slate-700">Brief Description of Activity and Who Can Verify It</label><textarea id="report-description" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></textarea></div><button type="submit" id="self-report-btn" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Submit for Approval</button></div></div></form>`;
+            //const selfReportFormHtml = `<form id="self-report-form"><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8"><h3 class="text-xl font-semibold text-slate-800 mb-2">Self-Report Off-Portal Hours</h3><p class="text-sm text-slate-600 mb-4">Did you volunteer for a task not listed in the portal (e.g., driving for a field trip, at-home prep)? Please submit the details below for approval.</p><div class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="report-date" class="block text-sm font-medium text-slate-700">Date of Activity</label><input type="date" id="report-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></div><div><label for="report-duration" class="block text-sm font-medium text-slate-700">Duration</label><select id="report-duration" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required><option value="CUST-30M">30 Minutes</option><option value="CUST-1H">1 Hour</option><option value="CUST-2H">2 Hours</option><option value="CUST-3H">3 Hours</option><option value="CUST-4H">4 Hours</option><option value="CUST-5H">5 Hours</option><option value="CUST-6H">6 Hours</option><option value="CUST-7H">7 Hours</option><option value="CUST-8H">8 Hours</option></select></div></div><div><label for="report-description" class="block text-sm font-medium text-slate-700">Brief Description of Activity and Who Can Verify It</label><textarea id="report-description" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></textarea></div><button type="submit" id="self-report-btn" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Submit for Approval</button></div></div></form>`;
+            const selfReportFormHtml = `
+<form id="self-report-form">
+  <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
+    <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-2">
+      <h3 class="text-xl font-semibold text-slate-800">Self-Report Off-Portal Hours</h3>
+      <span class="text-xs font-bold uppercase tracking-wider bg-amber-50 text-amber-700 px-2 py-1 rounded border border-amber-200">
+        Review Required
+      </span>
+    </div>
+
+    <div class="bg-slate-50 border-l-4 border-teal-500 p-4 mb-6">
+      <p class="text-sm text-slate-700 leading-relaxed">
+        <strong>Before you submit:</strong> To ensure quick approval and accurate records, please verify that this task is <strong>not</strong> already listed in the portal. 
+        <span class="block mt-1 italic text-slate-600">Note: Duplicate entries or double-counted hours will be declined during the review process.</span>
+      </p>
+    </div>
+
+    <p class="text-sm text-slate-600 mb-4">
+      Did you volunteer for a custom task (e.g., at-home prep)? Please provide clear details below.
+    </p>
+
+    <div class="space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label for="report-date" class="block text-sm font-medium text-slate-700">Date of Activity</label>
+          <input type="date" id="report-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
+        </div>
+        <div>
+          <label for="report-duration" class="block text-sm font-medium text-slate-700">Duration</label>
+          <select id="report-duration" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
+            <option value="CUST-30M">30 Minutes</option>
+            <option value="CUST-1H">1 Hour</option>
+            <option value="CUST-2H">2 Hours</option>
+            <option value="CUST-3H">3 Hours</option>
+            <option value="CUST-4H">4 Hours</option>
+            <option value="CUST-5H">5 Hours</option>
+            <option value="CUST-6H">6 Hours</option>
+            <option value="CUST-7H">7 Hours</option>
+            <option value="CUST-8H">8 Hours</option>
+          </select>
+        </div>
+      </div>
+
+      <div>
+        <label for="report-description" class="block text-sm font-medium text-slate-700">Description & Verifying Contact</label>
+        <textarea id="report-description" rows="3" placeholder="Explain the task and provide a name/email of the lead who can verify your work." class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></textarea>
+      </div>
+
+      <div class="flex flex-col sm:flex-row items-center gap-4">
+        <button type="submit" id="self-report-btn" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-8 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">
+          Confirm & Submit for Approval
+        </button>
+        <p class="text-[11px] text-slate-400 italic">By clicking submit, I confirm these hours are accurate and unique.</p>
+      </div>
+    </div>
+  </div>
+</form>`;
             const progressBarsHtml = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8"><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h3 class="text-lg font-semibold text-slate-800">Semester 1 Progress</h3><div class="mt-4"><div class="flex justify-between mb-1"><span class="text-base font-medium text-teal-700">Completed Hours</span><span class="text-sm font-medium text-teal-700" id="progress-text-s1"></span></div><div class="w-full bg-slate-200 rounded-full h-5 relative overflow-hidden"><div id="progress-bar-s1-inprogress" class="bg-orange-400 h-5 rounded-full" style="width: 0%"></div><div id="progress-bar-s1-completed" class="bg-teal-600 h-5 rounded-full absolute top-0 left-0" style="width: 0%"></div></div><div class="flex justify-between text-xs text-slate-500 mt-2"><span id="in-progress-text-s1"></span><span id="penalty-text-s1" class="text-red-600 font-semibold"></span></div></div></div><div><h3 class="text-lg font-semibold text-slate-800">Semester 2 Progress</h3><div class="mt-4"><div class="flex justify-between mb-1"><span class="text-base font-medium text-teal-700">Completed Hours</span><span class="text-sm font-medium text-teal-700" id="progress-text-s2"></span></div><div class="w-full bg-slate-200 rounded-full h-5 relative overflow-hidden"><div id="progress-bar-s2-inprogress" class="bg-orange-400 h-5 rounded-full" style="width: 0%"></div><div id="progress-bar-s2-completed" class="bg-teal-600 h-5 rounded-full absolute top-0 left-0" style="width: 0%"></div></div><div class="flex justify-between text-xs text-slate-500 mt-2"><span id="in-progress-text-s2"></span><span id="penalty-text-s2" class="text-red-600 font-semibold"></span></div></div></div></div></div>`;
             const signupListsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h3 class="text-xl font-semibold text-slate-700 mb-2">Upcoming Signups</h3><p class="text-sm text-slate-600 mb-4">You may withdraw up to 3 weeks (21 days) before the event.</p><div id="upcoming-signups-list" class="space-y-4"></div></div><div><h3 class="text-xl font-semibold text-slate-700 mb-4">Completed & Past Signups</h3><div id="completed-signups-list" class="space-y-4"></div></div></div>`;
             
