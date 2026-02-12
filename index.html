@@ -469,7 +469,7 @@
         //const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3LGShhqFBG5Y2TocWHYYgg8Sp-mK2YbkZ2x6tWJwf6li0teEvIYYXa5zNxDKtV4U7/exec';
         //const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3LGShhqFBG5Y2TocWHYYgg8Sp-mK2YbkZ2x6tWJwf6li0teEvIYYXa5zNxDKtV4U7/exec';
         //const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNo5dyu7Rg_78PwCaZdtbg3LJEwMlU5sxoyiGgM3E2xITjDtwLzshFdDCMQSAX8w2T/exec';
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwQWDkjjXqT7V2x4N3ea9IvqBbvI7QJ2qaMLVyXbpg2pBJxsVl_5r00kaLZXJNDw_mw/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzS5IhdAZQBBPJPN4KEGYWr0tf5mg7i-ZvxrWmwJMxjuGOtB3SNb3FZwIzThQYt9mTx/exec';
         const NEWSLETTER_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdZkNNppgbr_FdH2FOAztYpujc9A4URAsQIlWnADSypDlb5_KnCiVP3EImRK96jWK3Yg/exec';
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         let ID_TOKEN = null;
@@ -1090,29 +1090,34 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:00');
 
         function renderActionsTab(students) {
     const container = document.getElementById('actions-content-container');
+    if (!students || students.length === 0) {
+        container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><p>No students found.</p></div>`;
+        return;
+    }
+
     const now = new Date();
     
     // --- 1. RE-ENROLLMENT CARD LOGIC ---
-    let reEnrollCard = '';
+    let enrollmentCardHtml = '';
     
     if (now < PRIORITY_DEADLINE) {
-        // SCENARIO A: BEFORE DEADLINE (Active Priority Window)
-        reEnrollCard = `
-        <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl border border-amber-300 shadow-sm">
+        // Active Priority Window
+        enrollmentCardHtml = `
+        <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl border border-amber-300 shadow-sm mb-8">
             <div class="flex justify-between items-start">
                 <div>
                     <h3 class="text-xl font-bold text-amber-900">2026-2027 Re-enrollment</h3>
                     <p class="text-amber-800">Priority window open. Fee: $150 (Discounted)</p>
                     <div class="mt-2 text-sm text-red-700 font-bold bg-white/50 inline-block px-2 rounded">Deadline: Feb 16, 8:30 AM</div>
                 </div>
-                <i class="ph-student text-3xl text-amber-600"></i>
+                <div class="bg-white p-2 rounded-full shadow-sm"><i class="ph-student text-2xl text-amber-600"></i></div>
             </div>
-            <button onclick="startEnrollment()" class="mt-4 bg-amber-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-amber-700">Start Re-enrollment</button>
+            <button onclick="startEnrollment()" class="mt-4 w-full sm:w-auto bg-amber-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-amber-700 transition">Start Re-enrollment</button>
         </div>`;
     } else {
-        // SCENARIO B: AFTER DEADLINE (Expired - No PayPal, Gradelink Only)
-        reEnrollCard = `
-        <div class="bg-slate-50 p-6 rounded-xl border border-slate-300 shadow-sm opacity-90">
+        // Expired Priority Window (Gradelink Only)
+        enrollmentCardHtml = `
+        <div class="bg-slate-50 p-6 rounded-xl border border-slate-300 shadow-sm opacity-90 mb-8">
             <div class="flex justify-between items-start">
                 <div>
                     <h3 class="text-xl font-bold text-slate-700">2026-2027 Re-enrollment</h3>
@@ -1120,57 +1125,134 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:00');
                     <p class="text-slate-600 mt-2 text-sm">The discounted priority window has closed.</p>
                     <p class="text-slate-600 text-sm mt-1">Registration fee is now <strong>$250/student</strong>. Please process all payments and forms directly on Gradelink.</p>
                 </div>
-                <i class="ph-student text-3xl text-slate-400"></i>
+                <div class="bg-white p-2 rounded-full shadow-sm"><i class="ph-student text-2xl text-slate-400"></i></div>
             </div>
-            <a href="https://secure.gradelink.com/lkg/Gradelink.xml" target="_blank" class="mt-4 inline-block bg-slate-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-slate-700">
+            <a href="https://secure.gradelink.com/lkg/Gradelink.xml?contenttype=text%2Fhtml&Language=English&v=1.0" target="_blank" class="mt-4 inline-block bg-slate-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-slate-700 transition">
                 Go to Gradelink to Pay ($250) &rarr;
             </a>
         </div>`;
     }
 
     // --- 2. SIBLING ENROLLMENT CARD LOGIC ---
-    let siblingCard = '';
+    let siblingCardHtml = '';
     
     if (now >= SIBLING_START && now < SIBLING_END) {
-        // SCENARIO A: ACTIVE WINDOW (Show Button)
-        siblingCard = `
-        <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-300 shadow-sm">
+        // Active Window
+        siblingCardHtml = `
+        <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-300 shadow-sm mb-8">
             <div class="flex justify-between items-start">
                 <div>
                     <h3 class="text-xl font-bold text-orange-900">Sibling Priority Enrollment</h3>
                     <p class="text-orange-800">Enroll new siblings for 2026-2027 (PreK - 8th).</p>
                     <div class="mt-2 text-sm text-orange-800 font-bold bg-white/50 inline-block px-2 rounded">Closes: Feb 23, 8:30 AM</div>
                 </div>
-                <i class="ph-users-three text-3xl text-orange-600"></i>
+                <div class="bg-white p-2 rounded-full shadow-sm"><i class="ph-users-three text-2xl text-orange-600"></i></div>
             </div>
-            <button onclick="openModal('sibling-modal')" class="mt-4 bg-orange-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-700">Enroll Sibling</button>
+            <button onclick="openModal('sibling-modal')" class="mt-4 w-full sm:w-auto bg-orange-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-700 transition">Enroll Sibling</button>
         </div>`;
     } else if (now < SIBLING_START) {
-        // SCENARIO B: COMING SOON
-        siblingCard = `
-        <div class="bg-slate-50 p-6 rounded-xl border border-dashed border-slate-300">
+        // Upcoming
+        siblingCardHtml = `
+        <div class="bg-slate-50 p-6 rounded-xl border border-dashed border-slate-300 mb-8">
             <h3 class="text-lg font-bold text-slate-500">Sibling Enrollment</h3>
             <p class="text-slate-400 text-sm">Opens Feb 16 at 8:30 AM</p>
         </div>`;
-    } else {
-         // SCENARIO C: ENDED
-        siblingCard = `
-        <div class="bg-slate-50 p-6 rounded-xl border border-slate-300">
-            <h3 class="text-lg font-bold text-slate-500">Sibling Enrollment</h3>
-            <p class="text-red-400 text-sm">Priority window closed.</p>
-        </div>`;
     }
 
-    // --- 3. OTHER ACTIONS (Absence) ---
+    // --- 3. ABSENCE FORM (Restored Full Version) ---
     const studentOptions = students.map(s => `<option value="${s.uniqueStudentId}">${s.studentName}</option>`).join('');
-    const absenceForm = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><h3 class="font-bold mb-4">Report Absence</h3><p class="text-sm text-slate-500 mb-2">Use this to notify teachers/admin.</p><button data-student-id="${students[0]?.uniqueStudentId}" class="report-absence-nav-btn bg-teal-100 text-teal-800 font-bold py-2 px-4 rounded hover:bg-teal-200">Open Absence Form</button></div>`;
+    const absenceFormHtml = `
+    <form id="absence-form" class="mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl mx-auto">
+            <h3 class="font-semibold text-lg text-slate-800 mb-4">Report Absence or Tardy</h3>
+            <div class="space-y-5">
+                <div class="mb-4">
+                    <label class="block text-sm font-medium text-slate-700">Student</label>
+                    <select id="student-select" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500">${studentOptions}</select>
+                </div>
+                <div>
+                    <fieldset>
+                        <legend class="text-sm font-medium text-slate-700">Report Type</legend>
+                        <div class="mt-2 flex space-x-4">
+                            <label class="inline-flex items-center"><input type="radio" class="form-radio text-teal-600 focus:ring-teal-500" name="report-type" value="absent" checked> <span class="ml-2">Absence</span></label>
+                            <label class="inline-flex items-center"><input type="radio" class="form-radio text-teal-600 focus:ring-teal-500" name="report-type" value="tardy"> <span class="ml-2">Tardy</span></label>
+                        </div>
+                    </fieldset>
+                </div>
+                <div id="absence-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label for="absence-start" class="block text-sm font-medium text-slate-700">Absence Start Date</label><input type="date" id="absence-start" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div>
+                    <div><label for="absence-end" class="block text-sm font-medium text-slate-700">Absence End Date</label><input type="date" id="absence-end" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div>
+                </div>
+                <div id="tardy-fields" class="hidden grid-cols-1 md:grid-cols-2 gap-4">
+                    <div><label for="tardy-start-time" class="block text-sm font-medium text-slate-700">Expected Arrival</label><input type="time" id="tardy-start-time" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div>
+                    <div><label for="tardy-end-time" class="block text-sm font-medium text-slate-700"> Date</label><input type="date" id="tardy-end-time" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></div>
+                </div>
+                <div>
+                    <label for="absence-reason" class="block text-sm font-medium text-slate-700">Reason</label>
+                    <select id="absence-reason" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"><option>Sick</option><option>Travel</option><option>Appointment</option><option>Other</option></select>
+                </div>
+                <div id="other-reason-container" class="hidden">
+                    <label for="other-reason-text" class="block text-sm font-medium text-slate-700">Please specify:</label>
+                    <textarea id="other-reason-text" rows="2" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></textarea>
+                </div>
+                <div>
+                    <label for="absence-comments" class="block text-sm font-medium text-slate-700">Optional Comments</label>
+                    <textarea id="absence-comments" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></textarea>
+                </div>
+                <div class="border-t border-slate-200 pt-5">
+                    <button id="send-notification-btn" type="submit" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Send Notification</button>
+                </div>
+            </div>
+        </div>
+    </form>`;
 
-    container.innerHTML = `<div class="grid grid-cols-1 gap-6">${reEnrollCard}${siblingCard}${absenceForm}</div>`;
+    // --- 4. PICKUP FORM (Restored Full Version) ---
+    const eligibleStudents = students.filter(s => ['K', '0', '1', '2', '3', '4', '5', '6', '7', '8'].includes(String(s.grade)));
+    let pickupFormHtml = '';
+    if (eligibleStudents.length > 0) {
+        const studentCheckboxes = eligibleStudents.map(s => `<label class="inline-flex items-center"><input type="checkbox" class="form-checkbox h-5 w-5 rounded border-slate-300 text-teal-600 focus:ring-teal-500 pickup-student-checkbox" value="${s.uniqueStudentId}"><span class="ml-2 text-slate-700">${s.studentName} (${decodeGrade(s.grade)})</span></label>`).join('');
+        pickupFormHtml = `
+        <form id="pickup-form">
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-2xl mx-auto">
+                <h3 class="font-semibold text-lg text-slate-800 mb-2">One-Time Authorized Pickup</h3>
+                <p class="text-sm text-slate-500 mb-4">For students in KG to 8th Grade only. Please notify the office for any permanent changes.</p>
+                <div class="space-y-5">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-700">Select Student(s)</label>
+                        <div class="mt-2 space-y-2">${studentCheckboxes}</div>
+                    </div>
+                    <div>
+                        <label for="pickup-name" class="block text-sm font-medium text-slate-700">Authorized Person's Full Name (must match ID)</label>
+                        <input type="text" id="pickup-name" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label for="pickup-relationship" class="block text-sm font-medium text-slate-700">Relationship to Student(s)</label>
+                        <input type="text" id="pickup-relationship" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label for="pickup-email" class="block text-sm font-medium text-slate-700">Authorized Person's Email (Optional)</label>
+                        <input type="email" id="pickup-email" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label for="pickup-date" class="block text-sm font-medium text-slate-700">Pickup Date</label>
+                        <input type="date" id="pickup-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500">
+                    </div>
+                    <div>
+                        <label for="pickup-reason" class="block text-sm font-medium text-slate-700">Reason / Comment (Optional)</label>
+                        <textarea id="pickup-reason" rows="2" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500"></textarea>
+                    </div>
+                    <div class="border-t border-slate-200 pt-5">
+                        <button id="send-pickup-btn" type="submit" class="w-full sm:w-auto inline-flex justify-center items-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Send Pickup Notification</button>
+                    </div>
+                </div>
+            </div>
+        </form>`;
+    }
+    
+    // Render everything
+    container.innerHTML = enrollmentCardHtml + siblingCardHtml + absenceFormHtml + pickupFormHtml;
 }
-
         // --- SIBLING ENROLLMENT FUNCTIONS ---
-
-// Generates the input fields based on how many siblings they select
 function renderSiblingInputs() {
     const count = document.getElementById('sibling-count').value;
     const container = document.getElementById('sibling-inputs-container');
@@ -1201,7 +1283,6 @@ function renderSiblingInputs() {
     }
 }
 
-// Collects data and sends it to the backend
 function submitSiblingEnrollment() {
     const inputs = document.querySelectorAll('#sibling-inputs-container .bg-orange-50');
     const siblings = [];
@@ -1220,7 +1301,6 @@ function submitSiblingEnrollment() {
     btn.textContent = "Submitting...";
     btn.disabled = true;
 
-    // Send to Backend
     fetch(WEB_APP_URL, {
         method: 'POST', mode: 'no-cors',
         headers: {'Content-Type': 'application/json'},
@@ -1230,7 +1310,6 @@ function submitSiblingEnrollment() {
             siblings: siblings
         })
     }).then(() => {
-        // Simulate Success (since no-cors is opaque)
         document.getElementById('sibling-step-1').classList.add('hidden');
         document.getElementById('sibling-step-success').classList.remove('hidden');
         document.getElementById('sibling-conf-id').textContent = "Sent via Email";
