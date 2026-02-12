@@ -119,81 +119,131 @@
     </div>
     
     <div id="portal-container" class="hidden">
+        
         <div id="enrollment-modal" class="fixed inset-0 bg-gray-800 bg-opacity-90 overflow-y-auto h-full w-full hidden z-[60] flex items-center justify-center">
              <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col my-6 mx-4">
                 <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-teal-600 rounded-t-xl">
                     <h3 class="text-xl font-bold text-white">Re-enrollment 2026-2027</h3>
-                    <button onclick="closeModal('enrollment-modal')" class="text-teal-100 hover:text-white"><i class="ph-x text-2xl"></i></button>
+                    <button onclick="closeEnrollmentWizard(true)" class="text-teal-100 hover:text-white">
+                        <i class="ph-x text-2xl"></i>
+                    </button>
                 </div>
+                
                 <div class="flex-1 overflow-y-auto p-6" id="enrollment-wizard-content">
+                    
                     <div id="step-start" class="wizard-step">
+                        <h4 class="text-2xl font-bold text-slate-800 mb-4">Priority Re-enrollment Discounted Fee ($150/student)</h4>
                         <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
-                            <p class="text-blue-800"><strong>Priority Deadline:</strong> <span id="priority-countdown" class="font-mono font-bold text-red-600">Loading...</span></p>
+                            <p class="text-blue-800">
+                                <strong>Discounted Priority Window Ends:</strong> <span id="priority-countdown" class="font-mono font-bold text-red-600">Loading...</span>
+                                <br><span class="text-sm">Deadline: February 16, 2026 at 8:30am PST</span>
+                            </p>
                         </div>
-                        <h5 class="font-bold text-lg text-slate-800 mb-3">Select students to re-enroll:</h5>
+                        <p class="mb-4 text-slate-700">Start securing your spot at Silicon Valley Academy for the 2026-2027 school year.</p>
+                        <p class="mb-4 text-slate-600 text-sm">
+                            This exclusive window offers discounted priority registration fee for existing families. Note, after payment, you will receive a link to finalize the enrollment process on Gradelink!
+                        </p>
+                        
+                        <h5 class="font-bold text-lg text-slate-800 mb-3">Select students you plan to re-enroll:</h5>
                         <div id="enrollment-student-list" class="space-y-3 mb-6"></div>
                         <p id="enrollment-error" class="text-red-500 hidden mb-2">Please select at least one student.</p>
-                        <div class="text-right"><button onclick="wizardNext('payment')" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700">Continue &rarr;</button></div>
+                        
+                        <div class="text-right">
+                            <button onclick="wizardNext('payment')" id="btn-goto-payment" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700">Continue to Payment &rarr;</button>
+                        </div>
                     </div>
+
                     <div id="step-payment" class="wizard-step hidden">
                         <h4 class="text-2xl font-bold text-slate-800 mb-4">Registration Payment</h4>
+                        
+                        <div class="bg-teal-50 p-4 rounded border border-teal-200 mb-6">
+                            <p class="text-sm text-teal-800 font-semibold">
+                                Please complete the payment below to as part of the enrollment process. Once payment is successful, you will receive a link to finalize the enrollment process on Gradelink.
+                            </p>
+                        </div>
+
                         <div class="mb-6">
                              <h5 class="font-bold text-slate-800 mb-2">Total Due: <span id="payment-amount" class="text-teal-600">$0.00</span></h5>
+                             <p class="text-sm text-slate-600 mb-4">Registration fee for <span id="payment-student-count">0</span> student(s). ($150.00 discounted enrollment fee per student + 2.5% transaction fee.)</p>
+                             
                              <div id="paypal-button-container"></div>
-                             <div id="payment-completed-msg" class="hidden bg-green-100 text-green-800 p-4 rounded-lg text-center space-y-3">
-                                 <div class="font-bold text-lg">Payment Successful!</div>
-                                 <p class="text-sm">ID: <strong id="success-payment-id" class="font-mono select-all"></strong></p>
-                                 <a href="https://secure.gradelink.com/lkg/Gradelink.xml?contenttype=text%2Fhtml&Language=English&v=1.0" target="_blank" class="inline-block bg-teal-600 text-white font-bold py-2 px-6 rounded-lg">Complete on Gradelink &rarr;</a>
+                             
+                             <div id="payment-completed-msg" class="hidden bg-green-100 text-green-800 p-4 rounded-lg shadow-sm border border-green-200 text-center space-y-3">
+                                 <div class="font-bold text-lg"><i class="ph-check-circle text-2xl align-middle mr-1"></i> Payment Successful!</div>
+                                 <p class="text-sm">Your Payment ID: <strong id="success-payment-id" class="font-mono bg-white px-2 py-1 rounded border border-green-300 select-all"></strong></p>
+                                 <p class="text-sm">Please save this ID for your records.</p>
+                                 <p class="text-sm">Avoid Double Payment! Don't pay again on Gradlink.</p>
+                                 <div class="pt-2">
+                                     <a href="https://secure.gradelink.com/lkg/Gradelink.xml?contenttype=text%2Fhtml&Language=English&v=1.0" target="_blank" class="inline-block bg-teal-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-teal-700 transition shadow-md">
+                                         Complete Enrollment on Gradelink &rarr;
+                                     </a>
+                                 </div>
                              </div>
                         </div>
+
                         <div class="flex justify-between items-center mt-8">
-                            <button onclick="wizardPrev('start')" id="btn-back-to-start" class="text-slate-500">Back</button>
+                            <button onclick="wizardPrev('start')" id="btn-back-to-start" class="text-slate-500 hover:text-slate-800">Back</button>
+                            <button onclick="submitEnrollment()" id="btn-submit-enrollment" class="hidden bg-teal-600 text-white px-8 py-3 rounded-lg hover:bg-teal-700 shadow-lg font-bold disabled:opacity-50 disabled:cursor-not-allowed">Finalize</button>
                         </div>
                     </div>
                 </div>
              </div>
         </div>
 
+
+
         <div id="sibling-modal" class="fixed inset-0 bg-gray-800 bg-opacity-90 overflow-y-auto h-full w-full hidden z-[60] flex items-center justify-center">
-            <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col my-6 mx-4">
-               <div class="px-6 py-4 border-b border-orange-200 flex justify-between items-center bg-orange-500 rounded-t-xl">
-                   <h3 class="text-xl font-bold text-white">Sibling Priority Enrollment</h3>
-                   <button onclick="closeModal('sibling-modal')" class="text-orange-100 hover:text-white"><i class="ph-x text-2xl"></i></button>
-               </div>
-               <div class="p-6">
-                   <div id="sibling-step-1">
-                       <p class="text-slate-600 mb-4">Please enter the details for new siblings you wish to enroll for 2026-2027.</p>
-                       <label class="block text-sm font-medium text-slate-700">How many new siblings?</label>
-                       <select id="sibling-count" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm p-2 border mb-4" onchange="renderSiblingInputs()">
-                           <option value="0">Select...</option>
-                           <option value="1">1</option>
-                           <option value="2">2</option>
-                           <option value="3">3</option>
-                       </select>
-                       <div id="sibling-inputs-container" class="space-y-4 mb-6"></div>
-                       <button onclick="submitSiblingEnrollment()" id="btn-submit-sibling" class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 hidden">Submit Request</button>
-                   </div>
-                   
-                   <div id="sibling-step-success" class="hidden text-center space-y-4">
-                        <div class="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-green-100">
-                            <i class="ph-check text-2xl text-green-600"></i>
-                        </div>
-                        <h3 class="text-lg leading-6 font-medium text-gray-900">Request Submitted!</h3>
-                        <p class="text-sm text-gray-500">Your priority spot is reserved pending application completion.</p>
-                        <div class="bg-orange-50 p-3 rounded border border-orange-200 text-left text-sm">
-                            <p><strong>Confirmation ID:</strong> <span id="sibling-conf-id" class="font-mono"></span></p>
-                        </div>
-                        <div class="pt-2">
-                            <a href="https://secure.gradelink.com/668/enrollment" target="_blank" class="block w-full bg-teal-600 text-white font-bold py-2 px-4 rounded hover:bg-teal-700 text-center">
-                                Go to Gradelink to Apply & Pay ($250)
-                            </a>
-                        </div>
-                   </div>
-               </div>
-            </div>
+    <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-2xl flex flex-col my-6 mx-4">
+       <div class="px-6 py-4 border-b border-orange-200 flex justify-between items-center bg-orange-500 rounded-t-xl">
+           <h3 class="text-xl font-bold text-white">Sibling Priority Enrollment</h3>
+           <button onclick="closeModal('sibling-modal')" class="text-orange-100 hover:text-white"><i class="ph-x text-2xl"></i></button>
        </div>
+       
+       <div class="p-6">
+           <div id="sibling-step-1">
+               <p class="text-slate-600 mb-4">Please enter the details for new siblings you wish to enroll for 2026-2027.</p>
+               
+               <label class="block text-sm font-medium text-slate-700 mb-1">How many new siblings?</label>
+               <select id="sibling-count" class="block w-full rounded-md border-gray-300 shadow-sm p-2 border mb-4 focus:border-orange-500 focus:ring-orange-500" onchange="renderSiblingInputs()">
+                   <option value="0">Select...</option>
+                   <option value="1">1</option>
+                   <option value="2">2</option>
+                   <option value="3">3</option>
+               </select>
+               
+               <div id="sibling-inputs-container" class="space-y-4 mb-6"></div>
+               
+               <button onclick="submitSiblingEnrollment()" id="btn-submit-sibling" class="w-full bg-orange-600 text-white font-bold py-3 rounded-lg hover:bg-orange-700 hidden shadow-md">Submit Request</button>
+           </div>
+           
+           <div id="sibling-step-success" class="hidden text-center space-y-6 py-4">
+                <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100">
+                    <i class="ph-check text-4xl text-green-600"></i>
+                </div>
+                <div>
+                    <h3 class="text-xl leading-6 font-bold text-gray-900">Request Submitted!</h3>
+                    <p class="text-slate-500 mt-2">Your priority spot is reserved pending application completion.</p>
+                </div>
 
-
+                <div class="bg-orange-50 p-4 rounded-lg border border-orange-200 text-left text-sm space-y-2">
+                    <p><strong>Next Steps:</strong></p>
+                    <ol class="list-decimal pl-4 text-slate-700 space-y-1">
+                        <li>Check your email for confirmation.</li>
+                        <li>Go to Gradelink to fill out the full application.</li>
+                        <li>Pay the <strong>$250 Application Fee</strong> on Gradelink.</li>
+                    </ol>
+                    <p class="mt-2 text-xs text-orange-800">Confirmation ID: <span id="sibling-conf-id" class="font-mono font-bold"></span></p>
+                </div>
+                
+                <div class="pt-2">
+                    <a href="https://secure.gradelink.com/668/enrollment" target="_blank" class="block w-full bg-teal-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-teal-700 text-center shadow-lg transition transform hover:-translate-y-0.5">
+                        Go to Gradelink to Apply & Pay &rarr;
+                    </a>
+                </div>
+           </div>
+       </div>
+    </div>
+</div>
 
 
         
@@ -419,12 +469,20 @@
         //const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3LGShhqFBG5Y2TocWHYYgg8Sp-mK2YbkZ2x6tWJwf6li0teEvIYYXa5zNxDKtV4U7/exec';
         //const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3LGShhqFBG5Y2TocWHYYgg8Sp-mK2YbkZ2x6tWJwf6li0teEvIYYXa5zNxDKtV4U7/exec';
         //const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNo5dyu7Rg_78PwCaZdtbg3LJEwMlU5sxoyiGgM3E2xITjDtwLzshFdDCMQSAX8w2T/exec';
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzS5IhdAZQBBPJPN4KEGYWr0tf5mg7i-ZvxrWmwJMxjuGOtB3SNb3FZwIzThQYt9mTx/exec';
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwQWDkjjXqT7V2x4N3ea9IvqBbvI7QJ2qaMLVyXbpg2pBJxsVl_5r00kaLZXJNDw_mw/exec';
         const NEWSLETTER_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdZkNNppgbr_FdH2FOAztYpujc9A4URAsQIlWnADSypDlb5_KnCiVP3EImRK96jWK3Yg/exec';
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         let ID_TOKEN = null;
         let portalData = {};
         //let tempRequestToken = null; // No longer needed for magic link
+
+        // --- DATES CONFIGURATION ---
+// The moment Priority Re-enrollment Ends AND Sibling Enrollment Starts
+const PRIORITY_DEADLINE = new Date('2026-02-16T08:30:00-08:00'); 
+const SIBLING_START     = new Date('2026-02-16T08:30:00-08:00');
+const SIBLING_END       = new Date('2026-02-23T08:30:00-08:00');
+
+        
         // --- ENROLLMENT STATE (Added) ---
         let enrollmentState = { selectedStudents: [], contactStatus: '', volunteerOptOutS1: false, volunteerOptOutS2: false, paymentPlan: null, paymentID: null, totalAmount: 0, initials: '' };
         // --- GLOBAL HELPER FUNCTIONS ---
@@ -487,76 +545,6 @@
         }
         // --- END GLOBAL HELPERS ---
 
-        // --- SIBLING WIZARD FUNCTIONS ---
-        function renderSiblingInputs() {
-            const count = document.getElementById('sibling-count').value;
-            const container = document.getElementById('sibling-inputs-container');
-            const submitBtn = document.getElementById('btn-submit-sibling');
-            container.innerHTML = '';
-            
-            if (count > 0) {
-                submitBtn.classList.remove('hidden');
-                for(let i=1; i<=count; i++) {
-                    container.innerHTML += `
-                    <div class="p-3 bg-orange-50 border border-orange-200 rounded">
-                        <h5 class="font-bold text-orange-800 text-sm mb-2">Sibling #${i}</h5>
-                        <div class="grid grid-cols-2 gap-4">
-                            <input type="text" class="sib-name w-full p-2 border rounded" placeholder="Full Name">
-                            <select class="sib-grade w-full p-2 border rounded">
-                                <option value="">Grade...</option>
-                                <option value="Pre-K">Pre-K</option><option value="KG">KG</option>
-                                <option value="1">1st</option><option value="2">2nd</option>
-                                <option value="3">3rd</option><option value="4">4th</option>
-                                <option value="5">5th</option><option value="6">6th</option>
-                                <option value="7">7th</option><option value="8">8th</option>
-                            </select>
-                        </div>
-                    </div>`;
-                }
-            } else {
-                submitBtn.classList.add('hidden');
-            }
-        }
-
-        function submitSiblingEnrollment() {
-            const inputs = document.querySelectorAll('#sibling-inputs-container .bg-orange-50');
-            const siblings = [];
-            let valid = true;
-
-            inputs.forEach(div => {
-                const name = div.querySelector('.sib-name').value.trim();
-                const grade = div.querySelector('.sib-grade').value;
-                if(!name || !grade) valid = false;
-                siblings.push({ name, grade });
-            });
-
-            if(!valid) return alert("Please fill in Name and Grade for all siblings.");
-
-            const btn = document.getElementById('btn-submit-sibling');
-            btn.textContent = "Submitting...";
-            btn.disabled = true;
-
-            fetch(WEB_APP_URL, {
-                method: 'POST', mode: 'no-cors',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({
-                    action: 'siblingEnrollment',
-                    token: ID_TOKEN,
-                    siblings: siblings
-                })
-            }).then(() => {
-                // Since no-cors doesn't return data, we simulate success for UI
-                // In production with CORS, we'd read the confirmation ID from response
-                // Here we generate a temp one for display or assume email has it
-                document.getElementById('sibling-step-1').classList.add('hidden');
-                document.getElementById('sibling-step-success').classList.remove('hidden');
-                document.getElementById('sibling-conf-id').textContent = "Sent via Email";
-            }).catch(e => {
-                console.error(e);
-                alert("Error submitting. Please check your connection.");
-                btn.disabled = false;
-            });
-        }
 
         // --- ENROLLMENT WIZARD LOGIC (Added) ---
         function startEnrollment() {
@@ -1101,103 +1089,160 @@
         }
 
         function renderActionsTab(students) {
-            const container = document.getElementById('actions-content-container');
-            if (!students || students.length === 0) {
-                container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow"><p>No students found.</p></div>`;
-                return;
-            }
-
-            // --- ENROLLMENT CARD (Added) ---
-          /**  const enrollmentCardHtml = `
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                <div class="flex items-start justify-between">
-                    <div>
-                        <h3 class="text-xl font-bold text-slate-800">2026-2027 Re-enrollment</h3>
-                        <p class="text-slate-600 mt-1">Secure your child's spot for the upcoming academic year.</p>
-                        <div class="mt-2 text-sm text-red-600 font-semibold">Priority Deadline: Feb 16, 2026</div>
-                    </div>
-                    <div class="bg-teal-100 p-3 rounded-full"><i class="ph-student text-2xl text-teal-600"></i></div>
+    const container = document.getElementById('actions-content-container');
+    const now = new Date();
+    
+    // --- 1. RE-ENROLLMENT CARD LOGIC ---
+    let reEnrollCard = '';
+    
+    if (now < PRIORITY_DEADLINE) {
+        // SCENARIO A: BEFORE DEADLINE (Active Priority Window)
+        reEnrollCard = `
+        <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl border border-amber-300 shadow-sm">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-bold text-amber-900">2026-2027 Re-enrollment</h3>
+                    <p class="text-amber-800">Priority window open. Fee: $150 (Discounted)</p>
+                    <div class="mt-2 text-sm text-red-700 font-bold bg-white/50 inline-block px-2 rounded">Deadline: Feb 16, 8:30 AM</div>
                 </div>
-                <div class="mt-6">
-                    <button onclick="startEnrollment()" class="w-full sm:w-auto bg-teal-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-teal-700 transition">Start Re-enrollment</button>
+                <i class="ph-student text-3xl text-amber-600"></i>
+            </div>
+            <button onclick="startEnrollment()" class="mt-4 bg-amber-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-amber-700">Start Re-enrollment</button>
+        </div>`;
+    } else {
+        // SCENARIO B: AFTER DEADLINE (Expired - No PayPal, Gradelink Only)
+        reEnrollCard = `
+        <div class="bg-slate-50 p-6 rounded-xl border border-slate-300 shadow-sm opacity-90">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-bold text-slate-700">2026-2027 Re-enrollment</h3>
+                    <div class="inline-block bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded mt-1">PRIORITY WINDOW ENDED</div>
+                    <p class="text-slate-600 mt-2 text-sm">The discounted priority window has closed.</p>
+                    <p class="text-slate-600 text-sm mt-1">Registration fee is now <strong>$250/student</strong>. Please process all payments and forms directly on Gradelink.</p>
+                </div>
+                <i class="ph-student text-3xl text-slate-400"></i>
+            </div>
+            <a href="https://secure.gradelink.com/lkg/Gradelink.xml" target="_blank" class="mt-4 inline-block bg-slate-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-slate-700">
+                Go to Gradelink to Pay ($250) &rarr;
+            </a>
+        </div>`;
+    }
+
+    // --- 2. SIBLING ENROLLMENT CARD LOGIC ---
+    let siblingCard = '';
+    
+    if (now >= SIBLING_START && now < SIBLING_END) {
+        // SCENARIO A: ACTIVE WINDOW (Show Button)
+        siblingCard = `
+        <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-300 shadow-sm">
+            <div class="flex justify-between items-start">
+                <div>
+                    <h3 class="text-xl font-bold text-orange-900">Sibling Priority Enrollment</h3>
+                    <p class="text-orange-800">Enroll new siblings for 2026-2027 (PreK - 8th).</p>
+                    <div class="mt-2 text-sm text-orange-800 font-bold bg-white/50 inline-block px-2 rounded">Closes: Feb 23, 8:30 AM</div>
+                </div>
+                <i class="ph-users-three text-3xl text-orange-600"></i>
+            </div>
+            <button onclick="openModal('sibling-modal')" class="mt-4 bg-orange-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-700">Enroll Sibling</button>
+        </div>`;
+    } else if (now < SIBLING_START) {
+        // SCENARIO B: COMING SOON
+        siblingCard = `
+        <div class="bg-slate-50 p-6 rounded-xl border border-dashed border-slate-300">
+            <h3 class="text-lg font-bold text-slate-500">Sibling Enrollment</h3>
+            <p class="text-slate-400 text-sm">Opens Feb 16 at 8:30 AM</p>
+        </div>`;
+    } else {
+         // SCENARIO C: ENDED
+        siblingCard = `
+        <div class="bg-slate-50 p-6 rounded-xl border border-slate-300">
+            <h3 class="text-lg font-bold text-slate-500">Sibling Enrollment</h3>
+            <p class="text-red-400 text-sm">Priority window closed.</p>
+        </div>`;
+    }
+
+    // --- 3. OTHER ACTIONS (Absence) ---
+    const studentOptions = students.map(s => `<option value="${s.uniqueStudentId}">${s.studentName}</option>`).join('');
+    const absenceForm = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><h3 class="font-bold mb-4">Report Absence</h3><p class="text-sm text-slate-500 mb-2">Use this to notify teachers/admin.</p><button data-student-id="${students[0]?.uniqueStudentId}" class="report-absence-nav-btn bg-teal-100 text-teal-800 font-bold py-2 px-4 rounded hover:bg-teal-200">Open Absence Form</button></div>`;
+
+    container.innerHTML = `<div class="grid grid-cols-1 gap-6">${reEnrollCard}${siblingCard}${absenceForm}</div>`;
+}
+
+        // --- SIBLING ENROLLMENT FUNCTIONS ---
+
+// Generates the input fields based on how many siblings they select
+function renderSiblingInputs() {
+    const count = document.getElementById('sibling-count').value;
+    const container = document.getElementById('sibling-inputs-container');
+    const submitBtn = document.getElementById('btn-submit-sibling');
+    container.innerHTML = '';
+    
+    if (count > 0) {
+        submitBtn.classList.remove('hidden');
+        for(let i=1; i<=count; i++) {
+            container.innerHTML += `
+            <div class="p-3 bg-orange-50 border border-orange-200 rounded">
+                <h5 class="font-bold text-orange-800 text-sm mb-2">Sibling #${i}</h5>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <input type="text" class="sib-name w-full p-2 border border-orange-200 rounded focus:ring-orange-500" placeholder="Full Name (First Last)">
+                    <select class="sib-grade w-full p-2 border border-orange-200 rounded focus:ring-orange-500">
+                        <option value="">Select Grade...</option>
+                        <option value="Pre-K">Pre-K</option><option value="KG">KG</option>
+                        <option value="1">1st</option><option value="2">2nd</option>
+                        <option value="3">3rd</option><option value="4">4th</option>
+                        <option value="5">5th</option><option value="6">6th</option>
+                        <option value="7">7th</option><option value="8">8th</option>
+                    </select>
                 </div>
             </div>`;
-
-*/
-           const PRIORITY_DEADLINE = new Date('2026-02-16T08:30:00-08:00'); 
-        const SIBLING_START = new Date('2026-02-16T08:30:00-08:00');
-        const SIBLING_END = new Date('2026-02-23T08:30:00-08:00');
-
-        function renderActionsTab(students) {
-            const container = document.getElementById('actions-content-container');
-            const now = new Date();
-            
-            // 1. RE-ENROLLMENT CARD LOGIC
-            let reEnrollCard = '';
-            if (now < PRIORITY_DEADLINE) {
-                // Active Priority Window
-                reEnrollCard = `
-                <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-xl border border-amber-300 shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="text-xl font-bold text-amber-900">2026-2027 Re-enrollment</h3>
-                            <p class="text-amber-800">Priority window open. Fee: $150 (Discounted)</p>
-                            <div class="mt-2 text-sm text-red-700 font-bold bg-white/50 inline-block px-2 rounded">Deadline: Feb 16, 8:30 AM</div>
-                        </div>
-                        <i class="ph-student text-3xl text-amber-600"></i>
-                    </div>
-                    <button onclick="startEnrollment()" class="mt-4 bg-amber-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-amber-700">Start Re-enrollment</button>
-                </div>`;
-            } else {
-                // Expired Priority Window
-                reEnrollCard = `
-                <div class="bg-slate-50 p-6 rounded-xl border border-slate-300 shadow-sm opacity-90">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="text-xl font-bold text-slate-700">2026-2027 Re-enrollment</h3>
-                            <div class="inline-block bg-red-100 text-red-800 text-xs font-bold px-2 py-1 rounded mt-1">PRIORITY WINDOW ENDED</div>
-                            <p class="text-slate-600 mt-2 text-sm">The discounted rate has expired. The registration fee is now <strong>$250/student</strong>.</p>
-                            <p class="text-slate-600 text-sm">Please proceed directly to Gradelink to pay and enroll.</p>
-                        </div>
-                        <i class="ph-student text-3xl text-slate-400"></i>
-                    </div>
-                    <a href="https://secure.gradelink.com/lkg/Gradelink.xml" target="_blank" class="mt-4 inline-block bg-slate-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-slate-700">
-                        Go to Gradelink ($250 Fee) &rarr;
-                    </a>
-                </div>`;
-            }
-
-            // 2. SIBLING ENROLLMENT CARD LOGIC
-            let siblingCard = '';
-            if (now >= SIBLING_START && now < SIBLING_END) {
-                // Active Sibling Window
-                siblingCard = `
-                <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-300 shadow-sm">
-                    <div class="flex justify-between items-start">
-                        <div>
-                            <h3 class="text-xl font-bold text-orange-900">Sibling Priority Enrollment</h3>
-                            <p class="text-orange-800">Enroll new siblings for 2026-2027 (PreK - 8th).</p>
-                            <div class="mt-2 text-sm text-orange-800 font-bold bg-white/50 inline-block px-2 rounded">Closes: Feb 23, 8:30 AM</div>
-                        </div>
-                        <i class="ph-users-three text-3xl text-orange-600"></i>
-                    </div>
-                    <button onclick="openModal('sibling-modal')" class="mt-4 bg-orange-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-700">Enroll Sibling</button>
-                </div>`;
-            } else if (now < SIBLING_START) {
-                // Upcoming
-                siblingCard = `
-                <div class="bg-slate-50 p-6 rounded-xl border border-dashed border-slate-300">
-                    <h3 class="text-lg font-bold text-slate-500">Sibling Enrollment</h3>
-                    <p class="text-slate-400 text-sm">Opens Feb 16 at 8:30 AM</p>
-                </div>`;
-            }
-
-            // 3. OTHER ACTIONS (Absence)
-            const studentOptions = students.map(s => `<option value="${s.uniqueStudentId}">${s.studentName}</option>`).join('');
-            const absenceForm = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200"><h3 class="font-bold mb-4">Report Absence</h3><select id="student-select" class="w-full border p-2 rounded mb-4">${studentOptions}</select><button class="bg-teal-600 text-white px-4 py-2 rounded">Report</button></div>`;
-
-            container.innerHTML = reEnrollCard + siblingCard + absenceForm;
         }
+    } else {
+        submitBtn.classList.add('hidden');
+    }
+}
+
+// Collects data and sends it to the backend
+function submitSiblingEnrollment() {
+    const inputs = document.querySelectorAll('#sibling-inputs-container .bg-orange-50');
+    const siblings = [];
+    let valid = true;
+
+    inputs.forEach(div => {
+        const name = div.querySelector('.sib-name').value.trim();
+        const grade = div.querySelector('.sib-grade').value;
+        if(!name || !grade) valid = false;
+        siblings.push({ name, grade });
+    });
+
+    if(!valid) return alert("Please fill in Name and Grade for all siblings.");
+
+    const btn = document.getElementById('btn-submit-sibling');
+    btn.textContent = "Submitting...";
+    btn.disabled = true;
+
+    // Send to Backend
+    fetch(WEB_APP_URL, {
+        method: 'POST', mode: 'no-cors',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+            action: 'siblingEnrollment',
+            token: ID_TOKEN,
+            siblings: siblings
+        })
+    }).then(() => {
+        // Simulate Success (since no-cors is opaque)
+        document.getElementById('sibling-step-1').classList.add('hidden');
+        document.getElementById('sibling-step-success').classList.remove('hidden');
+        document.getElementById('sibling-conf-id').textContent = "Sent via Email";
+    }).catch(e => {
+        console.error(e);
+        alert("Error submitting. Please check your connection.");
+        btn.disabled = false;
+        btn.textContent = "Submit Request";
+    });
+}
+
+        
 
         function renderVolunteering(opportunities) {
             const list = document.getElementById('volunteering-list');
