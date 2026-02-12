@@ -547,14 +547,34 @@
             const submitted = portalData.submittedSiblings || [];
             
             if (submitted.length > 0) {
+                // Show Success/Summary Screen
                 document.getElementById('sibling-step-1').classList.add('hidden');
                 document.getElementById('sibling-step-success').classList.remove('hidden');
                 
-                // Show submitted data
+                // Show Confirmation ID
                 const confID = submitted[0].confirmationId || "Sent via Email";
                 document.getElementById('sibling-conf-id').innerText = confID;
+
+                // --- FIX: Add "Register Another" Button ---
+                const successContainer = document.getElementById('sibling-step-success');
+                if(!document.getElementById('btn-add-another')) {
+                    const btn = document.createElement('button');
+                    btn.id = 'btn-add-another';
+                    btn.className = "mt-6 text-sm text-slate-400 hover:text-orange-600 underline w-full text-center transition cursor-pointer";
+                    btn.innerText = "Register another sibling?";
+                    btn.onclick = () => {
+                        // Reset the form for a new entry
+                        document.getElementById('sibling-step-success').classList.add('hidden');
+                        document.getElementById('sibling-step-1').classList.remove('hidden');
+                        document.getElementById('sibling-count').value = 0;
+                        document.getElementById('sibling-inputs-container').innerHTML = '';
+                        document.getElementById('btn-submit-sibling').classList.add('hidden');
+                    };
+                    successContainer.appendChild(btn);
+                }
                 
             } else {
+                // Show Fresh Form
                 document.getElementById('sibling-step-1').classList.remove('hidden');
                 document.getElementById('sibling-step-success').classList.add('hidden');
                 document.getElementById('sibling-inputs-container').innerHTML = '';
