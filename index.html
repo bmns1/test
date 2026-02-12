@@ -1135,21 +1135,42 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:00');
 
     // --- 2. SIBLING ENROLLMENT CARD LOGIC ---
     let siblingCardHtml = '';
+    const hasSiblings = portalData.submittedSiblings && portalData.submittedSiblings.length > 0;
     
     if (now >= SIBLING_START && now < SIBLING_END) {
-        // Active Window
-        siblingCardHtml = `
-        <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-300 shadow-sm mb-8">
-            <div class="flex justify-between items-start">
-                <div>
-                    <h3 class="text-xl font-bold text-orange-900">Sibling Priority Enrollment</h3>
-                    <p class="text-orange-800">Enroll new siblings for 2026-2027 (PreK - 8th).</p>
-                    <div class="mt-2 text-sm text-orange-800 font-bold bg-white/50 inline-block px-2 rounded">Closes: Feb 23, 8:30 AM</div>
+        if (hasSiblings) {
+            // SCENARIO A: ALREADY SUBMITTED (Green Card)
+            siblingCardHtml = `
+            <div class="bg-green-50 p-6 rounded-xl border border-green-200 shadow-sm mb-8">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-xl font-bold text-green-900">Sibling Enrollment Submitted</h3>
+                        <p class="text-green-800 text-sm mt-1">We have received your request for: <br><strong>${portalData.submittedSiblings.map(s => s.name).join(', ')}</strong></p>
+                        <div class="mt-3">
+                            <a href="https://secure.gradelink.com/668/enrollment" target="_blank" class="text-green-700 font-bold hover:underline text-sm">
+                                Continue to Gradelink (Application & Payment) &rarr;
+                            </a>
+                        </div>
+                    </div>
+                    <div class="bg-white p-2 rounded-full shadow-sm"><i class="ph-check-circle text-3xl text-green-600"></i></div>
                 </div>
-                <div class="bg-white p-2 rounded-full shadow-sm"><i class="ph-users-three text-2xl text-orange-600"></i></div>
-            </div>
-            <button onclick="openModal('sibling-modal')" class="mt-4 w-full sm:w-auto bg-orange-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-700 transition">Enroll Sibling</button>
-        </div>`;
+                <button onclick="openSiblingModal()" class="mt-4 text-green-700 text-xs hover:underline">View Details / Add Another</button>
+            </div>`;
+        } else {
+            // SCENARIO B: ACTIVE WINDOW, NOT SUBMITTED (Orange Card)
+            siblingCardHtml = `
+            <div class="bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-xl border border-orange-300 shadow-sm mb-8">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <h3 class="text-xl font-bold text-orange-900">Sibling Priority Enrollment</h3>
+                        <p class="text-orange-800">Enroll new siblings for 2026-2027 (PreK - 8th).</p>
+                        <div class="mt-2 text-sm text-orange-800 font-bold bg-white/50 inline-block px-2 rounded">Closes: Feb 23, 8:30 AM</div>
+                    </div>
+                    <div class="bg-white p-2 rounded-full shadow-sm"><i class="ph-users-three text-2xl text-orange-600"></i></div>
+                </div>
+                <button onclick="openSiblingModal()" class="mt-4 w-full sm:w-auto bg-orange-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-orange-700 transition">Enroll Sibling</button>
+            </div>`;
+        }
     } else if (now < SIBLING_START) {
         // Upcoming
         siblingCardHtml = `
@@ -1283,6 +1304,62 @@ function renderSiblingInputs() {
     }
 }
 
+
+        function openSiblingModal() {
+    openModal('sibling-modal');
+    
+    const submitted = portalData.submittedSiblings || [];
+    
+    if (submitted.length > 0) {
+        // Show Summary View
+        document.getElementById('sibling-step-1').classList.add('hidden');
+        document.getElementById('sibling-step-success').classList.remove('hidden');
+        
+        // Populate the success/summary area with actual data
+        const listHtml = submitted.map(s => `<li class="font-bold text-slate-800">${s.name} <span class="font-normal text-slate-500">(${s.grade})</span></li>`).join('');
+        
+        // Update the modal content specifically for "Already Submitted" state
+        document.querySelector('#sibling-step-success h3').innerText = "Sibling Request On File";
+        document.querySelector('#sibling-step-success p').innerText = "You have already submitted requests for:";
+        
+        // Insert list dynamically
+        const container = document.querySelector('#sibling-step-success .bg-orange-50');
+        container.innerHTML = `
+            <ul class="list-disc pl-4 mb-4">${listHtml}</ul>
+            <p class="text-sm text-slate-700"><strong>Next Steps:</strong></p>
+            <ol class="list-decimal pl-4 text-slate-600 text-sm space-y-1 mb-2">
+                <li>Complete application on Gradelink.</li>
+                <li>Pay the $250 Fee on Gradelink.</li>
+            </ol>
+            <p class="text-xs text-orange-800 mt-2">Confirmation ID: <span class="font-mono font-bold">${submitted[0].confirmationId}</span></p>
+        `;
+        
+        // Add a "Add Another" button if they made a mistake and need to submit more
+        const footer = document.querySelector('#sibling-step-success .pt-2');
+        if(!document.getElementById('btn-add-another')) {
+             const addBtn = document.createElement('button');
+             addBtn.id = 'btn-add-another';
+             addBtn.className = "mt-3 text-sm text-orange-600 hover:text-orange-800 underline w-full text-center";
+             addBtn.innerText = "Need to add another sibling?";
+             addBtn.onclick = () => {
+                 document.getElementById('sibling-step-success').classList.add('hidden');
+                 document.getElementById('sibling-step-1').classList.remove('hidden');
+             };
+             footer.appendChild(addBtn);
+        }
+
+    } else {
+        // Show Default Form
+        document.getElementById('sibling-step-1').classList.remove('hidden');
+        document.getElementById('sibling-step-success').classList.add('hidden');
+        document.getElementById('sibling-inputs-container').innerHTML = '';
+        document.getElementById('sibling-count').value = 0;
+        document.getElementById('btn-submit-sibling').classList.add('hidden');
+    }
+}
+
+
+        
 function submitSiblingEnrollment() {
     const inputs = document.querySelectorAll('#sibling-inputs-container .bg-orange-50');
     const siblings = [];
@@ -1309,10 +1386,28 @@ function submitSiblingEnrollment() {
             token: ID_TOKEN,
             siblings: siblings
         })
-    }).then(() => {
+    })then(() => {
+        // 1. Simulate adding to local data so UI updates immediately
+        const newSiblings = siblings.map(s => ({
+            name: s.name, 
+            grade: s.grade, 
+            confirmationId: 'Sent via Email'
+        }));
+        
+        if (!portalData.submittedSiblings) portalData.submittedSiblings = [];
+        portalData.submittedSiblings.push(...newSiblings);
+
+        // 2. Refresh the Tab to show the Green Card
+        renderActionsTab(portalData.students);
+
+        // 3. Show Success Message in Modal
         document.getElementById('sibling-step-1').classList.add('hidden');
         document.getElementById('sibling-step-success').classList.remove('hidden');
-        document.getElementById('sibling-conf-id').textContent = "Sent via Email";
+        
+        // Reset Text for specific "Just Submitted" context
+        document.querySelector('#sibling-step-success h3').innerText = "Request Submitted!";
+        // ... (standard success message) ...
+        
     }).catch(e => {
         console.error(e);
         alert("Error submitting. Please check your connection.");
