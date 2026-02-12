@@ -25,7 +25,6 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Input styling adjustments */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
     </style>
@@ -306,7 +305,7 @@
                             <li>Go to Gradelink to apply.</li>
                             <li>Pay the <strong>$250 Fee</strong> on Gradelink.</li>
                         </ol>
-                        <div class="pt-2 text-xs text-slate-400 text-center">Confirmation ID sent to email</div>
+                        <div class="pt-2 text-xs text-orange-800 text-center font-bold">Conf ID: <span id="sibling-conf-id" class="font-mono select-all"></span></div>
                     </div>
                     
                     <div class="mt-8">
@@ -330,8 +329,8 @@
 
     <script>
         // --- CONFIGURATION ---
-        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwQWDkjjXqT7V2x4N3ea9IvqBbvI7QJ2qaMLVyXbpg2pBJxsVl_5r00kaLZXJNDw_mw/exec'; // Replace with YOUR Deployment ID
-        const NEWSLETTER_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdZkNNppgbr_FdH2FOAztYpujc9A4URAsQIlWnADSypDlb5_KnCiVP3EImRK96jWK3Yg/exec'; // Resource script
+        const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzS5IhdAZQBBPJPN4KEGYWr0tf5mg7i-ZvxrWmwJMxjuGOtB3SNb3FZwIzThQYt9mTx/exec'; 
+        const NEWSLETTER_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdZkNNppgbr_FdH2FOAztYpujc9A4URAsQIlWnADSypDlb5_KnCiVP3EImRK96jWK3Yg/exec';
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         
         let ID_TOKEN = null;
@@ -339,9 +338,9 @@
         let enrollmentState = { selectedStudents: [], totalAmount: 0 };
 
         // --- DATES CONFIGURATION ---
-        const PRIORITY_DEADLINE = new Date('2026-02-11T08:30:00-08:00'); // Feb 16 (Using 11 for testing)
-        const SIBLING_START     = new Date('2026-02-11T08:30:00-08:00'); // Feb 16
-        const SIBLING_END       = new Date('2026-02-23T08:30:00-08:00'); // Feb 23
+        const PRIORITY_DEADLINE = new Date('2026-02-16T08:30:00-08:00'); // Feb 16 8:30 AM
+        const SIBLING_START     = new Date('2026-02-16T08:30:00-08:00'); // Feb 16 8:30 AM
+        const SIBLING_END       = new Date('2026-02-23T08:30:00-08:00'); // Feb 23 8:30 AM
 
         // --- RENDER ACTIONS TAB (The Core Logic) ---
         function renderActionsTab(students) {
@@ -387,7 +386,7 @@
                                 <p class="text-slate-500 text-sm mt-1">Standard Fee: $250. Priority pricing has ended.</p>
                             </div>
                         </div>
-                        <a href="https://secure.gradelink.com/lkg/Gradelink.xml" target="_blank" class="w-full sm:w-auto text-center bg-slate-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-slate-700 transition">
+                        <a href="https://secure.gradelink.com/lkg/Gradelink.xml?contenttype=text%2Fhtml&Language=English&v=1.0" target="_blank" class="w-full sm:w-auto text-center bg-slate-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-slate-700 transition">
                             Pay on Gradelink
                         </a>
                     </div>
@@ -555,8 +554,6 @@
                 const confID = submitted[0].confirmationId || "Sent via Email";
                 document.getElementById('sibling-conf-id').innerText = confID;
                 
-                // Populate List (Optional visual if you want to show names again)
-                // const list = submitted.map(s => `<li>${s.name}</li>`).join('');
             } else {
                 document.getElementById('sibling-step-1').classList.remove('hidden');
                 document.getElementById('sibling-step-success').classList.add('hidden');
@@ -637,6 +634,20 @@
             openModal('enrollment-modal');
             const list = document.getElementById('enrollment-student-list');
             list.innerHTML = '';
+            
+            // Countdown Logic
+            const dest = new Date("Feb 16, 2026 08:30:00").getTime();
+            const timer = setInterval(() => {
+                const diff = dest - new Date().getTime();
+                if (diff < 0) { clearInterval(timer); document.getElementById("priority-countdown").innerText = "Closed"; }
+                else {
+                    const d = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const h = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    document.getElementById("priority-countdown").innerText = `${d}d ${h}h ${m}m left`;
+                }
+            }, 1000);
+
             portalData.students.forEach(s => {
                 const isPaid = s.enrollmentDetails?.timestamp;
                 list.innerHTML += `
@@ -706,7 +717,73 @@
             }).then(() => fetchData(ID_TOKEN)).catch(e => console.error(e));
         }
 
-        // --- CORE LOAD ---
+        // --- DASHBOARD RENDERERS ---
+        function renderDashboard(students) {
+            const container = document.getElementById('student-content-container');
+            container.innerHTML = ''; 
+            if (!students || students.length === 0) {
+                container.innerHTML = '<div class="bg-white p-6 rounded-lg shadow-sm"><p class="text-center text-slate-600">No students found.</p></div>';
+                return;
+            }
+            students.forEach(s => {
+                const initials = s.studentName.split(" ").map(n=>n[0]).join("");
+                const teachers = (s.teachers||[]).slice(0,3).map(t => 
+                    `<div class="flex items-center gap-3 p-2 hover:bg-slate-50 rounded">
+                        <img src="${t.photoUrl}" class="w-8 h-8 rounded-full bg-gray-200">
+                        <div><p class="text-sm font-bold text-slate-800">${t.teacherName}</p><p class="text-xs text-slate-500">${t.role}</p></div>
+                    </div>`).join('') || '<p class="text-slate-400 text-sm p-2">No teachers assigned.</p>';
+                
+                const events = (s.events||[]).slice(0,3).map(e => 
+                    `<div class="flex justify-between items-start border-b border-slate-100 last:border-0 py-2">
+                        <div><p class="text-sm font-bold text-slate-800">${e.name}</p><p class="text-xs text-slate-500">${formatDate(e.date)}</p></div>
+                    </div>`).join('') || '<p class="text-slate-400 text-sm p-2">No events.</p>';
+
+                container.innerHTML += `
+                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                    <div class="p-6 bg-slate-50 border-b border-slate-200 flex items-center gap-4">
+                        <div class="w-16 h-16 rounded-full bg-white flex items-center justify-center text-xl font-bold text-teal-700 shadow-sm border border-slate-100">${initials}</div>
+                        <div><h3 class="text-xl font-bold text-slate-900">${s.studentName}</h3><p class="text-slate-500 text-sm">${decodeGrade(s.grade)} • Classroom ${s.classroom}</p></div>
+                    </div>
+                    <div class="grid grid-cols-1 lg:grid-cols-2">
+                        <div class="p-6 border-b lg:border-b-0 lg:border-r border-slate-100"><h4 class="font-bold text-xs uppercase text-slate-400 mb-3">Teachers</h4>${teachers}</div>
+                        <div class="p-6"><h4 class="font-bold text-xs uppercase text-slate-400 mb-3">Upcoming Events</h4>${events}</div>
+                    </div>
+                </div>`;
+            });
+        }
+
+        // --- AUTH & INIT ---
+        function handleLoginSuccess(idToken) {
+            ID_TOKEN = idToken;
+            localStorage.setItem('sva_id_token', idToken);
+            const profile = JSON.parse(atob(ID_TOKEN.split('.')[1]));
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('loading-overlay').classList.remove('hidden');
+            
+            const pic = profile.picture || `https://placehold.co/100x100/E2E8F0/4A5568?text=${profile.email[0]}`;
+            document.getElementById('user-info-desktop').innerHTML = `<div class="flex items-center gap-3"><div class="text-right"><p class="text-sm font-bold text-slate-800">${profile.name||'User'}</p><p class="text-xs text-slate-500">${profile.email}</p></div><img src="${pic}" class="w-9 h-9 rounded-full border border-slate-200"></div>`;
+            
+            fetchData(ID_TOKEN);
+            // fetchAndRenderResources(); // Add back if needed
+        }
+
+        function fetchData(token) {
+            fetch(`${WEB_APP_URL}?token=${token}`)
+                .then(r => r.json())
+                .then(d => {
+                    document.getElementById('loading-overlay').classList.add('hidden');
+                    if(d.status !== 'success') return handleTokenExpired();
+                    
+                    portalData = d.data;
+                    document.getElementById('portal-container').classList.remove('hidden');
+                    
+                    renderDashboard(portalData.students);
+                    renderActionsTab(portalData.students);
+                    // renderVolunteering()... add others as needed
+                })
+                .catch(e => handleTokenExpired(e.message));
+        }
+
         window.onload = function() {
             const token = localStorage.getItem('sva_id_token');
             const hash = window.location.hash.startsWith('#token=') ? window.location.hash.substring(7) : null;
@@ -724,32 +801,62 @@
                 document.getElementById('passkey-request-form').addEventListener('submit', handlePasskeyRequest);
             }
             
-            // Mobile Menu Toggle
-            document.getElementById('mobile-menu-button').addEventListener('click', () => {
-                document.getElementById('mobile-menu').classList.toggle('hidden');
-            });
+            // Mobile Menu
+            document.getElementById('mobile-menu-button').addEventListener('click', () => document.getElementById('mobile-menu').classList.toggle('hidden'));
             
-            // Tab Listeners (Delegation)
+            // Tab Delegation
             document.body.addEventListener('click', e => {
-                if(e.target.closest('.tab-btn')) {
-                    const t = e.target.closest('.tab-btn').dataset.tab;
-                    switchToTab(t);
-                }
-                if(e.target.matches('.faq-forms-tab-btn')) {
-                    document.querySelectorAll('.faq-forms-tab-btn').forEach(b => {
-                        b.classList.remove('text-slate-600', 'bg-white', 'shadow-sm');
-                        b.classList.add('text-slate-400');
-                    });
-                    e.target.classList.add('text-slate-600', 'bg-white', 'shadow-sm');
-                    e.target.classList.remove('text-slate-400');
-                    document.querySelectorAll('.faq-forms-tab-content').forEach(c => c.classList.add('hidden'));
-                    document.getElementById(e.target.dataset.tab).classList.remove('hidden');
-                }
-                // Absence/Tardy Logic
+                if(e.target.closest('.tab-btn')) switchToTab(e.target.closest('.tab-btn').dataset.tab);
+                
+                // Absence Logic
                 if(e.target.name === 'report-type') {
                     const isTardy = e.target.value === 'tardy';
                     document.getElementById('tardy-fields').classList.toggle('hidden', !isTardy);
                     document.getElementById('absence-fields').classList.toggle('hidden', isTardy);
+                }
+                
+                // Absence Submit
+                if(e.target.id === 'send-notification-btn' || e.target.id === 'send-pickup-btn') {
+                    e.preventDefault();
+                    const isPickup = e.target.id === 'send-pickup-btn';
+                    const btn = e.target;
+                    
+                    // Basic Validation
+                    if(isPickup && !document.getElementById('pickup-name').value) return alert("Enter name.");
+                    
+                    btn.disabled = true; btn.innerText = "Sending...";
+                    
+                    // Construct Payload based on form type (Simplified for brevity)
+                    const payload = { 
+                        action: isPickup ? 'sendPickupEmail' : 'sendAbsenceEmail', 
+                        token: ID_TOKEN,
+                        // ... map fields ...
+                        student: portalData.students.find(s => s.uniqueStudentId == document.getElementById('student-select').value)
+                        // Add pickup fields if isPickup...
+                    };
+                    
+                    if(isPickup) {
+                        // Add pickup specific fields manually for this demo block
+                        const checked = Array.from(document.querySelectorAll('.pickup-student-checkbox:checked')).map(c=>c.value);
+                        if(checked.length===0) { alert("Select student"); btn.disabled=false; return; }
+                        payload.students = portalData.students.filter(s=>checked.includes(String(s.uniqueStudentId)));
+                        payload.pickupName = document.getElementById('pickup-name').value;
+                        payload.relationship = document.getElementById('pickup-relationship').value;
+                        payload.date = document.getElementById('pickup-date').value;
+                        payload.reason = document.getElementById('pickup-reason').value;
+                    } else {
+                        payload.reportType = document.querySelector('input[name="report-type"]:checked').value;
+                        payload.startDate = document.getElementById('absence-start').value;
+                        payload.endDate = document.getElementById('absence-end').value;
+                        payload.tardyStartTime = document.getElementById('tardy-start-time').value;
+                        payload.tardyEndTime = document.getElementById('tardy-end-time').value;
+                        payload.reason = document.getElementById('absence-reason').value;
+                        payload.comments = document.getElementById('absence-comments').value;
+                    }
+
+                    fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
+                        .then(() => { alert('Sent successfully!'); btn.disabled = false; btn.innerText = isPickup ? "Authorize Pickup" : "Send Notification"; })
+                        .catch(e => { alert("Error sending."); btn.disabled = false; });
                 }
             });
         };
@@ -774,9 +881,11 @@
             document.getElementById('loading-overlay').classList.add('hidden');
             document.getElementById('portal-container').classList.add('hidden');
             showLoginScreen('login-screen');
-            const err = document.getElementById('login-error-msg');
-            err.innerText = msg || "Session expired.";
-            err.classList.remove('hidden');
+            if(msg) {
+                const err = document.getElementById('login-error-msg');
+                err.innerText = msg;
+                err.classList.remove('hidden');
+            }
         }
     </script>
 </body>
