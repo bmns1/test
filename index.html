@@ -1386,7 +1386,7 @@ function submitSiblingEnrollment() {
             token: ID_TOKEN,
             siblings: siblings
         })
-    })then(() => {
+    }).then(() => {
         // 1. Simulate adding to local data so UI updates immediately
         const newSiblings = siblings.map(s => ({
             name: s.name, 
