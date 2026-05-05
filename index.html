@@ -8,102 +8,144 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator/qrcode.js"></script>
-    <script src="https://unpkg.com/phosphor-icons"></script>
+    <script src="https://unpkg.com/phosphor-icons@1.4.2"></script>
 
     <script src="https://www.paypal.com/sdk/js?client-id=AYReVExwdQDLVcYme5sm02-tqJnyoQ5v05C7roBQyzjZiJmSScrDHYM0DzmSyfpx8Va4W2pSmfShNL-o&currency=USD&enable-funding=venmo,applepay&components=buttons"></script>
-    
+
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc; /* A softer slate-50 background */
+            background-color: #f8fafc;
         }
         .tab-active {
-            border-bottom: 2px solid #0d9488; /* teal-600 */
-            color: #0d9488; /* teal-600 */
+            border-bottom: 2px solid #0d9488;
+            color: #0d9488;
             font-weight: 600;
         }
         .tab-content { display: none; }
         .tab-content-active { display: block; }
         #mobile-menu { display: none; }
-        /* Simple animation for accordion */
         .rotate-180 { transform: rotate(180deg); }
         .transition-transform { transition: transform 0.2s ease-in-out; }
-        /* Hide number input arrows */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-          -webkit-appearance: none; 
-          margin: 0; 
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
         }
-        input[type=number] {
-          -moz-appearance: textfield;
-        }
+        input[type=number] { -moz-appearance: textfield; }
         .student-tab-active {
             border-bottom: 3px solid #0d9488;
             color: #0d9488;
             font-weight: 600;
         }
-        /* Custom Scrollbar for Wizard */
-        .agreement-scroll::-webkit-scrollbar {
-            width: 8px;
+        .agreement-scroll::-webkit-scrollbar { width: 8px; }
+        .agreement-scroll::-webkit-scrollbar-track { background: #f1f1f1; }
+        .agreement-scroll::-webkit-scrollbar-thumb { background: #888; border-radius: 4px; }
+        .agreement-scroll::-webkit-scrollbar-thumb:hover { background: #555; }
+
+        /* Toast notification system */
+        #toast-container {
+            position: fixed;
+            bottom: 1.25rem;
+            right: 1.25rem;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-width: calc(100vw - 2.5rem);
+            pointer-events: none;
         }
-        .agreement-scroll::-webkit-scrollbar-track {
-            background: #f1f1f1; 
+        .toast {
+            pointer-events: auto;
+            min-width: 280px;
+            max-width: 420px;
+            padding: 0.875rem 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 25px -5px rgb(0 0 0 / 0.15), 0 4px 6px -2px rgb(0 0 0 / 0.05);
+            display: flex;
+            align-items: flex-start;
+            gap: 0.75rem;
+            font-size: 0.875rem;
+            background: white;
+            border-left: 4px solid #64748b;
+            transform: translateX(120%);
+            transition: transform 0.25s ease-out, opacity 0.2s ease-out;
+            opacity: 0;
         }
-        .agreement-scroll::-webkit-scrollbar-thumb {
-            background: #888; 
-            border-radius: 4px;
+        .toast.show { transform: translateX(0); opacity: 1; }
+        .toast.success { border-left-color: #16a34a; }
+        .toast.error   { border-left-color: #dc2626; }
+        .toast.info    { border-left-color: #0d9488; }
+        .toast.warning { border-left-color: #d97706; }
+        .toast-icon { flex-shrink: 0; font-size: 1.25rem; line-height: 1; margin-top: 1px; }
+        .toast.success .toast-icon { color: #16a34a; }
+        .toast.error   .toast-icon { color: #dc2626; }
+        .toast.info    .toast-icon { color: #0d9488; }
+        .toast.warning .toast-icon { color: #d97706; }
+        .toast-body { flex: 1; color: #1e293b; }
+        .toast-close {
+            background: transparent; border: 0; color: #94a3b8;
+            cursor: pointer; padding: 0; font-size: 1.1rem; line-height: 1;
         }
-        .agreement-scroll::-webkit-scrollbar-thumb:hover {
-            background: #555; 
+        .toast-close:hover { color: #475569; }
+
+        /* Inline error helper */
+        .field-error { color: #dc2626; font-size: 0.75rem; margin-top: 0.25rem; }
+        .input-error { border-color: #dc2626 !important; }
+
+        @media (max-width: 640px) {
+            #toast-container { left: 1rem; right: 1rem; bottom: 1rem; }
+            .toast { min-width: 0; max-width: none; width: 100%; }
         }
     </style>
 </head>
 <body class="antialiased text-slate-800">
 
+    <!-- Toast container -->
+    <div id="toast-container" aria-live="polite" aria-atomic="true"></div>
+
     <div id="login-container" class="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-        <!-- Screen 1: Main Login Choice -->
         <div id="login-screen" class="text-center p-8 bg-white rounded-xl shadow-lg max-w-md w-full">
             <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
             <h1 class="text-3xl font-bold text-slate-900 mt-4">Silicon Valley Academy</h1>
             <p class="text-lg text-slate-600 mb-6">Parent Portal (beta)</p>
             <p class="text-sm text-slate-500 mb-8">Please log in with your SVA-associated student email. For assistance or password issues, please contact: <a href="mailto:parent.portal@svaschool.org" class="font-medium text-teal-600 hover:underline">parent.portal@svaschool.org</a></p>
-            
-            <!-- Error Message Area -->
+
             <div id="login-error-msg" class="hidden bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-6 text-left" role="alert">
                 <strong class="font-bold">Login Failed:</strong>
                 <span class="block sm:inline" id="login-error-text"></span>
             </div>
 
-            <!-- Google Sign-In Button -->
             <div id="google-signin-button-container" class="flex justify-center"></div>
-            
-            <!-- Divider -->
+
             <div class="my-6 flex items-center justify-center">
                 <span class="border-b border-slate-300 w-full"></span>
                 <span class="mx-4 text-sm font-medium text-slate-500">OR</span>
                 <span class="border-b border-slate-300 w-full"></span>
             </div>
-            
-            <!-- Passkey Login Form -->
-            <form id="passkey-request-form" class="space-y-4">
+
+            <form id="passkey-request-form" class="space-y-4" novalidate>
                 <div>
                     <label for="email-input" class="sr-only">Student Email</label>
-                    <input type="email" id="email-input" placeholder="Enter your student email" class="w-full px-4 py-3 rounded-md border-slate-300 shadow-sm" required>
+                    <input type="email" id="email-input" autocomplete="email" placeholder="Enter your student email" class="w-full px-4 py-3 rounded-md border-slate-300 shadow-sm" required>
+                    <p id="email-input-error" class="field-error hidden"></p>
                 </div>
-                <button type="submit" id="request-passkey-btn" class="w-full bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-teal-700 transition">
+                <button type="submit" id="request-passkey-btn" class="w-full bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg hover:bg-teal-700 transition disabled:opacity-60 disabled:cursor-not-allowed">
                     Send Login Link
                 </button>
             </form>
         </div>
 
-        <!-- Screen 2: "Check Email" Screen (Hidden by default) -->
         <div id="passkey-verify-screen" class="hidden text-center p-8 bg-white rounded-xl shadow-lg max-w-md w-full">
             <img src="https://raw.githubusercontent.com/bmns1/parent-portal/main/logo.png" alt="SVA Logo" class="h-20 w-auto mx-auto mb-4">
             <h2 class="text-2xl font-bold text-slate-900">Check Your Email</h2>
-            <p class="text-slate-600 my-4">A secure login link has been sent to parents email associated with the following student <strong id="passkey-email-display">your email</strong>.</p>
-             <p class="text-sm text-slate-500">Please click the link in that email to log in. The link will expire in 10 minutes. You may need to check your spam folder.</p>
-            
-            <button type="button" id="go-back-btn" class="w-full text-sm text-slate-600 hover:text-slate-900 hover:underline mt-6">
+            <p class="text-slate-600 my-4">A secure login link has been sent to the parent email associated with <strong id="passkey-email-display">your account</strong>.</p>
+            <p class="text-sm text-slate-500">Please click the link in that email to log in. The link will expire in 10 minutes. You may need to check your spam folder.</p>
+
+            <button type="button" id="resend-passkey-btn" class="w-full mt-6 text-sm text-teal-700 font-semibold py-2 hover:underline disabled:text-slate-400 disabled:no-underline disabled:cursor-not-allowed">
+                Resend link
+            </button>
+            <button type="button" id="go-back-btn" class="w-full text-sm text-slate-600 hover:text-slate-900 hover:underline mt-2">
                 &larr; Go Back
             </button>
         </div>
@@ -117,20 +159,20 @@
             <p id="loading-message" class="text-slate-500">Please wait a moment.</p>
         </div>
     </div>
-    
+
     <div id="portal-container" class="hidden">
-        
-        <div id="enrollment-modal" class="fixed inset-0 bg-gray-800 bg-opacity-90 overflow-y-auto h-full w-full hidden z-[60] flex items-center justify-center">
+
+        <div id="enrollment-modal" class="fixed inset-0 bg-gray-800 bg-opacity-90 overflow-y-auto h-full w-full hidden z-[60] flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="enrollment-modal-title">
              <div class="relative bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col my-6 mx-4">
                 <div class="px-6 py-4 border-b border-slate-200 flex justify-between items-center bg-teal-600 rounded-t-xl">
-                    <h3 class="text-xl font-bold text-white">Re-enrollment 2026-2027</h3>
-                    <button onclick="closeEnrollmentWizard(true)" class="text-teal-100 hover:text-white">
+                    <h3 id="enrollment-modal-title" class="text-xl font-bold text-white">Re-enrollment 2026-2027</h3>
+                    <button onclick="closeEnrollmentWizard(true)" aria-label="Close enrollment wizard" class="text-teal-100 hover:text-white">
                         <i class="ph-x text-2xl"></i>
                     </button>
                 </div>
-                
+
                 <div class="flex-1 overflow-y-auto p-6" id="enrollment-wizard-content">
-                    
+
                     <div id="step-start" class="wizard-step">
                         <h4 class="text-2xl font-bold text-slate-800 mb-4">Priority Re-enrollment Discounted Fee ($150/student)</h4>
                         <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6">
@@ -141,13 +183,13 @@
                         </div>
                         <p class="mb-4 text-slate-700">Start securing your spot at Silicon Valley Academy for the 2026-2027 school year.</p>
                         <p class="mb-4 text-slate-600 text-sm">
-                            This exclusive window offers discounted priority registration fee for existing families. Note, after payment, you will receive a link to finalize the enrollment process on Gradelink!
+                            This exclusive window offers a discounted priority registration fee for existing families. After payment, you will receive a link to finalize the enrollment process on Gradelink.
                         </p>
-                        
+
                         <h5 class="font-bold text-lg text-slate-800 mb-3">Select students you plan to re-enroll:</h5>
                         <div id="enrollment-student-list" class="space-y-3 mb-6"></div>
                         <p id="enrollment-error" class="text-red-500 hidden mb-2">Please select at least one student.</p>
-                        
+
                         <div class="text-right">
                             <button onclick="wizardNext('payment')" id="btn-goto-payment" class="bg-teal-600 text-white px-6 py-2 rounded-lg hover:bg-teal-700">Continue to Payment &rarr;</button>
                         </div>
@@ -155,26 +197,26 @@
 
                     <div id="step-payment" class="wizard-step hidden">
                         <h4 class="text-2xl font-bold text-slate-800 mb-4">Registration Payment</h4>
-                        
+
                         <div class="bg-teal-50 p-4 rounded border border-teal-200 mb-6">
                             <p class="text-sm text-teal-800 font-semibold">
-                                Please complete the payment below to as part of the enrollment process. Once payment is successful, you will receive a link to finalize the enrollment process on Gradelink.
+                                Please complete the payment below as part of the enrollment process. Once payment is successful, you will receive a link to finalize the enrollment process on Gradelink.
                             </p>
                         </div>
 
                         <div class="mb-6">
                              <h5 class="font-bold text-slate-800 mb-2">Total Due: <span id="payment-amount" class="text-teal-600">$0.00</span></h5>
                              <p class="text-sm text-slate-600 mb-4">Registration fee for <span id="payment-student-count">0</span> student(s). ($150.00 discounted enrollment fee per student + 2.5% transaction fee.)</p>
-                             
+
                              <div id="paypal-button-container"></div>
-                             
+
                              <div id="payment-completed-msg" class="hidden bg-green-100 text-green-800 p-4 rounded-lg shadow-sm border border-green-200 text-center space-y-3">
                                  <div class="font-bold text-lg"><i class="ph-check-circle text-2xl align-middle mr-1"></i> Payment Successful!</div>
                                  <p class="text-sm">Your Payment ID: <strong id="success-payment-id" class="font-mono bg-white px-2 py-1 rounded border border-green-300 select-all"></strong></p>
                                  <p class="text-sm">Please save this ID for your records.</p>
-                                 <p class="text-sm">Avoid Double Payment! Don't pay again on Gradlink.</p>
+                                 <p class="text-sm">Avoid double payment! Don't pay again on Gradelink.</p>
                                  <div class="pt-2">
-                                     <a href="https://secure.gradelink.com/lkg/Gradelink.xml?contenttype=text%2Fhtml&Language=English&v=1.0" target="_blank" class="inline-block bg-teal-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-teal-700 transition shadow-md">
+                                     <a href="https://secure.gradelink.com/lkg/Gradelink.xml?contenttype=text%2Fhtml&Language=English&v=1.0" target="_blank" rel="noopener" class="inline-block bg-teal-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-teal-700 transition shadow-md">
                                          Complete Enrollment on Gradelink &rarr;
                                      </a>
                                  </div>
@@ -192,49 +234,50 @@
 
 
 
-        <div id="sibling-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-[60] flex items-center justify-center transition-opacity duration-300">
+        <div id="sibling-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm overflow-y-auto h-full w-full hidden z-[60] flex items-center justify-center transition-opacity duration-300" role="dialog" aria-modal="true" aria-labelledby="sibling-modal-title">
         <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-2xl flex flex-col my-6 mx-4 overflow-hidden">
            <div class="px-8 py-5 border-b border-orange-100 flex justify-between items-center bg-white">
                <div class="flex items-center gap-3">
                    <div class="bg-orange-100 p-2 rounded-lg text-orange-600"><i class="ph-users-three text-xl"></i></div>
-                   <h3 class="text-xl font-bold text-slate-800">Sibling Priority Enrollment</h3>
+                   <h3 id="sibling-modal-title" class="text-xl font-bold text-slate-800">Sibling Priority Enrollment</h3>
                </div>
-               <button onclick="closeModal('sibling-modal')" class="text-slate-400 hover:text-slate-600 bg-slate-50 p-2 rounded-full transition"><i class="ph-x text-lg"></i></button>
+               <button onclick="closeModal('sibling-modal')" aria-label="Close" class="text-slate-400 hover:text-slate-600 bg-slate-50 p-2 rounded-full transition"><i class="ph-x text-lg"></i></button>
            </div>
-           
+
            <div class="p-8 bg-slate-50/50">
                <div id="sibling-step-1">
                    <p class="text-slate-600 mb-6">Enter details for <strong>new siblings</strong> you wish to enroll for 2026-2027 (PreK - 8th).</p>
-                   
-                   <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Number of New Siblings</label>
+
+                   <label for="sibling-count" class="block text-xs font-bold text-slate-500 uppercase mb-2">Number of New Siblings</label>
                    <select id="sibling-count" class="block w-full rounded-lg border-slate-300 shadow-sm p-3 border mb-6 focus:border-orange-500 focus:ring-orange-500" onchange="renderSiblingInputs()">
                        <option value="0">Select count...</option><option value="1">1</option><option value="2">2</option><option value="3">3</option><option value="4">4</option><option value="5">5</option>
                    </select>
-                   
+
                    <div id="sibling-inputs-container" class="space-y-4 mb-8"></div>
-                   
-                   <button onclick="submitSiblingEnrollment()" id="btn-submit-sibling" class="w-full bg-orange-600 text-white font-bold py-3.5 rounded-xl hover:bg-orange-700 hidden shadow-lg hover:shadow-orange-500/30 transition transform hover:-translate-y-0.5">Submit Request</button>
+                   <p id="sibling-error" class="field-error hidden mb-3"></p>
+
+                   <button onclick="submitSiblingEnrollment()" id="btn-submit-sibling" class="w-full bg-orange-600 text-white font-bold py-3.5 rounded-xl hover:bg-orange-700 hidden shadow-lg hover:shadow-orange-500/30 transition transform hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed">Submit Request</button>
                </div>
-               
+
                <div id="sibling-step-success" class="hidden text-center py-6">
                     <div class="mx-auto flex items-center justify-center h-20 w-20 rounded-full bg-green-100 mb-6 animate-bounce">
                         <i class="ph-check text-4xl text-green-600"></i>
                     </div>
                     <h3 class="text-2xl font-bold text-slate-900">Request Submitted, go to Gradelink to complete sibling application!</h3>
-                    <p class="text-slate-500 mt-2 mb-8">Your priority spot is not yet reserved, you need to complete Gradelink application and pay the fees.</p>
+                    <p class="text-slate-500 mt-2 mb-8">Your priority spot is not yet reserved — you need to complete the Gradelink application and pay the fees.</p>
 
                     <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm text-left text-sm space-y-4 max-w-sm mx-auto">
                         <p class="font-semibold text-slate-800 border-b pb-2">Next Required Steps:</p>
                         <ol class="list-decimal pl-4 text-slate-600 space-y-2">
-                            <li>Check email/portal for confirmation and keep it for your record.</li>
+                            <li>Check email/portal for confirmation and keep it for your records.</li>
                             <li>Go to Gradelink to apply.</li>
                             <li>Pay the <strong>$250 Fee</strong> on Gradelink.</li>
                         </ol>
                         <div class="pt-2 text-xs text-orange-800 text-center font-bold">Conf ID: <span id="sibling-conf-id" class="font-mono select-all"></span></div>
                     </div>
-                    
+
                     <div class="mt-8">
-                        <a href="https://secure.gradelink.com/668/enrollment" target="_blank" class="inline-block bg-slate-900 text-white font-bold py-3 px-8 rounded-xl hover:bg-slate-800 shadow-lg transition">
+                        <a href="https://secure.gradelink.com/668/enrollment" target="_blank" rel="noopener" class="inline-block bg-slate-900 text-white font-bold py-3 px-8 rounded-xl hover:bg-slate-800 shadow-lg transition">
                             Go to Gradelink (school ID: 2923) &rarr;
                         </a>
                     </div>
@@ -244,11 +287,11 @@
     </div>
 
 
-        
-        <div id="qr-code-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center">
+
+        <div id="qr-code-modal" class="modal fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full hidden z-50 flex items-center justify-center" role="dialog" aria-modal="true" aria-labelledby="qr-modal-title">
             <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
                 <div class="mt-3 text-center">
-                    <h3 class="text-lg leading-6 font-medium text-gray-900">Event Check-in QR Code</h3>
+                    <h3 id="qr-modal-title" class="text-lg leading-6 font-medium text-gray-900">Event Check-in QR Code</h3>
                     <div class="mt-2 px-7 py-3">
                         <div id="qrcode" class="mx-auto"></div>
                         <p class="text-sm text-gray-500 mt-4">Have an admin scan this code when you arrive at the event to get credit for your hours.</p>
@@ -280,7 +323,7 @@
                             <button onclick="signOut();" class="bg-slate-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300 transition duration-300">Sign Out</button>
                         </div>
                         <div class="sm:hidden flex items-center">
-                            <button id="mobile-menu-button" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-slate-500 hover:text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" aria-controls="mobile-menu" aria-expanded="false">
+                            <button id="mobile-menu-button" type="button" class="inline-flex items-center justify-center p-2 rounded-md text-slate-500 hover:text-white hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-white" aria-controls="mobile-menu" aria-expanded="false" aria-label="Toggle navigation menu">
                                 <span class="sr-only">Open main menu</span>
                                 <i id="menu-icon-open" class="ph-list text-2xl"></i>
                                 <i id="menu-icon-close" class="ph-x text-2xl hidden"></i>
@@ -301,16 +344,16 @@
                 </div>
             </header>
 
-            <nav class="hidden sm:block bg-white border-b border-slate-200">
+            <nav class="hidden sm:block bg-white border-b border-slate-200 overflow-x-auto">
                 <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div id="main-nav" class="flex justify-center -mb-px">
+                    <div id="main-nav" class="flex justify-center -mb-px whitespace-nowrap">
                         <button class="tab-btn tab-active text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="dashboard"><i class="ph-house mr-2"></i>Student Dashboard</button>
                         <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="actions"><i class="ph-bell-ringing mr-2"></i>Enrollment & Actions</button>
                         <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="volunteering"><i class="ph-hands-clapping mr-2"></i>Volunteering</button>
                         <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="signups"><i class="ph-list-checks mr-2"></i>My Signups</button>
                         <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="pto"><i class="ph-users-three mr-2"></i>PTO</button>
                         <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="faq-forms"><i class="ph-link mr-2"></i>Resources</button>
-                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="live-event"><i class="ph-video-camera-fill mr-2"></i>Live Events</button>  
+                        <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="live-event"><i class="ph-video-camera-fill mr-2"></i>Live Events</button>
                         <button class="tab-btn text-slate-600 hover:text-teal-600 py-4 px-5 block focus:outline-none text-sm font-medium" data-tab="calendar"><i class="ph-calendar mr-2"></i>Calendar</button>
                     </div>
                 </div>
@@ -321,7 +364,7 @@
                      <h2 class="text-3xl font-bold text-slate-900 mb-6">My Students</h2>
                     <div id="student-content-container" class="space-y-12"></div>
                 </div>
-                
+
                 <div id="actions" class="tab-content">
                     <h2 class="text-3xl font-bold text-slate-900 mb-6">Actions</h2>
                     <div id="actions-content-container" class="space-y-10"></div>
@@ -431,7 +474,7 @@
 
                <div id="faq-forms" class="tab-content">
                     <h2 class="text-3xl font-bold text-slate-900 mb-6">Resources, Newsletters & FAQs</h2>
-                    <div class="flex border-b border-gray-200">
+                    <div class="flex border-b border-gray-200 overflow-x-auto whitespace-nowrap">
                         <button class="faq-forms-tab-btn tab-active px-6 py-3 text-sm font-medium" data-tab="faq-content">FAQ</button>
                         <button class="faq-forms-tab-btn px-6 py-3 text-sm font-medium text-slate-500" data-tab="forms-content">Forms</button>
                         <button class="faq-forms-tab-btn px-6 py-3 text-sm font-medium text-slate-500" data-tab="newsletters-content">Newsletters</button>
@@ -447,53 +490,126 @@
 
                 <div id="live-event" class="tab-content">
                     </div>
-                
+
                 <div id="calendar" class="tab-content">
                      <h2 class="text-3xl font-bold text-slate-900 mb-6">School Calendar</h2>
                      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                        <iframe src="https://calendar.google.com/calendar/embed?src=svaschool.org_us4ga4j1cfs27epj0f2dfegcl0%40group.calendar.google.com&ctz=America/Los_Angeles" style="border: 0" width="100%" height="600" frameborder="0" scrolling="no"></iframe>
+                        <iframe src="https://calendar.google.com/calendar/embed?src=svaschool.org_us4ga4j1cfs27epj0f2dfegcl0%40group.calendar.google.com&ctz=America/Los_Angeles" style="border: 0" width="100%" height="600" frameborder="0" scrolling="no" title="School calendar"></iframe>
                     </div>
                 </div>
             </main>
-            
+
             <footer class="bg-white mt-12 border-t border-slate-200">
-                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-sm"><p>&copy; 2025 BMNS. All Rights Reserved - (parent.portal@svaschool.org)</p></div>
+                 <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8 text-center text-slate-500 text-sm"><p>&copy; 2025 BMNS. All Rights Reserved &mdash; <a href="mailto:parent.portal@svaschool.org" class="text-teal-600 hover:underline">parent.portal@svaschool.org</a></p></div>
             </footer>
         </div>
     </div>
-    
+
     <script>
         // --- CONFIGURATION ---
-        //const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3LGShhqFBG5Y2TocWHYYgg8Sp-mK2YbkZ2x6tWJwf6li0teEvIYYXa5zNxDKtV4U7/exec';
-        //const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbx3LGShhqFBG5Y2TocWHYYgg8Sp-mK2YbkZ2x6tWJwf6li0teEvIYYXa5zNxDKtV4U7/exec';
-        //const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbwNo5dyu7Rg_78PwCaZdtbg3LJEwMlU5sxoyiGgM3E2xITjDtwLzshFdDCMQSAX8w2T/exec';
         const WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbzS5IhdAZQBBPJPN4KEGYWr0tf5mg7i-ZvxrWmwJMxjuGOtB3SNb3FZwIzThQYt9mTx/exec';
         const NEWSLETTER_WEB_APP_URL = 'https://script.google.com/macros/s/AKfycbxdZkNNppgbr_FdH2FOAztYpujc9A4URAsQIlWnADSypDlb5_KnCiVP3EImRK96jWK3Yg/exec';
         const CLIENT_ID = "14216824305-v19ecsmrhk1muaglrlhjceqjk5oeqr4n.apps.googleusercontent.com";
         let ID_TOKEN = null;
         let portalData = {};
-        //let tempRequestToken = null; // No longer needed for magic link
 
         // --- DATES CONFIGURATION ---
-// The moment Priority Re-enrollment Ends AND Sibling Enrollment Starts
-const PRIORITY_DEADLINE = new Date('2026-02-16T08:30:00-08:30'); 
-const SIBLING_START     = new Date('2026-02-16T08:30:00-08:30');
-const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
+        const PRIORITY_DEADLINE = new Date('2026-02-10T08:30:00-08:30');
+        const SIBLING_START     = new Date('2026-02-10T08:30:00-08:30');
+        const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
 
-        
-        // --- ENROLLMENT STATE (Added) ---
+        // --- ENROLLMENT STATE ---
         let enrollmentState = { selectedStudents: [], contactStatus: '', volunteerOptOutS1: false, volunteerOptOutS2: false, paymentPlan: null, paymentID: null, totalAmount: 0, initials: '' };
+
+        // ============================================================
+        // TOAST NOTIFICATION SYSTEM
+        // Replaces native alert() for non-blocking, friendlier UX.
+        // ============================================================
+        const TOAST_ICONS = {
+            success: 'ph-check-circle',
+            error:   'ph-warning-circle',
+            info:    'ph-info',
+            warning: 'ph-warning'
+        };
+        function showToast(message, type = 'info', duration = 4500) {
+            const container = document.getElementById('toast-container');
+            if (!container) return;
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            toast.setAttribute('role', type === 'error' ? 'alert' : 'status');
+            toast.innerHTML = `
+                <i class="toast-icon ${TOAST_ICONS[type] || TOAST_ICONS.info}"></i>
+                <div class="toast-body"></div>
+                <button type="button" class="toast-close" aria-label="Dismiss notification">&times;</button>
+            `;
+            toast.querySelector('.toast-body').textContent = message;
+            container.appendChild(toast);
+            // Trigger enter animation on next frame
+            requestAnimationFrame(() => toast.classList.add('show'));
+
+            const dismiss = () => {
+                toast.classList.remove('show');
+                toast.addEventListener('transitionend', () => toast.remove(), { once: true });
+            };
+            toast.querySelector('.toast-close').addEventListener('click', dismiss);
+            if (duration > 0) setTimeout(dismiss, duration);
+        }
+
+        // ============================================================
+        // BUTTON LOADING HELPER
+        // Disables button + swaps text for the duration of an async op.
+        // ============================================================
+        async function withLoading(button, loadingText, fn) {
+            if (!button) return fn();
+            const original = button.textContent;
+            button.disabled = true;
+            button.textContent = loadingText;
+            try {
+                return await fn();
+            } finally {
+                button.disabled = false;
+                button.textContent = original;
+            }
+        }
+
+        // ============================================================
+        // INLINE FIELD VALIDATION
+        // ============================================================
+        function setFieldError(inputId, message) {
+            const input = document.getElementById(inputId);
+            const err = document.getElementById(inputId + '-error');
+            if (input) input.classList.add('input-error');
+            if (err) {
+                err.textContent = message;
+                err.classList.remove('hidden');
+            }
+        }
+        function clearFieldError(inputId) {
+            const input = document.getElementById(inputId);
+            const err = document.getElementById(inputId + '-error');
+            if (input) input.classList.remove('input-error');
+            if (err) err.classList.add('hidden');
+        }
+
         // --- GLOBAL HELPER FUNCTIONS ---
-         // --- GLOBAL HELPER FUNCTIONS ---
         function closeModal(modalId) {
-            // Updated to handle safety check for enrollment modal
-            if(modalId === 'enrollment-modal' && !enrollmentState.paymentID) {
+            if (modalId === 'enrollment-modal' && !enrollmentState.paymentID) {
                 if (!confirm("Are you sure you want to close? Your progress may not be saved.")) return;
             }
             document.getElementById(modalId).classList.add('hidden');
         }
         function openModal(modalId) {
             document.getElementById(modalId).classList.remove('hidden');
+        }
+        function closeAllOpenModals() {
+            ['enrollment-modal', 'sibling-modal', 'qr-code-modal'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && !el.classList.contains('hidden')) {
+                    if (id === 'enrollment-modal' && !enrollmentState.paymentID) return; // protect mid-payment
+                    el.classList.add('hidden');
+                }
+            });
+            document.querySelectorAll('.event-dropdown').forEach(d => d.classList.add('hidden'));
         }
         function showLoginScreen(screenId) {
             document.getElementById('login-screen').classList.add('hidden');
@@ -513,19 +629,24 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
             if (gradeStr === '0' || gradeStr === 'K' ) return 'KG';
             return `Grade ${gradeStr}`;
         }
+        function todayISO() {
+            const d = new Date();
+            d.setMinutes(d.getMinutes() - d.getTimezoneOffset());
+            return d.toISOString().split('T')[0];
+        }
         function switchToTab(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('tab-active'));
             document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('tab-content-active'));
             document.querySelectorAll(`.tab-btn[data-tab="${tabName}"]`).forEach(b => b.classList.add('tab-active'));
             document.getElementById(tabName).classList.add('tab-content-active');
             const mobileMenu = document.getElementById('mobile-menu');
-            if(mobileMenu.style.display === 'block'){
+            if (mobileMenu.style.display === 'block') {
                 mobileMenu.style.display = 'none';
                 document.getElementById('menu-icon-open').classList.remove('hidden');
                 document.getElementById('menu-icon-close').classList.add('hidden');
             }
         }
-        
+
         function switchToTabAndSubTab(mainTabId, subTabId) {
             switchToTab(mainTabId);
             document.querySelectorAll('.faq-forms-tab-btn').forEach(btn => {
@@ -541,17 +662,15 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
             const subTabContent = document.getElementById(subTabId);
             if (subTabContent) subTabContent.classList.remove('hidden');
         }
-        // --- END GLOBAL HELPERS ---
 
-
-        // --- ENROLLMENT WIZARD LOGIC (Added) ---
+        // --- ENROLLMENT WIZARD LOGIC ---
         function startEnrollment() {
             openModal('enrollment-modal');
             startCountdown();
             populateStudentSelection();
             wizardNext('start');
         }
-        
+
         function closeEnrollmentWizard(force = false) {
              if (force || enrollmentState.paymentID || confirm("Are you sure you want to close? Your progress may not be saved.")) {
                  document.getElementById('enrollment-modal').classList.add('hidden');
@@ -561,14 +680,14 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
         function populateStudentSelection() {
             const container = document.getElementById('enrollment-student-list');
             container.innerHTML = '';
-            
+
             portalData.students.forEach(s => {
                 const details = s.enrollmentDetails || {};
                 const isEnrolled = details.timestamp && String(details.timestamp).trim() !== '';
-                
+
                 const div = document.createElement('div');
                 div.className = `flex items-center p-3 border rounded ${isEnrolled ? 'bg-green-50 border-green-200' : 'hover:bg-slate-50 border-slate-200'} cursor-pointer`;
-                
+
                 let enrolledBadge = '';
                 if (isEnrolled) {
                      enrolledBadge = `
@@ -576,7 +695,7 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                              <span class="text-green-700 font-bold text-xs uppercase bg-green-200 px-2 py-1 rounded inline-flex items-center"><i class="ph-check-circle mr-1"></i> Payment Verified</span>
                              <div class="text-xs text-slate-500 mt-0.5">Ref: ${details.paymentid || 'N/A'}</div>
                              <div class="mt-1">
-                                 <a href="https://secure.gradelink.com/lkg/Gradelink.xml?contenttype=text%2Fhtml&Language=English&v=1.0" target="_blank" class="text-teal-600 text-xs font-semibold hover:underline">Complete on Gradelink &rarr;</a>
+                                 <a href="https://secure.gradelink.com/lkg/Gradelink.xml?contenttype=text%2Fhtml&Language=English&v=1.0" target="_blank" rel="noopener" class="text-teal-600 text-xs font-semibold hover:underline">Complete on Gradelink &rarr;</a>
                              </div>
                         </div>
                      `;
@@ -594,7 +713,7 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                 `;
                 container.appendChild(div);
             });
-            
+
             const allEnrolled = portalData.students.every(s => s.enrollmentDetails && s.enrollmentDetails.timestamp && String(s.enrollmentDetails.timestamp).trim() !== '');
             if (allEnrolled) {
                  const successMsg = document.createElement('p');
@@ -627,24 +746,19 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
             document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
             document.getElementById('step-' + stepId).classList.remove('hidden');
         }
-        
+
         function wizardPrev(stepId) {
             document.querySelectorAll('.wizard-step').forEach(el => el.classList.add('hidden'));
             document.getElementById('step-' + stepId).classList.remove('hidden');
-            if(stepId === 'start') populateStudentSelection();
+            if (stepId === 'start') populateStudentSelection();
         }
 
         function renderPayPalButton() {
             const container = document.getElementById('paypal-button-container');
             container.innerHTML = '';
-            
+
             paypal.Buttons({
-                style: {
-                    shape: 'rect',
-                    color: 'gold',
-                    layout: 'vertical',
-                    label: 'pay'
-                },
+                style: { shape: 'rect', color: 'gold', layout: 'vertical', label: 'pay' },
                 createOrder: function(data, actions) {
                     return actions.order.create({
                         purchase_units: [{
@@ -686,27 +800,37 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                     initials: 'N/A'
                 })
             }).then(() => {
-                console.log('Backend updated with enrollment.');
+                showToast('Enrollment recorded. You can now finalize on Gradelink.', 'success');
                 fetchData(ID_TOKEN);
             }).catch(err => {
                 console.error("Submission failed:", err);
-                alert("Payment recorded locally, but server update failed. Please contact support with ID: " + enrollmentState.paymentID);
+                showToast(`Payment recorded locally, but server update failed. Contact support with ID: ${enrollmentState.paymentID}`, 'error', 10000);
             });
         }
 
-        function startCountdown() { 
-            const dest = new Date("Feb 16, 2026 08:30:00").getTime(); 
-            const timer = setInterval(function() { 
-                const now = new Date().getTime(); 
-                const diff = dest - now; 
-                if (diff < 0) { 
+        function startCountdown() {
+            const dest = new Date("Feb 16, 2026 08:30:00").getTime();
+            const timer = setInterval(function() {
+                const now = new Date().getTime();
+                const diff = dest - now;
+                const el = document.getElementById("priority-countdown");
+                if (!el) { clearInterval(timer); return; }
+                if (diff < 0) {
                     clearInterval(timer);
-                    document.getElementById("priority-countdown").innerHTML = "Priority Window Closed"; 
-                } else { 
-                    const days = Math.floor(diff / (1000 * 60 * 60 * 24)); 
-                    document.getElementById("priority-countdown").innerHTML = days + "d " + Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)) + "h " + Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60)) + "m"; 
-                } 
-            }, 1000); 
+                    el.textContent = "Priority Window Closed";
+                } else {
+                    const days  = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const mins  = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    const secs  = Math.floor((diff % (1000 * 60)) / 1000);
+                    // Drop "0d" once under a day; show seconds in final hour for urgency.
+                    let txt = '';
+                    if (days > 0) txt = `${days}d ${hours}h ${mins}m`;
+                    else if (hours > 0) txt = `${hours}h ${mins}m`;
+                    else txt = `${mins}m ${secs}s`;
+                    el.textContent = txt;
+                }
+            }, 1000);
         }
 
         // --- GOOGLE SIGN-IN & LOGIN LOGIC ---
@@ -714,60 +838,49 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
             handleLoginSuccess(response.credential);
         }
 
-        /**
-         * Handles the final stage of login for both Google Sign-In and Passkey.
-         * @param {string} idToken - A valid JWT (from Google or our backend).
-         */
         function handleLoginSuccess(idToken) {
             ID_TOKEN = idToken;
-            localStorage.setItem('sva_id_token', idToken); // <-- SAVE THE TOKEN
+            localStorage.setItem('sva_id_token', idToken);
             const profile = JSON.parse(atob(ID_TOKEN.split('.')[1]));
             document.getElementById('login-container').classList.add('hidden');
             document.getElementById('loading-overlay').classList.remove('hidden');
-            // Use placeholder for picture if not provided (for passkey)
             const picture = profile.picture || `https://placehold.co/100x100/E2E8F0/4A5568?text=${profile.email[0].toUpperCase()}`;
             const name = profile.name || profile.email;
             const userInfoHtml = `<div class="flex items-center"><img class="h-8 w-8 rounded-full" src="${picture}" alt=""><div class="ml-3"><div class="text-base font-medium text-slate-800">${name}</div><div class="text-sm font-medium text-slate-500">${profile.email}</div></div></div>`;
             document.getElementById('user-info-desktop').innerHTML = userInfoHtml;
             document.getElementById('user-info-mobile').innerHTML = userInfoHtml;
-            document.getElementById('login-error-msg').classList.add('hidden'); // Hide any previous errors
+            document.getElementById('login-error-msg').classList.add('hidden');
 
             fetchData(ID_TOKEN);
             fetchAndRenderResources();
-            addEventListeners(); // Event listeners are added *after* login
+            addEventListeners();
         }
 
-        /**
-         * NEW: Handles an expired or invalid token.
-         * Clears storage and shows the login screen with an error.
-         */
         function handleTokenExpired(message) {
-            localStorage.removeItem('sva_id_token'); // Clear the bad token
+            localStorage.removeItem('sva_id_token');
             ID_TOKEN = null;
             portalData = {};
 
-            // Hide portal, show login screen
             document.getElementById('loading-overlay').classList.add('hidden');
             document.getElementById('portal-container').classList.add('hidden');
             document.getElementById('login-container').classList.remove('hidden');
-            showLoginScreen('login-screen'); // Make sure the main login screen is visible
+            showLoginScreen('login-screen');
 
-            // Display the error message
             document.getElementById('login-error-text').textContent = message || "Your session has expired. Please log in again to continue.";
             document.getElementById('login-error-msg').classList.remove('hidden');
         }
 
         function signOut() {
             google.accounts.id.disableAutoSelect();
-            localStorage.removeItem('sva_id_token'); // <-- CLEAR THE TOKEN
+            localStorage.removeItem('sva_id_token');
             ID_TOKEN = null;
             portalData = {};
-            window.location.href = window.location.pathname; // Reload to a clean login page
+            window.location.href = window.location.pathname;
         }
-        
-        // --- HELPER FUNCTIONS ---
+
+        // --- HELPERS ---
         function formatGoogleDate(date) { return date.toISOString().split('T')[0].replace(/-/g, ''); }
-        
+
         function generateICalLink(event) {
             const startDate = new Date(event.date);
             const endDate = new Date(startDate);
@@ -798,8 +911,8 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
             const location = `&location=${encodeURIComponent('Silicon Valley Academy')}`;
             return `${baseUrl}${title}${dates}${details}${location}`;
         }
-        
-        
+
+
         // --- DATA FETCH & RENDER ---
         function fetchData(token) {
             fetch(`${WEB_APP_URL}?token=${token}`)
@@ -807,7 +920,6 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                 .then(data => {
                     document.getElementById('loading-overlay').classList.add('hidden');
                     if (data.status !== 'success' || !data.data) {
-                        // Check for explicit auth failure from backend
                         if (data.error && data.error.includes("Authentication failed")) {
                            return handleTokenExpired(data.error);
                         }
@@ -815,11 +927,11 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                     }
                     portalData = data.data;
                     document.getElementById('portal-container').classList.remove('hidden');
-                    
+
                     renderDashboard(portalData.students);
                     renderActionsTab(portalData.students);
                     populateEventFilter(portalData.allEvents);
-                    applyAndRenderFilters(); 
+                    applyAndRenderFilters();
                     renderMySignups(portalData.volunteerProgress);
                     renderMySignupsList(portalData.mySignups);
                     renderMobileMenu();
@@ -856,7 +968,7 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                     if (document.getElementById('quicklinks-content')) document.getElementById('quicklinks-content').innerHTML = '<p class="text-red-500">Could not load quick links.</p>';
                 });
         }
-        
+
         function renderFAQ(faqItems) {
             const container = document.getElementById('faq-content');
             if (!container) return;
@@ -881,7 +993,7 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
             }
             container.innerHTML = `<ul class="space-y-4">` + forms.map(form => `
                 <li class="border-b border-slate-200 pb-3 last:border-b-0">
-                    <a href="${form.link}" target="_blank" class="text-teal-600 hover:underline font-semibold">${form.title}</a>
+                    <a href="${form.link}" target="_blank" rel="noopener" class="text-teal-600 hover:underline font-semibold">${form.title}</a>
                     <p class="text-sm text-slate-600 mt-1">${form.description}</p>
                 </li>
             `).join('') + `</ul>`;
@@ -890,13 +1002,12 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
         function renderNewsletters(newsletters) {
             const container = document.getElementById('newsletters-content');
             if (!container) return;
-
             let listItems = '';
             if (!newsletters || newsletters.length === 0) {
                 listItems = '<li><p class="text-slate-500">No newsletters found.</p></li>';
             } else {
-                listItems = newsletters.map(n => 
-                    `<li class="border-b border-slate-200 pb-2 last:border-b-0"><a href="${n.link}" target="_blank" class="text-teal-600 hover:underline">${n.title}</a></li>`
+                listItems = newsletters.map(n =>
+                    `<li class="border-b border-slate-200 pb-2 last:border-b-0"><a href="${n.link}" target="_blank" rel="noopener" class="text-teal-600 hover:underline">${n.title}</a></li>`
                 ).join('');
             }
             container.innerHTML = `<ul class="space-y-3">${listItems}</ul>`;
@@ -905,73 +1016,73 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
         function renderQuickLinks(links) {
             const container = document.getElementById('quicklinks-content');
             if (!container) return;
-
             let listItems = '';
             if (!links || links.length === 0) {
                 listItems = '<li><p class="text-slate-500">No links found.</p></li>';
             } else {
-                listItems = links.map(l => 
-                    `<li class="border-b border-slate-200 pb-2 last:border-b-0"><a href="${l.link}" target="_blank" class="text-teal-600 hover:underline">${l.title}</a></li>`
+                listItems = links.map(l =>
+                    `<li class="border-b border-slate-200 pb-2 last:border-b-0"><a href="${l.link}" target="_blank" rel="noopener" class="text-teal-600 hover:underline">${l.title}</a></li>`
                 ).join('');
             }
             container.innerHTML = `<ul class="space-y-3">${listItems}</ul>`;
         }
 
         function renderLiveEvent(liveEventData) {
-    const container = document.getElementById('live-event');
-    if (!container) return;
-    if (liveEventData && liveEventData.length > 0) {
-        const eventsHtml = liveEventData.map(liveEvent => {
-            if (!liveEvent.link) return ''; 
-            let embedUrl = '';
-            if (liveEvent.link.includes('vimeo.com/')) {
-                try {
-                    const url = new URL(liveEvent.link);
-                    url.searchParams.set('autoplay', '1');
-                    url.searchParams.set('title', '0');
-                    url.searchParams.set('byline', '0');
-                    url.searchParams.set('portrait', '0');
-                    embedUrl = url.toString();
-                } catch (e) { embedUrl = liveEvent.link; }
-            }
-            if (embedUrl) {
-                return `
-                    <div class="mb-8 -mx-4 sm:mx-0">
-                        <div class="bg-white sm:rounded-lg shadow-sm overflow-hidden">
-                            <div class="relative w-full h-[600px] sm:h-0 sm:pb-[56.25%]">
-                                <iframe 
-                                    src="${embedUrl}" 
-                                    frameborder="0" 
-                                    allow="autoplay; fullscreen; picture-in-picture" 
-                                    allowfullscreen 
-                                    style="position:absolute;top:0;left:0;width:100%;height:100%;" 
-                                    class="sm:rounded-t-lg">
-                                </iframe>
+            const container = document.getElementById('live-event');
+            if (!container) return;
+            if (liveEventData && liveEventData.length > 0) {
+                const eventsHtml = liveEventData.map(liveEvent => {
+                    if (!liveEvent.link) return '';
+                    let embedUrl = '';
+                    if (liveEvent.link.includes('vimeo.com/')) {
+                        try {
+                            const url = new URL(liveEvent.link);
+                            url.searchParams.set('autoplay', '1');
+                            url.searchParams.set('title', '0');
+                            url.searchParams.set('byline', '0');
+                            url.searchParams.set('portrait', '0');
+                            embedUrl = url.toString();
+                        } catch (e) { embedUrl = liveEvent.link; }
+                    }
+                    if (embedUrl) {
+                        return `
+                            <div class="mb-8 -mx-4 sm:mx-0">
+                                <div class="bg-white sm:rounded-lg shadow-sm overflow-hidden">
+                                    <div class="relative w-full h-[600px] sm:h-0 sm:pb-[56.25%]">
+                                        <iframe
+                                            src="${embedUrl}"
+                                            frameborder="0"
+                                            allow="autoplay; fullscreen; picture-in-picture"
+                                            allowfullscreen
+                                            title="${liveEvent.title || 'Live event'}"
+                                            style="position:absolute;top:0;left:0;width:100%;height:100%;"
+                                            class="sm:rounded-t-lg">
+                                        </iframe>
+                                    </div>
+                                    <div class="p-4 sm:p-6">
+                                         <h2 class="text-2xl sm:text-3xl font-bold text-slate-800">${liveEvent.title || 'Live School Event'}</h2>
+                                    </div>
+                                </div>
                             </div>
-                            <div class="p-4 sm:p-6">
-                                 <h2 class="text-2xl sm:text-3xl font-bold text-slate-800">${liveEvent.title || 'Live School Event'}</h2>
-                            </div>
-                        </div>
+                        `;
+                    }
+                    return '';
+                }).join('');
+                container.innerHTML = eventsHtml || `<h2 class="text-3xl font-bold text-slate-900 mb-6">Live Events</h2><div class="bg-white p-8 rounded-xl shadow-sm border text-center"><p class="text-red-500">No valid live event links available. Please check again later.</p></div>`;
+            } else {
+                container.innerHTML = `
+                    <h2 class="text-3xl font-bold text-slate-900 mb-6">Live Event</h2>
+                    <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center">
+                        <i class="ph-video-camera-slash text-6xl text-slate-400"></i>
+                        <p class="mt-4 text-slate-600">There are no live events currently scheduled.</p>
                     </div>
                 `;
             }
-            return '';
-        }).join('');
-        container.innerHTML = eventsHtml || `<h2 class="text-3xl font-bold text-slate-900 mb-6">Live Events</h2><div class="bg-white p-8 rounded-xl shadow-sm border text-center"><p class="text-red-500">No valid live event links available. Please check again later.</p></div>`;
-    } else {
-        container.innerHTML = `
-            <h2 class="text-3xl font-bold text-slate-900 mb-6">Live Event</h2>
-            <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 text-center">
-                <i class="ph-video-camera-slash text-6xl text-slate-400"></i>
-                <p class="mt-4 text-slate-600">There are no live events currently scheduled.</p>
-            </div>
-        `;
-    }
-}
-        
+        }
+
         function renderDashboard(students) {
             const contentContainer = document.getElementById('student-content-container');
-            contentContainer.innerHTML = ''; 
+            contentContainer.innerHTML = '';
             if (!students || students.length === 0) {
                 contentContainer.innerHTML = '<div class="bg-white p-6 rounded-lg shadow-sm"><p class="text-center text-slate-600">No students found for this parent account.</p></div>';
                 return;
@@ -1029,7 +1140,7 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                             <div class="mb-8">
                                 <h4 class="font-semibold text-lg text-slate-700 mb-3">Quick Actions</h4>
                                 <div class="flex flex-wrap gap-3">
-                                    <button data-student-id="${student.uniqueStudentId}" class="report-absence-nav-btn inline-flex items-center bg-amber-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-amber-200 transition-colors">Priority Enrollment 2026/2027</button>
+                                    <button data-student-id="${student.uniqueStudentId}" class="report-absence-nav-btn inline-flex items-center bg-amber-200 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-amber-300 transition-colors">Priority Enrollment 2026/2027</button>
                                     <button data-student-id="${student.uniqueStudentId}" class="report-absence-nav-btn inline-flex items-center bg-teal-100 text-teal-800 font-semibold py-2 px-4 rounded-lg hover:bg-teal-200 transition-colors">Report Absence/Tardy</button>
                                     <button onclick="switchToTabAndSubTab('faq-forms', 'quicklinks-content');" class="inline-flex items-center bg-slate-100 text-slate-800 font-semibold py-2 px-4 rounded-lg hover:bg-slate-200 transition-colors">View Student Handbook</button>
                                 </div>
@@ -1062,7 +1173,7 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                 <div class="flex flex-col space-y-2 items-end w-24">
                     ${volunteerButtonHtml}
                     <div class="relative inline-block text-left w-full">
-                        <button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-md border border-slate-300 shadow-sm px-3 py-1 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${event.name}" data-event-date="${event.date}"><i class="ph-plus-circle mr-1"></i> Add</button>
+                        <button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-md border border-slate-300 shadow-sm px-3 py-1 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${event.name}" data-event-date="${event.date}" aria-label="Add ${event.name} to calendar"><i class="ph-plus-circle mr-1"></i> Add</button>
                         <div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10">
                             <div class="py-1">
                                 <a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">Google Calendar</a>
@@ -1073,7 +1184,7 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                 </div>
             </li>`;
         }
-        
+
         function renderMobileMenu() {
             const desktopNav = document.getElementById('main-nav');
             const mobileNavContainer = document.getElementById('main-nav-mobile');
@@ -1086,7 +1197,6 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
             });
         }
 
-        // --- RENDER ACTIONS TAB (The Core Logic) ---
         function renderActionsTab(students) {
             const container = document.getElementById('actions-content-container');
             if (!students || students.length === 0) {
@@ -1095,11 +1205,10 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
             }
 
             const now = new Date();
-            
+
             // 1. RE-ENROLLMENT CARD
             let enrollmentCardHtml = '';
             if (now < PRIORITY_DEADLINE) {
-                // Active Priority
                 enrollmentCardHtml = `
                 <div class="bg-white p-6 rounded-xl border-l-4 border-amber-500 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden group">
                     <div class="absolute top-0 right-0 bg-amber-100 text-amber-700 text-xs font-bold px-3 py-1 rounded-bl-lg">PRIORITY OPEN</div>
@@ -1110,7 +1219,7 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                                 <h3 class="text-xl font-bold text-slate-900">2026-2027 Current Students Re-enrollment</h3>
                                 <p class="text-amber-800 mt-1">Secure your child's spot for the upcoming academic year.</p>
                                 <p class="text-amber-600 mt-1">Step 1: Pay enrollment fee.</p>
-                                <p class="text-amber-600 mt-1">Step 2: Receive a link to finalize the enrollment process. </p>
+                                <p class="text-amber-600 mt-1">Step 2: Receive a link to finalize the enrollment process.</p>
                                 <p class="text-slate-600 text-sm mt-1">Discounted Fee: <span class="font-bold text-green-600">$150</span> <span class="text-slate-400 line-through text-xs ml-1">$250</span></p>
                                 <p class="text-xs text-red-500 font-medium mt-2"><i class="ph-clock mr-1"></i>Ends Feb 16 @ 8:30 AM</p>
                             </div>
@@ -1121,7 +1230,6 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                     </div>
                 </div>`;
             } else {
-                // Expired
                 enrollmentCardHtml = `
                 <div class="bg-white p-6 rounded-xl border-l-4 border-slate-300 shadow-sm relative opacity-75 hover:opacity-100 transition-opacity">
                     <div class="absolute top-0 right-0 bg-slate-100 text-slate-500 text-xs font-bold px-3 py-1 rounded-bl-lg">WINDOW CLOSED</div>
@@ -1130,10 +1238,10 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                             <div class="p-3 bg-slate-50 rounded-lg text-slate-400"><i class="ph-student text-3xl"></i></div>
                             <div>
                                 <h3 class="text-xl font-bold text-slate-700">2026-2027 Current Students Re-enrollment</h3>
-                                <p class="text-slate-500 text-sm mt-1">Standard Fee: $250. Priority pricing has ended - Continue on Gradelink.</p>
+                                <p class="text-slate-500 text-sm mt-1">Standard Fee: $250. Priority pricing has ended &mdash; continue on Gradelink.</p>
                             </div>
                         </div>
-                        <a href="https://secure.gradelink.com/lkg/Gradelink.xml?contenttype=text%2Fhtml&Language=English&v=1.0" target="_blank" class="w-full sm:w-auto text-center bg-slate-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-slate-700 transition">
+                        <a href="https://secure.gradelink.com/lkg/Gradelink.xml?contenttype=text%2Fhtml&Language=English&v=1.0" target="_blank" rel="noopener" class="w-full sm:w-auto text-center bg-slate-600 text-white font-bold py-2.5 px-6 rounded-lg hover:bg-slate-700 transition">
                             Apply, Pay, Application Status on Gradelink
                         </a>
                     </div>
@@ -1146,7 +1254,6 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
 
             if (now >= SIBLING_START && now < SIBLING_END) {
                 if (hasSiblings) {
-                    // Submitted (Green)
                     siblingCardHtml = `
                     <div class="bg-white p-6 rounded-xl border-l-4 border-green-500 shadow-sm hover:shadow-md transition-shadow">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -1154,7 +1261,7 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                                 <div class="p-3 bg-green-50 rounded-lg text-green-600"><i class="ph-check-circle text-3xl"></i></div>
                                 <div>
                                     <h3 class="text-xl font-bold text-slate-900">Sibling Request Submitted</h3>
-                                    <p class="text-amber-600 mt-1">Apply, Pay, and Check Application Status on Gradelink.</p>
+                                    <p class="text-amber-600 mt-1">Apply, pay, and check application status on Gradelink.</p>
                                     <p class="text-slate-600 text-sm mt-1">For the following students: <span class="font-medium">${portalData.submittedSiblings.map(s=>s.name).join(', ')}</span></p>
                                 </div>
                             </div>
@@ -1164,7 +1271,6 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                         </div>
                     </div>`;
                 } else {
-                    // Active (Orange)
                     siblingCardHtml = `
                     <div class="bg-white p-6 rounded-xl border-l-4 border-orange-500 shadow-sm hover:shadow-md transition-shadow group relative">
                         <div class="absolute top-0 right-0 bg-orange-100 text-orange-700 text-xs font-bold px-3 py-1 rounded-bl-lg">NEW</div>
@@ -1175,7 +1281,7 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                                     <h3 class="text-xl font-bold text-slate-900">Sibling Priority Window Enrollment</h3>
                                     <p class="text-slate-600 text-sm mt-1">Enroll new siblings (PreK - 8th) for next year.</p>
                                     <p class="text-amber-600 mt-1">Step 1: Register here.</p>
-                                    <p class="text-amber-600 mt-1">Step 2: Receive a link to finalize the enrollment process on Gradelink. </p>
+                                    <p class="text-amber-600 mt-1">Step 2: Receive a link to finalize the enrollment process on Gradelink.</p>
                                     <p class="text-xs text-orange-600 font-medium mt-1">Closes Feb 23</p>
                                 </div>
                             </div>
@@ -1186,22 +1292,22 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                     </div>`;
                 }
             } else if (now < SIBLING_START) {
-                // Upcoming
-                siblingCardHtml = `<div class="bg-slate-50 border border-dashed border-slate-300 p-6 rounded-xl text-center"><p class="text-slate-400 font-medium">Sibling Enrollment Opens Feb 16 at 8:30 am PST</p></div>`;
+                siblingCardHtml = `<div class="bg-slate-50 border border-dashed border-slate-300 p-6 rounded-xl text-center"><p class="text-slate-400 font-medium">Sibling Enrollment Opens Feb 16 at 8:30 AM PST</p></div>`;
             }
 
             // 3. ABSENCE FORM
             const studentOptions = students.map(s => `<option value="${s.uniqueStudentId}">${s.studentName}</option>`).join('');
+            const today = todayISO();
             const absenceFormHtml = `
             <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm">
                 <div class="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
                     <div class="bg-teal-50 p-2 rounded text-teal-600"><i class="ph-calendar-x text-xl"></i></div>
                     <h3 class="text-lg font-bold text-slate-800">Report Absence or Tardy</h3>
                 </div>
-                <form id="absence-form" class="space-y-4">
+                <form id="absence-form" class="space-y-4" novalidate>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Student</label>
+                            <label for="student-select" class="block text-xs font-bold text-slate-500 uppercase mb-1">Student</label>
                             <select id="student-select" class="w-full rounded-lg border-slate-300 text-sm py-2.5">${studentOptions}</select>
                         </div>
                         <div>
@@ -1213,15 +1319,15 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                         </div>
                     </div>
                     <div id="absence-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Start Date</label><input type="date" id="absence-start" class="w-full rounded-lg border-slate-300 text-sm py-2.5"></div>
-                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">End Date</label><input type="date" id="absence-end" class="w-full rounded-lg border-slate-300 text-sm py-2.5"></div>
+                        <div><label for="absence-start" class="block text-xs font-bold text-slate-500 uppercase mb-1">Start Date</label><input type="date" id="absence-start" min="${today}" class="w-full rounded-lg border-slate-300 text-sm py-2.5"></div>
+                        <div><label for="absence-end" class="block text-xs font-bold text-slate-500 uppercase mb-1">End Date</label><input type="date" id="absence-end" min="${today}" class="w-full rounded-lg border-slate-300 text-sm py-2.5"></div>
                     </div>
                     <div id="tardy-fields" class="hidden grid-cols-1 md:grid-cols-2 gap-4">
-                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Expected Arrival</label><input type="time" id="tardy-start-time" class="w-full rounded-lg border-slate-300 text-sm py-2.5"></div>
-                        <div><label class="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label><input type="date" id="tardy-end-time" class="w-full rounded-lg border-slate-300 text-sm py-2.5"></div>
+                        <div><label for="tardy-start-time" class="block text-xs font-bold text-slate-500 uppercase mb-1">Expected Arrival</label><input type="time" id="tardy-start-time" class="w-full rounded-lg border-slate-300 text-sm py-2.5"></div>
+                        <div><label for="tardy-end-time" class="block text-xs font-bold text-slate-500 uppercase mb-1">Date</label><input type="date" id="tardy-end-time" min="${today}" class="w-full rounded-lg border-slate-300 text-sm py-2.5"></div>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-slate-500 uppercase mb-1">Reason</label>
+                        <label for="absence-reason" class="block text-xs font-bold text-slate-500 uppercase mb-1">Reason</label>
                         <select id="absence-reason" class="w-full rounded-lg border-slate-300 text-sm py-2.5">
                             <option>Sick</option><option>Travel</option><option>Appointment</option><option>Other</option>
                         </select>
@@ -1230,7 +1336,7 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                         <textarea id="other-reason-text" rows="2" class="w-full rounded-lg border-slate-300 text-sm" placeholder="Please specify..."></textarea>
                     </div>
                     <textarea id="absence-comments" rows="2" class="w-full rounded-lg border-slate-300 text-sm" placeholder="Optional comments..."></textarea>
-                    <button id="send-notification-btn" type="submit" class="w-full bg-slate-800 text-white font-bold py-3 rounded-lg hover:bg-slate-900 transition">Send Notification</button>
+                    <button id="send-notification-btn" type="submit" class="w-full bg-slate-800 text-white font-bold py-3 rounded-lg hover:bg-slate-900 transition disabled:opacity-60 disabled:cursor-not-allowed">Send Notification</button>
                 </form>
             </div>`;
 
@@ -1245,18 +1351,18 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
                         <div class="bg-purple-50 p-2 rounded text-purple-600"><i class="ph-car text-xl"></i></div>
                         <div><h3 class="text-lg font-bold text-slate-800">One-Time Pickup Auth</h3><p class="text-xs text-slate-500">K-8th Only</p></div>
                     </div>
-                    <form id="pickup-form" class="space-y-4">
+                    <form id="pickup-form" class="space-y-4" novalidate>
                         <div><label class="block text-xs font-bold text-slate-500 uppercase mb-2">Select Student(s)</label><div class="grid grid-cols-1 sm:grid-cols-2 gap-2">${checkboxes}</div></div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="text" id="pickup-name" placeholder="Auth Person Full Name" class="w-full rounded-lg border-slate-300 text-sm">
+                            <input type="text" id="pickup-name" autocomplete="name" placeholder="Auth Person Full Name" class="w-full rounded-lg border-slate-300 text-sm">
                             <input type="text" id="pickup-relationship" placeholder="Relationship" class="w-full rounded-lg border-slate-300 text-sm">
                         </div>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="date" id="pickup-date" class="w-full rounded-lg border-slate-300 text-sm">
-                            <input type="email" id="pickup-email" placeholder="Person's Email (Opt)" class="w-full rounded-lg border-slate-300 text-sm">
+                            <input type="date" id="pickup-date" min="${today}" class="w-full rounded-lg border-slate-300 text-sm">
+                            <input type="email" id="pickup-email" autocomplete="email" placeholder="Person's Email (Opt)" class="w-full rounded-lg border-slate-300 text-sm">
                         </div>
                         <textarea id="pickup-reason" rows="1" placeholder="Note (Optional)" class="w-full rounded-lg border-slate-300 text-sm"></textarea>
-                        <button id="send-pickup-btn" type="submit" class="w-full bg-slate-800 text-white font-bold py-3 rounded-lg hover:bg-slate-900 transition">Authorize Pickup</button>
+                        <button id="send-pickup-btn" type="submit" class="w-full bg-slate-800 text-white font-bold py-3 rounded-lg hover:bg-slate-900 transition disabled:opacity-60 disabled:cursor-not-allowed">Authorize Pickup</button>
                     </form>
                 </div>`;
             }
@@ -1265,59 +1371,54 @@ const SIBLING_END       = new Date('2026-02-23T08:30:00-08:30');
         }
 
         // --- SIBLING ENROLLMENT FUNCTIONS ---
-function renderSiblingInputs() {
-    const count = document.getElementById('sibling-count').value;
-    const container = document.getElementById('sibling-inputs-container');
-    const submitBtn = document.getElementById('btn-submit-sibling');
-    container.innerHTML = '';
-    
-    if (count > 0) {
-        submitBtn.classList.remove('hidden');
-        for(let i=1; i<=count; i++) {
-            container.innerHTML += `
-            <div class="p-3 bg-orange-50 border border-orange-200 rounded">
-                <h5 class="font-bold text-orange-800 text-sm mb-2">Sibling #${i}</h5>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <input type="text" class="sib-name w-full p-2 border border-orange-200 rounded focus:ring-orange-500" placeholder="Full Name (First Last)">
-                    <select class="sib-grade w-full p-2 border border-orange-200 rounded focus:ring-orange-500">
-                        <option value="">Select Grade...</option>
-                        <option value="Pre-K">Pre-K</option><option value="KG">KG</option>
-                        <option value="1">1st</option><option value="2">2nd</option>
-                        <option value="3">3rd</option><option value="4">4th</option>
-                        <option value="5">5th</option><option value="6">6th</option>
-                        <option value="7">7th</option><option value="8">8th</option>
-                    </select>
-                </div>
-            </div>`;
-        }
-    } else {
-        submitBtn.classList.add('hidden');
-    }
-}
+        function renderSiblingInputs() {
+            const count = document.getElementById('sibling-count').value;
+            const container = document.getElementById('sibling-inputs-container');
+            const submitBtn = document.getElementById('btn-submit-sibling');
+            container.innerHTML = '';
 
+            if (count > 0) {
+                submitBtn.classList.remove('hidden');
+                for (let i = 1; i <= count; i++) {
+                    container.innerHTML += `
+                    <div class="p-3 bg-orange-50 border border-orange-200 rounded">
+                        <h5 class="font-bold text-orange-800 text-sm mb-2">Sibling #${i}</h5>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <input type="text" class="sib-name w-full p-2 border border-orange-200 rounded focus:ring-orange-500" placeholder="Full Name (First Last)">
+                            <select class="sib-grade w-full p-2 border border-orange-200 rounded focus:ring-orange-500">
+                                <option value="">Select Grade...</option>
+                                <option value="Pre-K">Pre-K</option><option value="KG">KG</option>
+                                <option value="1">1st</option><option value="2">2nd</option>
+                                <option value="3">3rd</option><option value="4">4th</option>
+                                <option value="5">5th</option><option value="6">6th</option>
+                                <option value="7">7th</option><option value="8">8th</option>
+                            </select>
+                        </div>
+                    </div>`;
+                }
+            } else {
+                submitBtn.classList.add('hidden');
+            }
+        }
 
         function openSiblingModal() {
             openModal('sibling-modal');
             const submitted = portalData.submittedSiblings || [];
-            
+
             if (submitted.length > 0) {
-                // Show Success/Summary Screen
                 document.getElementById('sibling-step-1').classList.add('hidden');
                 document.getElementById('sibling-step-success').classList.remove('hidden');
-                
-                // Show Confirmation ID
+
                 const confID = submitted[0].confirmationId || "Sent via Email, refresh page to see";
                 document.getElementById('sibling-conf-id').innerText = confID;
 
-                // --- FIX: Add "Register Another" Button ---
                 const successContainer = document.getElementById('sibling-step-success');
-                if(!document.getElementById('btn-add-another')) {
+                if (!document.getElementById('btn-add-another')) {
                     const btn = document.createElement('button');
                     btn.id = 'btn-add-another';
                     btn.className = "mt-6 text-sm text-slate-400 hover:text-orange-600 underline w-full text-center transition cursor-pointer";
                     btn.innerText = "Register another sibling?";
                     btn.onclick = () => {
-                        // Reset the form for a new entry
                         document.getElementById('sibling-step-success').classList.add('hidden');
                         document.getElementById('sibling-step-1').classList.remove('hidden');
                         document.getElementById('sibling-count').value = 0;
@@ -1326,9 +1427,8 @@ function renderSiblingInputs() {
                     };
                     successContainer.appendChild(btn);
                 }
-                
+
             } else {
-                // Show Fresh Form
                 document.getElementById('sibling-step-1').classList.remove('hidden');
                 document.getElementById('sibling-step-success').classList.add('hidden');
                 document.getElementById('sibling-inputs-container').innerHTML = '';
@@ -1337,65 +1437,63 @@ function renderSiblingInputs() {
             }
         }
 
+        function submitSiblingEnrollment() {
+            const inputs = document.querySelectorAll('#sibling-inputs-container .bg-orange-50');
+            const siblings = [];
+            let valid = true;
 
-        
-function submitSiblingEnrollment() {
-    const inputs = document.querySelectorAll('#sibling-inputs-container .bg-orange-50');
-    const siblings = [];
-    let valid = true;
+            inputs.forEach(div => {
+                const name = div.querySelector('.sib-name').value.trim();
+                const grade = div.querySelector('.sib-grade').value;
+                if (!name || !grade) valid = false;
+                siblings.push({ name, grade });
+            });
 
-    inputs.forEach(div => {
-        const name = div.querySelector('.sib-name').value.trim();
-        const grade = div.querySelector('.sib-grade').value;
-        if(!name || !grade) valid = false;
-        siblings.push({ name, grade });
-    });
+            const errEl = document.getElementById('sibling-error');
+            if (!valid) {
+                errEl.textContent = "Please fill in name and grade for all siblings.";
+                errEl.classList.remove('hidden');
+                return;
+            }
+            errEl.classList.add('hidden');
 
-    if(!valid) return alert("Please fill in Name and Grade for all siblings.");
+            const btn = document.getElementById('btn-submit-sibling');
+            btn.textContent = "Submitting...";
+            btn.disabled = true;
 
-    const btn = document.getElementById('btn-submit-sibling');
-    btn.textContent = "Submitting...";
-    btn.disabled = true;
+            fetch(WEB_APP_URL, {
+                method: 'POST', mode: 'no-cors',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    action: 'siblingEnrollment',
+                    token: ID_TOKEN,
+                    siblings: siblings
+                })
+            }).then(() => {
+                // Optimistic local update — no full page refetch needed.
+                const newSiblings = siblings.map(s => ({
+                    name: s.name,
+                    grade: s.grade,
+                    confirmationId: 'Sent via Email'
+                }));
+                if (!portalData.submittedSiblings) portalData.submittedSiblings = [];
+                portalData.submittedSiblings.push(...newSiblings);
 
-    fetch(WEB_APP_URL, {
-        method: 'POST', mode: 'no-cors',
-        headers: {'Content-Type': 'application/json'},
-        body: JSON.stringify({
-            action: 'siblingEnrollment',
-            token: ID_TOKEN,
-            siblings: siblings
-        })
-    }).then(() => {
-        // 1. Simulate adding to local data so UI updates immediately
-        const newSiblings = siblings.map(s => ({
-            name: s.name, 
-            grade: s.grade, 
-            confirmationId: 'Sent via Email'
-        }));
-        
-        if (!portalData.submittedSiblings) portalData.submittedSiblings = [];
-        portalData.submittedSiblings.push(...newSiblings);
+                renderActionsTab(portalData.students);
 
-        // 2. Refresh the Tab to show the Green Card
-        renderActionsTab(portalData.students);
+                document.getElementById('sibling-step-1').classList.add('hidden');
+                document.getElementById('sibling-step-success').classList.remove('hidden');
+                document.querySelector('#sibling-step-success h3').innerText = "Request Submitted!";
 
-        // 3. Show Success Message in Modal
-        document.getElementById('sibling-step-1').classList.add('hidden');
-        document.getElementById('sibling-step-success').classList.remove('hidden');
-        
-        // Reset Text for specific "Just Submitted" context
-        document.querySelector('#sibling-step-success h3').innerText = "Request Submitted!";
-        // ... (standard success message) ...
-        
-    }).catch(e => {
-        console.error(e);
-        alert("Error submitting. Please check your connection.");
-        btn.disabled = false;
-        btn.textContent = "Submit Request";
-    });
-}
+                showToast('Sibling enrollment request submitted.', 'success');
+            }).catch(e => {
+                console.error(e);
+                showToast('Could not submit. Please check your connection and try again.', 'error');
+                btn.disabled = false;
+                btn.textContent = "Submit Request";
+            });
+        }
 
-        
 
         function renderVolunteering(opportunities) {
             const list = document.getElementById('volunteering-list');
@@ -1428,10 +1526,10 @@ function submitSiblingEnrollment() {
                 list.appendChild(card);
             });
         }
-        
+
         function applyAndRenderFilters() {
             if (!portalData.volunteering || !document.getElementById('filter-time')) {
-                if(portalData.volunteering) renderVolunteering(portalData.volunteering);
+                if (portalData.volunteering) renderVolunteering(portalData.volunteering);
                 return;
             }
             const signedUpOppIds = portalData.mySignups.filter(signup => signup.status !== 'Withdrawn').map(signup => signup.opportunityId);
@@ -1468,33 +1566,27 @@ function submitSiblingEnrollment() {
                 eventFilter.appendChild(option);
             });
         }
-        
-        // --- MATCHING INFO LOGIC (UPDATED) ---
+
         function getMatchingInfoHtml(signups) {
             if (!signups) return '';
-            
-            // Calculate date for 2 months ago
+
             const twoMonthsAgo = new Date();
             twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
             twoMonthsAgo.setHours(0,0,0,0);
-            
-            // Filter signups: Completed AND within last 2 months
+
             const validSignups = signups.filter(s => {
                 const d = new Date(s.date);
-                // Note: s.status check depends on exact casing in your sheet ('Completed')
                 return s.status === 'Completed' && d >= twoMonthsAgo && d <= new Date();
             }).sort((a,b) => new Date(b.date) - new Date(a.date));
 
-            // Generate table rows
             const rows = validSignups.length > 0 ? validSignups.map(s => `
                 <tr class="border-b border-slate-100 last:border-0 hover:bg-slate-50 transition-colors">
                     <td class="px-4 py-3 whitespace-nowrap text-slate-700">${formatDate(s.date)}</td>
                     <td class="px-4 py-3 text-slate-700 font-medium">${s.title}</td>
-                    <td class="px-4 py-3 font-bold text-teal-600">${s.hours || '-'} hrs</td> 
+                    <td class="px-4 py-3 font-bold text-teal-600">${s.hours || '-'} hrs</td>
                 </tr>
             `).join('') : `<tr><td colspan="3" class="px-4 py-4 text-center text-slate-500 italic">No completed volunteer hours found in the last 2 months.</td></tr>`;
 
-            // Return the full card HTML
             return `
             <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mt-8">
                 <div class="flex flex-col md:flex-row items-start gap-6">
@@ -1536,9 +1628,8 @@ function submitSiblingEnrollment() {
 
         function renderMySignups(progress) {
             const container = document.getElementById('my-signups-content');
-            //const selfReportFormHtml = `<form id="self-report-form"><div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8"><h3 class="text-xl font-semibold text-slate-800 mb-2">Self-Report Off-Portal Hours</h3><p class="text-sm text-slate-600 mb-4">Did you volunteer for a task not listed in the portal (e.g., driving for a field trip, at-home prep)? Please submit the details below for approval.</p><div class="space-y-4"><div class="grid grid-cols-1 md:grid-cols-2 gap-4"><div><label for="report-date" class="block text-sm font-medium text-slate-700">Date of Activity</label><input type="date" id="report-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></div><div><label for="report-duration" class="block text-sm font-medium text-slate-700">Duration</label><select id="report-duration" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required><option value="CUST-30M">30 Minutes</option><option value="CUST-1H">1 Hour</option><option value="CUST-2H">2 Hours</option><option value="CUST-3H">3 Hours</option><option value="CUST-4H">4 Hours</option><option value="CUST-5H">5 Hours</option><option value="CUST-6H">6 Hours</option><option value="CUST-7H">7 Hours</option><option value="CUST-8H">8 Hours</option></select></div></div><div><label for="report-description" class="block text-sm font-medium text-slate-700">Brief Description of Activity and Who Can Verify It</label><textarea id="report-description" rows="3" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required></textarea></div><button type="submit" id="self-report-btn" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">Submit for Approval</button></div></div></form>`;
             const selfReportFormHtml = `
-<form id="self-report-form">
+<form id="self-report-form" novalidate>
   <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8">
     <div class="flex flex-col md:flex-row md:items-center justify-between mb-4 gap-2">
       <h3 class="text-xl font-semibold text-slate-800">Self-Report Off-Portal Hours</h3>
@@ -1549,7 +1640,7 @@ function submitSiblingEnrollment() {
 
     <div class="bg-slate-50 border-l-4 border-teal-500 p-4 mb-6">
       <p class="text-sm text-slate-700 leading-relaxed">
-        <strong>Before you submit:</strong> To ensure quick approval and accurate records, please verify that this task is <strong>not</strong> already listed in the portal. 
+        <strong>Before you submit:</strong> To ensure quick approval and accurate records, please verify that this task is <strong>not</strong> already listed in the portal.
         <span class="block mt-1 italic text-slate-600">Note: Duplicate entries or double-counted hours will be declined during the review process.</span>
       </p>
     </div>
@@ -1562,7 +1653,7 @@ function submitSiblingEnrollment() {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label for="report-date" class="block text-sm font-medium text-slate-700">Date of Activity</label>
-          <input type="date" id="report-date" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
+          <input type="date" id="report-date" max="${todayISO()}" class="mt-1 block w-full rounded-md border-slate-300 shadow-sm focus:ring-teal-500 focus:border-teal-500" required>
         </div>
         <div>
           <label for="report-duration" class="block text-sm font-medium text-slate-700">Duration</label>
@@ -1586,7 +1677,7 @@ function submitSiblingEnrollment() {
       </div>
 
       <div class="flex flex-col sm:flex-row items-center gap-4">
-        <button type="submit" id="self-report-btn" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-8 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400">
+        <button type="submit" id="self-report-btn" class="w-full sm:w-auto inline-flex items-center justify-center bg-teal-600 text-white font-semibold py-2 px-8 rounded-lg hover:bg-teal-700 transition-colors disabled:bg-slate-400 disabled:cursor-not-allowed">
           Confirm & Submit for Approval
         </button>
         <p class="text-[11px] text-slate-400 italic">By clicking submit, I confirm these hours are accurate and unique.</p>
@@ -1596,11 +1687,9 @@ function submitSiblingEnrollment() {
 </form>`;
             const progressBarsHtml = `<div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 mb-8"><div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h3 class="text-lg font-semibold text-slate-800">Semester 1 Progress</h3><div class="mt-4"><div class="flex justify-between mb-1"><span class="text-base font-medium text-teal-700">Completed Hours</span><span class="text-sm font-medium text-teal-700" id="progress-text-s1"></span></div><div class="w-full bg-slate-200 rounded-full h-5 relative overflow-hidden"><div id="progress-bar-s1-inprogress" class="bg-orange-400 h-5 rounded-full" style="width: 0%"></div><div id="progress-bar-s1-completed" class="bg-teal-600 h-5 rounded-full absolute top-0 left-0" style="width: 0%"></div></div><div class="flex justify-between text-xs text-slate-500 mt-2"><span id="in-progress-text-s1"></span><span id="penalty-text-s1" class="text-red-600 font-semibold"></span></div></div></div><div><h3 class="text-lg font-semibold text-slate-800">Semester 2 Progress</h3><div class="mt-4"><div class="flex justify-between mb-1"><span class="text-base font-medium text-teal-700">Completed Hours</span><span class="text-sm font-medium text-teal-700" id="progress-text-s2"></span></div><div class="w-full bg-slate-200 rounded-full h-5 relative overflow-hidden"><div id="progress-bar-s2-inprogress" class="bg-orange-400 h-5 rounded-full" style="width: 0%"></div><div id="progress-bar-s2-completed" class="bg-teal-600 h-5 rounded-full absolute top-0 left-0" style="width: 0%"></div></div><div class="flex justify-between text-xs text-slate-500 mt-2"><span id="in-progress-text-s2"></span><span id="penalty-text-s2" class="text-red-600 font-semibold"></span></div></div></div></div></div>`;
             const signupListsHtml = `<div class="grid grid-cols-1 md:grid-cols-2 gap-8"><div><h3 class="text-xl font-semibold text-slate-700 mb-2">Upcoming Signups</h3><p class="text-sm text-slate-600 mb-4">You may withdraw up to 3 weeks (21 days) before the event.</p><div id="upcoming-signups-list" class="space-y-4"></div></div><div><h3 class="text-xl font-semibold text-slate-700 mb-4">Completed & Past Signups</h3><div id="completed-signups-list" class="space-y-4"></div></div></div>`;
-            
-            // Generate the new Matching Info HTML
+
             const matchingInfoHtml = getMatchingInfoHtml(portalData.mySignups);
 
-            // Append it to the end of the container
             container.innerHTML = selfReportFormHtml + progressBarsHtml + signupListsHtml + matchingInfoHtml;
 
             if (progress) {
@@ -1624,7 +1713,7 @@ function submitSiblingEnrollment() {
                 document.getElementById('penalty-text-s2').textContent = s2.penalty > 0 ? `+ ${s2.penalty} penalty hours` : '';
             }
         }
-        
+
         function renderMySignupsList(signups) {
             const upcomingList = document.getElementById('upcoming-signups-list');
             const completedList = document.getElementById('completed-signups-list');
@@ -1642,7 +1731,7 @@ function submitSiblingEnrollment() {
                     const daysUntilEvent = (eventDate - new Date()) / (1000 * 60 * 60 * 24);
                     const today = new Date();
                     today.setHours(0,0,0,0);
-                    
+
                     let actionButtonsHtml = '';
                     if (signup.status === 'Pending Approval') {
                         actionButtonsHtml = `<span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">Pending Approval</span>`;
@@ -1657,7 +1746,7 @@ function submitSiblingEnrollment() {
                         const calendarButtonHtml = `<div class="relative"><button type="button" class="add-to-calendar-btn w-full inline-flex items-center justify-center rounded-md border border-slate-300 shadow-sm px-3 py-2 bg-white text-sm font-medium text-slate-700 hover:bg-slate-50 focus:outline-none" data-event-name="${signup.title}" data-event-date="${signup.date}"><i class="ph-plus-circle mr-2"></i> Add to Calendar</button><div class="event-dropdown origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 focus:outline-none hidden z-10"><div class="py-1"><a href="#" class="google-cal-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">Google Calendar</a><a href="#" class="ical-link text-slate-700 block px-4 py-2 text-sm hover:bg-slate-100">iCal/Outlook</a></div></div></div>`;
                         actionButtonsHtml = `<div class="mt-4 sm:mt-0 sm:ml-6 flex-shrink-0 flex flex-col space-y-2 w-full sm:w-48">${qrButtonHtml}${calendarButtonHtml}${withdrawButtonHtml}</div>`;
                     }
-                    
+
                     item.innerHTML = `<div class="flex flex-col sm:flex-row justify-between"><div class="flex-grow"><h4 class="text-lg font-bold text-slate-900">${signup.title}</h4><div class="mt-2 space-y-1"><div class="flex items-center text-sm text-slate-500"><i class="ph-info mr-2"></i><p>${signup.description || 'No description provided.'}</p></div><div class="flex items-center text-sm text-slate-500"><i class="ph-calendar-blank mr-2"></i><p>${formatDate(signup.date)} at ${signup.time}</p></div><div class="flex items-center text-sm text-slate-500"><i class="ph-map-pin mr-2"></i><p>${signup.location}</p></div></div></div>${actionButtonsHtml}</div>`;
                     upcomingList.appendChild(item);
                 });
@@ -1675,15 +1764,50 @@ function submitSiblingEnrollment() {
             }
         }
 
+        // ============================================================
+        // OPTIMISTIC UPDATE HELPERS
+        // Mutate portalData locally + re-render only the affected section
+        // instead of doing a full fetchData() round-trip after every action.
+        // ============================================================
+        function locallyMarkSignedUp(opportunityId) {
+            if (!portalData.volunteering) return;
+            const opp = portalData.volunteering.find(o => o.id === opportunityId);
+            if (opp) opp.signedUp = (opp.signedUp || 0) + 1;
+            // Add to mySignups so filters hide it.
+            if (!portalData.mySignups) portalData.mySignups = [];
+            if (opp) {
+                portalData.mySignups.push({
+                    signupId: 'TEMP-' + Date.now(),
+                    opportunityId: opportunityId,
+                    title: opp.title,
+                    description: opp.description,
+                    date: opp.date,
+                    time: opp.time,
+                    location: opp.location,
+                    status: 'In Progress',
+                    hours: opp.hours
+                });
+            }
+        }
+        function locallyWithdraw(signupId) {
+            if (!portalData.mySignups) return;
+            const s = portalData.mySignups.find(x => x.signupId === signupId);
+            if (s) {
+                s.status = 'Withdrawn';
+                if (portalData.volunteering) {
+                    const opp = portalData.volunteering.find(o => o.id === s.opportunityId);
+                    if (opp && opp.signedUp > 0) opp.signedUp -= 1;
+                }
+            }
+        }
+
         // --- EVENT LISTENERS ---
-       function addEventListeners() {
-            // Note: Login form listeners are now in window.onload
+        function addEventListeners() {
             document.body.addEventListener('click', function(event) {
                 const target = event.target;
                 const button = target.closest('button');
                 const sidebarLink = target.closest('.sidebar-link');
-                
-                // --- Card expand/collapse (Check this first!) ---
+
                 const header = target.closest('.volunteer-card-header');
                 if (header) {
                     const content = document.getElementById(header.dataset.target);
@@ -1692,59 +1816,57 @@ function submitSiblingEnrollment() {
                         content.classList.toggle('hidden');
                         icon.classList.toggle('rotate-180');
                     }
-                    return; // Action handled, exit
+                    return;
                 }
 
-                // --- Sidebar Navigation ---
                 if (sidebarLink) {
                     event.preventDefault();
                     document.querySelectorAll('.tab-btn, .sidebar-link').forEach(l => l.classList.remove('tab-active', 'active'));
-                    
+
                     const tabId = sidebarLink.dataset.tab;
                     document.querySelectorAll(`.sidebar-link[data-tab="${tabId}"]`).forEach(l => l.classList.add('active'));
                     document.querySelectorAll(`.tab-btn[data-tab="${tabId}"]`).forEach(l => l.classList.add('tab-active'));
 
-                    document.getElementById('page-title').textContent = sidebarLink.textContent.trim();
+                    const titleEl = document.getElementById('page-title');
+                    if (titleEl) titleEl.textContent = sidebarLink.textContent.trim();
                     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('tab-content-active'));
                     document.getElementById(tabId).classList.add('tab-content-active');
 
-                    // Close mobile sidebar if open
                     document.getElementById('mobile-menu').style.display = 'none';
                     document.getElementById('menu-icon-open').classList.remove('hidden');
                     document.getElementById('menu-icon-close').classList.add('hidden');
-                    return; // Action handled, exit
+                    return;
                 }
 
-                // --- Button Checks ---
                 if (!button) {
-                    // Close modal ONLY if clicking the modal backdrop itself
                     if (event.target.classList.contains('modal')) {
                         closeModal(event.target.id);
                     }
-                    return; // Not a button, sidebar link, or backdrop click, exit
+                    return;
                 }
 
-                if (button && button.matches('.withdraw-btn')) {
+                if (button.matches('.withdraw-btn')) {
                     if (!confirm('Are you sure you want to withdraw from this event?')) return;
                     const signupId = button.dataset.signupId;
-                    button.textContent = 'Withdrawing...';
-                    button.disabled = true;
-                    fetch(WEB_APP_URL, {
-                        method: 'POST', mode: 'no-cors',
-                        body: JSON.stringify({ action: 'withdraw', signupId: signupId, token: ID_TOKEN }),
-                        headers: {'Content-Type': 'application/json'}
-                    }).then(() => {
-                        alert('Withdrawal successful! The portal will now refresh.');
-                        fetchData(ID_TOKEN); 
-                    }).catch(error => {
-                        console.error('Withdrawal Error:', error);
-                        alert(`An error occurred during withdrawal: Load failed`);
-                        button.textContent = 'Withdraw';
-                        button.disabled = false;
-                    });
+                    withLoading(button, 'Withdrawing...', () =>
+                        fetch(WEB_APP_URL, {
+                            method: 'POST', mode: 'no-cors',
+                            body: JSON.stringify({ action: 'withdraw', signupId: signupId, token: ID_TOKEN }),
+                            headers: {'Content-Type': 'application/json'}
+                        }).then(() => {
+                            // Optimistic local update + targeted re-render.
+                            locallyWithdraw(signupId);
+                            renderMySignupsList(portalData.mySignups);
+                            applyAndRenderFilters();
+                            showToast('Withdrawal recorded.', 'success');
+                        }).catch(error => {
+                            console.error('Withdrawal Error:', error);
+                            showToast('Could not withdraw — please check your connection and try again.', 'error');
+                        })
+                    );
                 }
 
-                if (button && button.matches('.add-to-calendar-btn')) {
+                if (button.matches('.add-to-calendar-btn')) {
                     event.stopPropagation();
                     const dropdown = button.closest('.relative').querySelector('.event-dropdown');
                     if (dropdown) {
@@ -1760,32 +1882,33 @@ function submitSiblingEnrollment() {
                     document.querySelectorAll('.event-dropdown').forEach(dropdown => dropdown.classList.add('hidden'));
                 }
 
-                if (button && button.matches('.report-absence-nav-btn')) {
+                if (button.matches('.report-absence-nav-btn')) {
                     const studentId = button.dataset.studentId;
                     switchToTab('actions');
-                    document.getElementById('student-select').value = studentId;
+                    const sel = document.getElementById('student-select');
+                    if (sel) sel.value = studentId;
                 }
 
-                if (button && button.matches('.signup-btn')) {
+                if (button.matches('.signup-btn')) {
                     const opportunityId = button.dataset.id;
-                    button.textContent = 'Signing up...';
-                    button.disabled = true;
-                    fetch(WEB_APP_URL, {
-                        method: 'POST', mode: 'no-cors',
-                        body: JSON.stringify({ action: 'signup', opportunityId: opportunityId, token: ID_TOKEN }),
-                        headers: {'Content-Type': 'application/json'}
-                    }).then(() => {
-                       alert('Signup successful! The portal will now refresh.');
-                       fetchData(ID_TOKEN); 
-                    }).catch(error => {
-                        console.error('Signup Error:', error);
-                        alert(`An error occurred during signup: Load failed`);
-                        button.textContent = 'Sign Up';
-                        button.disabled = false;
-                    });
+                    withLoading(button, 'Signing up...', () =>
+                        fetch(WEB_APP_URL, {
+                            method: 'POST', mode: 'no-cors',
+                            body: JSON.stringify({ action: 'signup', opportunityId: opportunityId, token: ID_TOKEN }),
+                            headers: {'Content-Type': 'application/json'}
+                        }).then(() => {
+                            locallyMarkSignedUp(opportunityId);
+                            applyAndRenderFilters();
+                            renderMySignupsList(portalData.mySignups);
+                            showToast('Signup successful! See it under "My Signups".', 'success');
+                        }).catch(error => {
+                            console.error('Signup Error:', error);
+                            showToast('Could not sign up — please try again.', 'error');
+                        })
+                    );
                 }
 
-                if (button && button.matches('.show-qr-btn')) {
+                if (button.matches('.show-qr-btn')) {
                     const signupId = button.dataset.signupId;
                     const qrCodeContainer = document.getElementById('qrcode');
                     qrCodeContainer.innerHTML = '';
@@ -1795,13 +1918,13 @@ function submitSiblingEnrollment() {
                     document.getElementById('qr-code-modal').classList.remove('hidden');
                 }
 
-                if (button && (button.matches('#close-modal-btn') || button.parentElement.parentElement.parentElement === document.getElementById('qr-code-modal'))) {
+                if (button.matches('#close-qr-modal-btn')) {
                     document.getElementById('qr-code-modal').classList.add('hidden');
                 }
 
-                if (button && button.matches('.tab-btn')) { switchToTab(button.dataset.tab); }
-                
-                if (button && button.matches('.faq-forms-tab-btn')) {
+                if (button.matches('.tab-btn')) { switchToTab(button.dataset.tab); }
+
+                if (button.matches('.faq-forms-tab-btn')) {
                     const tabName = button.dataset.tab;
                     document.querySelectorAll('.faq-forms-tab-btn').forEach(btn => {
                         btn.classList.remove('tab-active'); btn.classList.add('text-slate-500');
@@ -1815,24 +1938,25 @@ function submitSiblingEnrollment() {
                     const mobileMenu = document.getElementById('mobile-menu');
                     const isOpen = mobileMenu.style.display === 'block';
                     mobileMenu.style.display = isOpen ? 'none' : 'block';
-                    document.getElementById('menu-icon-open').classList.toggle('hidden', isOpen);
-                    document.getElementById('menu-icon-close').classList.toggle('hidden', !isOpen);
+                    document.getElementById('menu-icon-open').classList.toggle('hidden', !isOpen ? true : false);
+                    document.getElementById('menu-icon-close').classList.toggle('hidden', !isOpen ? false : true);
+                    document.getElementById('mobile-menu-button').setAttribute('aria-expanded', String(!isOpen));
                 }
 
-                if (button && button.matches('.volunteer-for-event-btn')) {
+                if (button.matches('.volunteer-for-event-btn')) {
                     const eventId = button.dataset.eventId;
                     switchToTab('volunteering');
                     document.getElementById('filter-event').value = eventId;
                     applyAndRenderFilters();
                 }
 
-                if(target.matches('input[name="report-type"]')) {
+                if (target.matches('input[name="report-type"]')) {
                     const isTardy = target.value === 'tardy';
                     document.getElementById('tardy-fields').style.display = isTardy ? 'grid' : 'none';
                     document.getElementById('absence-fields').style.display = isTardy ? 'none' : 'grid';
                 }
-               
-                if (button && button.matches('.show-more-events-btn, .show-more-teachers-btn')) {
+
+                if (button.matches('.show-more-events-btn, .show-more-teachers-btn')) {
                     const studentId = button.dataset.studentId;
                     const type = button.matches('.show-more-events-btn') ? 'events' : 'teachers';
                     const moreDiv = document.getElementById(`more-${type}-${studentId}`);
@@ -1843,31 +1967,38 @@ function submitSiblingEnrollment() {
                     }
                 }
             });
-            
+
             document.body.addEventListener('submit', function(event) {
                 if (event.target.id === 'self-report-form') {
                     event.preventDefault();
                     const button = document.getElementById('self-report-btn');
+                    const dateVal = document.getElementById('report-date').value;
+                    const descVal = document.getElementById('report-description').value;
+                    if (!dateVal || !descVal) {
+                        showToast('Please fill out the date and description for your activity.', 'warning');
+                        return;
+                    }
                     const payload = {
                         action: 'selfReportHours', token: ID_TOKEN,
                         opportunityId: document.getElementById('report-duration').value,
-                        date: document.getElementById('report-date').value,
-                        description: document.getElementById('report-description').value
+                        date: dateVal,
+                        description: descVal
                     };
-                    if (!payload.date || !payload.description) { alert("Please fill out the date and description for your activity."); return; }
-                    button.textContent = 'Submitting...'; button.disabled = true;
-                    fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
-                    .then(() => {
-                        alert('Your hours have been submitted for approval! The portal will now refresh to show the pending item.');
-                        fetchData(ID_TOKEN);
-                        document.getElementById('self-report-form').reset();
-                    })
-                    .catch(error => console.error('Self-report Error:', error))
-                    .finally(() => { button.textContent = 'Submit for Approval'; button.disabled = false; });
+                    withLoading(button, 'Submitting...', () =>
+                        fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
+                            .then(() => {
+                                showToast('Hours submitted for approval. Refreshing your signups…', 'success');
+                                fetchData(ID_TOKEN); // Self-report needs server-issued ID; full refetch is justified here.
+                                document.getElementById('self-report-form').reset();
+                            })
+                            .catch(error => {
+                                console.error('Self-report Error:', error);
+                                showToast('Submission failed — please try again.', 'error');
+                            })
+                    );
                 } else if (event.target.id === 'absence-form') {
                     event.preventDefault();
                     const button = document.getElementById('send-notification-btn');
-                    button.textContent = 'Sending...'; button.disabled = true;
                     const studentId = document.getElementById('student-select').value;
                     const student = portalData.students.find(s => s.uniqueStudentId == studentId);
                     const reportType = document.querySelector('input[name="report-type"]:checked').value;
@@ -1876,17 +2007,38 @@ function submitSiblingEnrollment() {
                     let reason = document.getElementById('absence-reason').value;
                     if (reason === 'Other') reason = document.getElementById('other-reason-text').value;
                     let comments = document.getElementById('absence-comments').value;
-                    fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ action: 'sendAbsenceEmail', student: student, reportType, startDate, endDate, tardyStartTime, tardyEndTime, reason, comments, token: ID_TOKEN })
-                    })
-                    .then(() => alert('Absence/Tardy notification sent successfully!'))
-                    .catch(error => { console.error('Email Send Error:', error); alert(`An error occurred while sending the email: Load failed`); })
-                    .finally(() => { button.textContent = 'Send Notification'; button.disabled = false; });
+
+                    // Inline validation for the relevant date fields.
+                    if (reportType === 'absent' && !startDate) {
+                        showToast('Please pick a start date for the absence.', 'warning');
+                        return;
+                    }
+                    if (reportType === 'tardy' && (!tardyStartTime || !tardyEndTime)) {
+                        showToast('Please pick the expected arrival time and date.', 'warning');
+                        return;
+                    }
+
+                    withLoading(button, 'Sending...', () =>
+                        fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'application/json'},
+                            body: JSON.stringify({ action: 'sendAbsenceEmail', student: student, reportType, startDate, endDate, tardyStartTime, tardyEndTime, reason, comments, token: ID_TOKEN })
+                        })
+                            .then(() => {
+                                showToast('Absence/Tardy notification sent.', 'success');
+                                event.target.reset();
+                            })
+                            .catch(error => {
+                                console.error('Email Send Error:', error);
+                                showToast('Could not send the notification — please try again.', 'error');
+                            })
+                    );
                 } else if (event.target.id === 'pickup-form') {
                      event.preventDefault();
                      const button = document.getElementById('send-pickup-btn');
                      const selectedStudentIds = Array.from(document.querySelectorAll('.pickup-student-checkbox:checked')).map(cb => cb.value);
-                     if (selectedStudentIds.length === 0) { alert("Please select at least one student."); return; }
+                     if (selectedStudentIds.length === 0) {
+                        showToast('Please select at least one student.', 'warning');
+                        return;
+                     }
                      const selectedStudents = portalData.students.filter(s => selectedStudentIds.includes(String(s.uniqueStudentId)));
                      const payload = {
                         action: 'sendPickupEmail', token: ID_TOKEN,
@@ -1897,116 +2049,155 @@ function submitSiblingEnrollment() {
                         reason: document.getElementById('pickup-reason').value,
                         date: document.getElementById('pickup-date').value
                     };
-                    if (!payload.pickupName || !payload.relationship || !payload.date) { alert("Please fill out the Authorized Person's Name, Relationship, and the Pickup Date."); return; }
-                    button.textContent = 'Sending...'; button.disabled = true;
-                    fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
-                    .then(() => {
-                        alert('Pickup notification sent successfully!');
-                        event.target.reset();
-                    })
-                    .catch(error => { console.error('Pickup Send Error:', error); alert('An error occurred. Please try again.'); })
-                    .finally(() => { button.textContent = 'Send Pickup Notification'; button.disabled = false; });
+                    if (!payload.pickupName || !payload.relationship || !payload.date) {
+                        showToast("Please fill out the authorized person's name, relationship, and pickup date.", 'warning');
+                        return;
+                    }
+                    withLoading(button, 'Sending...', () =>
+                        fetch(WEB_APP_URL, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) })
+                            .then(() => {
+                                showToast('Pickup notification sent.', 'success');
+                                event.target.reset();
+                            })
+                            .catch(error => {
+                                console.error('Pickup Send Error:', error);
+                                showToast('Something went wrong — please try again.', 'error');
+                            })
+                    );
                 }
             });
 
             document.body.addEventListener('change', function(event) {
-    // FIX: Handle Report Type Toggling (Absence vs Tardy)
-    if (event.target.name === 'report-type') {
-        const isTardy = event.target.value === 'tardy';
-        const tardyFields = document.getElementById('tardy-fields');
-        const absenceFields = document.getElementById('absence-fields');
-        
-        if (tardyFields && absenceFields) {
-            tardyFields.style.display = isTardy ? 'grid' : 'none';
-            absenceFields.style.display = isTardy ? 'none' : 'grid';
-        }
-    }
+                if (event.target.name === 'report-type') {
+                    const isTardy = event.target.value === 'tardy';
+                    const tardyFields = document.getElementById('tardy-fields');
+                    const absenceFields = document.getElementById('absence-fields');
+                    if (tardyFields && absenceFields) {
+                        tardyFields.style.display = isTardy ? 'grid' : 'none';
+                        absenceFields.style.display = isTardy ? 'none' : 'grid';
+                    }
+                }
 
-    // Existing logic for other dropdowns
-    if (event.target.matches('#absence-reason')) {
-        document.getElementById('other-reason-container').style.display = (event.target.value === 'Other') ? 'block' : 'none';
-    } else if (event.target.matches('.filter-control')) {
-        applyAndRenderFilters();
-    }
-});
+                if (event.target.matches('#absence-reason')) {
+                    document.getElementById('other-reason-container').style.display = (event.target.value === 'Other') ? 'block' : 'none';
+                } else if (event.target.matches('.filter-control')) {
+                    applyAndRenderFilters();
+                }
+            });
+
+            // Escape key closes any open modal/dropdown.
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') closeAllOpenModals();
+            });
+        }
+
+        // ============================================================
+        // RESEND-LINK COOLDOWN (60 seconds)
+        // ============================================================
+        let resendCooldownTimer = null;
+        function startResendCooldown(seconds = 60) {
+            const btn = document.getElementById('resend-passkey-btn');
+            if (!btn) return;
+            const originalText = 'Resend link';
+            let remaining = seconds;
+            btn.disabled = true;
+            btn.textContent = `Resend link (${remaining}s)`;
+            if (resendCooldownTimer) clearInterval(resendCooldownTimer);
+            resendCooldownTimer = setInterval(() => {
+                remaining--;
+                if (remaining <= 0) {
+                    clearInterval(resendCooldownTimer);
+                    btn.disabled = false;
+                    btn.textContent = originalText;
+                } else {
+                    btn.textContent = `Resend link (${remaining}s)`;
+                }
+            }, 1000);
         }
 
         // --- INITIALIZATION ---
          window.onload = function() {
             const hashToken = window.location.hash.startsWith('#token=') ? window.location.hash.substring(7) : null;
-            const storedToken = localStorage.getItem('sva_id_token'); // <-- CHECK FOR STORED TOKEN
+            const storedToken = localStorage.getItem('sva_id_token');
 
             if (hashToken) {
-                // 1. User just clicked a magic link. Save the new token.
-                window.history.replaceState({}, document.title, window.location.pathname); // Clean the URL
+                window.history.replaceState({}, document.title, window.location.pathname);
                 handleLoginSuccess(hashToken);
             } else if (storedToken) {
-                // 2. User is returning. Log them in with the stored token.
                 handleLoginSuccess(storedToken);
             } else {
-                // 3. User is new or logged out, show the login screen.
                 try {
                     google.accounts.id.initialize({
                       client_id: CLIENT_ID,
                       callback: handleCredentialResponse
-                      // 'auto_select: true' and 'prompt()' have been removed
                     });
                     google.accounts.id.renderButton(
                       document.getElementById('google-signin-button-container'),
-                      { theme: "outline", size: "large", width: "300" } 
+                      { theme: "outline", size: "large", width: "300" }
                     );
-                    // Add login form listeners here
                     document.getElementById('passkey-request-form').addEventListener('submit', handleRequestPasskey);
-                    // document.getElementById('passkey-verify-form').addEventListener('submit', handleVerifyPasskey); // This form is gone
                     document.getElementById('go-back-btn').addEventListener('click', () => showLoginScreen('login-screen'));
+                    document.getElementById('resend-passkey-btn').addEventListener('click', handleResendPasskey);
                 } catch (error) {
                     console.error("Google Sign-In initialization failed:", error);
-                    document.getElementById('login-screen').innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-lg text-red-600"><p>Could not initialize Google Sign-In.".</p></div>`;
+                    document.getElementById('login-screen').innerHTML = `<div class="text-center p-8 bg-white rounded-lg shadow-lg text-red-600"><p>Could not initialize Google Sign-In.</p></div>`;
                 }
             }
         };
 
-        // --- NEW: Passkey Login Functions ---
-        /**
-         * Handles Step 1 of passkey login: Requesting the code.
-         */
         function handleRequestPasskey(e) {
             e.preventDefault();
             const emailInput = document.getElementById('email-input');
-            const email = emailInput.value;
+            const email = emailInput.value.trim();
             const button = document.getElementById('request-passkey-btn');
-            
-            button.disabled = true;
-            button.textContent = 'Sending...';
 
+            clearFieldError('email-input');
+            // Light client-side validation; backend remains source of truth.
+            const isLikelyEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            if (!isLikelyEmail) {
+                setFieldError('email-input', 'Please enter a valid email address.');
+                return;
+            }
+
+            withLoading(button, 'Sending...', () =>
+                fetch(WEB_APP_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+                    body: JSON.stringify({ action: 'requestLoginPasskey', email: email })
+                })
+                .then(() => {
+                    document.getElementById('passkey-email-display').textContent = email;
+                    showLoginScreen('passkey-verify-screen');
+                    startResendCooldown(60);
+                })
+                .catch(err => {
+                    console.error("Passkey Request Error:", err);
+                    showToast('A network error occurred. Please try again.', 'error');
+                })
+            );
+        }
+
+        function handleResendPasskey() {
+            const email = document.getElementById('passkey-email-display').textContent;
+            if (!email) return;
+            const btn = document.getElementById('resend-passkey-btn');
+            btn.disabled = true;
+            btn.textContent = 'Resending...';
             fetch(WEB_APP_URL, {
                 method: 'POST',
-                mode: 'no-cors', // Use no-cors
-                headers: { 'Content-Type': 'text/plain;charset=utf-8' }, // Use text/plain
+                mode: 'no-cors',
+                headers: { 'Content-Type': 'text/plain;charset=utf-8' },
                 body: JSON.stringify({ action: 'requestLoginPasskey', email: email })
-            })
-            .then(() => {
-                // FIX: Don't read the response. Just show the next screen.
-                document.getElementById('passkey-email-display').textContent = email;
-                showLoginScreen('passkey-verify-screen');
-            })
-            .catch(err => {
-                console.error("Passkey Request Error:", err);
-                alert(`A network error occurred. Please try again.`);
-            })
-            .finally(() => {
-                button.disabled = false;
-                button.textContent = 'Send Login Link';
+            }).then(() => {
+                showToast('A new login link has been sent.', 'success');
+                startResendCooldown(60);
+            }).catch(err => {
+                console.error("Resend Error:", err);
+                showToast('Could not resend — please try again shortly.', 'error');
+                btn.disabled = false;
+                btn.textContent = 'Resend link';
             });
-        }
-        
-        /**
-         * This function is no longer used for verification, as the magic link
-         * is handled by the doGet in the backend and the window.onload function here.
-         */
-        function handleVerifyPasskey(e) {
-            e.preventDefault();
-             alert("Please check your email for the login link.");
         }
     </script>
 </body>
